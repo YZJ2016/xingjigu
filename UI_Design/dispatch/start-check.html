@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 开工检查</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../orders/production-orders.css" />
+    <link rel="stylesheet" href="./dispatch-orders.css" />
+    <link rel="stylesheet" href="./operation-tasks.css" />
+    <link rel="stylesheet" href="./team-tasks.css" />
+    <link rel="stylesheet" href="./task-release.css" />
+    <link rel="stylesheet" href="./task-change.css" />
+    <link rel="stylesheet" href="./sop-view.css" />
+    <link rel="stylesheet" href="./start-check.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="checkModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A / Line-B / Line-C</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main check-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">派工与生产任务 / 开工检查</div>
+            <h1>开工检查工作台</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="batchPassBtn" class="primary-action" type="button">批量放行可开工</button>
+            <button id="resetCheckBtn" class="secondary-action" type="button">重置开工检查</button>
+            <a class="secondary-link" href="./sop-view.html">SOP 查看</a>
+            <a class="secondary-link" href="./dispatch-orders.html">派工单</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">沈</span>
+              <span>班组长</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="dispatch-metrics" aria-label="开工检查统计">
+          <article>
+            <span>可开工</span>
+            <strong id="metricReady">0</strong>
+            <em>全部检查项通过</em>
+          </article>
+          <article>
+            <span>待处理</span>
+            <strong id="metricPending">0</strong>
+            <em>存在待确认项目</em>
+          </article>
+          <article>
+            <span>已拦截</span>
+            <strong id="metricBlocked">0</strong>
+            <em>设备、物料或质量阻断</em>
+          </article>
+          <article>
+            <span>平均通过率</span>
+            <strong id="metricPassRate">0%</strong>
+            <em>开工准入检查项</em>
+          </article>
+        </section>
+
+        <section class="check-layout">
+          <div class="check-left">
+            <div class="toolbar check-toolbar">
+              <div class="search-box">
+                <label for="checkSearch">搜索</label>
+                <input id="checkSearch" type="search" placeholder="派工单、工单、工序、工位、责任人" />
+              </div>
+              <label>
+                状态
+                <select id="statusFilter">
+                  <option value="all">全部状态</option>
+                  <option value="可开工">可开工</option>
+                  <option value="待处理">待处理</option>
+                  <option value="已拦截">已拦截</option>
+                  <option value="已放行">已放行</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="lineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+              <label>
+                班组
+                <select id="teamFilter">
+                  <option value="all">全部班组</option>
+                  <option value="A1 班">A1 班</option>
+                  <option value="B1 班">B1 班</option>
+                  <option value="C1 班">C1 班</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="check-board">
+              <div class="task-lane">
+                <div class="section-title">
+                  <h3>待开工任务</h3>
+                </div>
+                <div id="checkList" class="task-list"></div>
+              </div>
+
+              <div class="check-focus">
+                <section class="gate-summary-panel">
+                  <div class="section-title">
+                    <h3>准入门概览</h3>
+                    <span id="activeCheckText">D-004</span>
+                  </div>
+                  <div id="gateSummary" class="gate-summary"></div>
+                </section>
+
+                <section class="resource-panel">
+                  <div class="section-title">
+                    <h3>资源状态</h3>
+                    <span>人员 · 设备 · 物料 · 质量</span>
+                  </div>
+                  <div id="resourceBoard" class="resource-board"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="dispatch-table-panel">
+              <div class="section-title">
+                <h3>开工检查明细</h3>
+                <div class="section-actions">
+                  <button id="showDetailBtn" type="button" hidden>显示详情</button>
+                  <button id="refreshCheckBtn" type="button">刷新检查</button>
+                </div>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="check-table">
+                  <thead>
+                    <tr>
+                      <th>派工单</th>
+                      <th>工单 / 工序</th>
+                      <th>工位</th>
+                      <th>班组</th>
+                      <th>通过率</th>
+                      <th>阻断项</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="checkTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside id="checkDetailPanel" class="order-detail-panel check-detail-panel">
+            <div class="detail-head">
+              <div>
+                <span id="detailStatus">待处理</span>
+                <h2 id="detailDispatchNo">D-004</h2>
+                <p id="detailTitle">整机装配 · ASM-WS-03</p>
+              </div>
+              <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
+            </div>
+
+            <div class="detail-grid" id="detailGrid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>开工准入</h3>
+                <button id="recheckBtn" type="button">重新检查</button>
+              </div>
+              <div id="gateList" class="gate-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>处理建议</h3>
+              </div>
+              <div id="actionSuggestionList" class="readiness-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>联动动作</h3>
+              </div>
+              <div class="action-grid dispatch-actions">
+                <button id="confirmBtn" type="button">确认检查</button>
+                <button id="releaseBtn" type="button">开工放行</button>
+                <button id="materialBtn" type="button">催料处理</button>
+                <button id="qualityBtn" type="button">首件确认</button>
+                <button id="equipmentBtn" type="button">设备复位</button>
+                <button id="blockBtn" class="danger-action" type="button">拦截开工</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>检查记录</h3>
+              </div>
+              <div id="checkLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./start-check.js"></script>
+  </body>
+</html>

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | SOP 查看</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../orders/production-orders.css" />
+    <link rel="stylesheet" href="./dispatch-orders.css" />
+    <link rel="stylesheet" href="./operation-tasks.css" />
+    <link rel="stylesheet" href="./team-tasks.css" />
+    <link rel="stylesheet" href="./task-release.css" />
+    <link rel="stylesheet" href="./task-change.css" />
+    <link rel="stylesheet" href="./sop-view.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="sopModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A / Line-B / Line-C</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main sop-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">派工与生产任务 / SOP 查看</div>
+            <h1>SOP 查看工作台</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="batchSignBtn" class="primary-action" type="button">批量签收已发布</button>
+            <button id="resetSopBtn" class="secondary-action" type="button">重置 SOP 演示</button>
+            <a class="secondary-link" href="./task-change.html">任务变更</a>
+            <a class="secondary-link" href="./task-release.html">任务下达</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">林</span>
+              <span>工艺工程师</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="dispatch-metrics" aria-label="SOP 查看统计">
+          <article>
+            <span>已发布</span>
+            <strong id="metricReleased">0</strong>
+            <em>可推送至工位终端</em>
+          </article>
+          <article>
+            <span>待确认</span>
+            <strong id="metricConfirm">0</strong>
+            <em>班组或工位未签收</em>
+          </article>
+          <article>
+            <span>版本风险</span>
+            <strong id="metricRisk">0</strong>
+            <em>临期、过期或变更中</em>
+          </article>
+          <article>
+            <span>终端覆盖</span>
+            <strong id="metricCoverage">0%</strong>
+            <em>已同步工位占比</em>
+          </article>
+        </section>
+
+        <section class="sop-layout">
+          <div class="sop-left">
+            <div class="toolbar sop-toolbar">
+              <div class="search-box">
+                <label for="sopSearch">搜索</label>
+                <input id="sopSearch" type="search" placeholder="SOP、工单、工序、产品、工位" />
+              </div>
+              <label>
+                状态
+                <select id="statusFilter">
+                  <option value="all">全部状态</option>
+                  <option value="已发布">已发布</option>
+                  <option value="待确认">待确认</option>
+                  <option value="变更中">变更中</option>
+                  <option value="已过期">已过期</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="lineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+              <label>
+                工序
+                <select id="operationFilter">
+                  <option value="all">全部工序</option>
+                  <option value="SMT 贴片">SMT 贴片</option>
+                  <option value="DIP 插件">DIP 插件</option>
+                  <option value="整机装配">整机装配</option>
+                  <option value="老化测试">老化测试</option>
+                  <option value="包装入库">包装入库</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="sop-board">
+              <div class="task-lane">
+                <div class="section-title">
+                  <h3>SOP 清单</h3>
+                </div>
+                <div id="sopList" class="task-list"></div>
+              </div>
+
+              <div class="sop-focus">
+                <section class="sop-preview-panel">
+                  <div class="section-title">
+                    <h3>终端预览</h3>
+                    <span id="activeSopText">SOP-ASM-016</span>
+                  </div>
+                  <div id="terminalPreview" class="terminal-preview"></div>
+                </section>
+
+                <section class="sop-param-panel">
+                  <div class="section-title">
+                    <h3>关键参数</h3>
+                    <span>设备 · 质量 · 安全</span>
+                  </div>
+                  <div id="paramBoard" class="param-board"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="dispatch-table-panel">
+              <div class="section-title">
+                <h3>SOP 明细</h3>
+                <div class="section-actions">
+                  <button id="showDetailBtn" type="button" hidden>显示详情</button>
+                  <button id="pushTerminalBtn" type="button">推送终端</button>
+                </div>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="sop-table">
+                  <thead>
+                    <tr>
+                      <th>SOP 编号</th>
+                      <th>产品 / 工单</th>
+                      <th>工序</th>
+                      <th>版本</th>
+                      <th>适用工位</th>
+                      <th>状态</th>
+                      <th>签收</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sopTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside id="sopDetailPanel" class="order-detail-panel sop-detail-panel">
+            <div class="detail-head">
+              <div>
+                <span id="detailStatus">已发布</span>
+                <h2 id="detailSopNo">SOP-ASM-016</h2>
+                <p id="detailTitle">整机装配 · TCU-100 控制器</p>
+              </div>
+              <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
+            </div>
+
+            <div class="detail-grid" id="detailGrid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>版本校验</h3>
+                <button id="verifyBtn" type="button">重新校验</button>
+              </div>
+              <div id="gateList" class="gate-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>附件与点检</h3>
+              </div>
+              <div id="attachmentList" class="readiness-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>联动动作</h3>
+              </div>
+              <div class="action-grid dispatch-actions">
+                <button id="signBtn" type="button">班组签收</button>
+                <button id="releaseBtn" type="button">发布版本</button>
+                <button id="changeBtn" type="button">发起变更</button>
+                <button id="terminalBtn" type="button">同步终端</button>
+                <button id="printBtn" type="button">打印工位卡</button>
+                <button id="archiveBtn" class="danger-action" type="button">标记过期</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>查看记录</h3>
+              </div>
+              <div id="sopLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./sop-view.js"></script>
+  </body>
+</html>

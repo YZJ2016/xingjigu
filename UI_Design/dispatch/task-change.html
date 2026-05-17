@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 任务变更</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../orders/production-orders.css" />
+    <link rel="stylesheet" href="./dispatch-orders.css" />
+    <link rel="stylesheet" href="./operation-tasks.css" />
+    <link rel="stylesheet" href="./team-tasks.css" />
+    <link rel="stylesheet" href="./task-release.css" />
+    <link rel="stylesheet" href="./task-change.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="changeModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A / Line-B / Line-C</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main change-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">派工与生产任务 / 任务变更</div>
+            <h1>任务变更工作台</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="approveReadyBtn" class="primary-action" type="button">批量批准低风险</button>
+            <button id="resetChangeBtn" class="secondary-action" type="button">重置变更演示</button>
+            <a class="secondary-link" href="./task-release.html">任务下达</a>
+            <a class="secondary-link" href="./team-tasks.html">班组任务</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">赵</span>
+              <span>车间主任</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="dispatch-metrics" aria-label="任务变更统计">
+          <article>
+            <span>待评估</span>
+            <strong id="metricReview">0</strong>
+            <em>需确认影响范围</em>
+          </article>
+          <article>
+            <span>待审批</span>
+            <strong id="metricApprove">0</strong>
+            <em>变更方案已形成</em>
+          </article>
+          <article>
+            <span>已生效</span>
+            <strong id="metricEffective">0</strong>
+            <em>已同步派工和终端</em>
+          </article>
+          <article>
+            <span>高风险</span>
+            <strong id="metricRisk">0</strong>
+            <em>影响交期、质量或停线</em>
+          </article>
+        </section>
+
+        <section class="change-layout">
+          <div class="change-left">
+            <div class="toolbar change-toolbar">
+              <div class="search-box">
+                <label for="changeSearch">搜索</label>
+                <input id="changeSearch" type="search" placeholder="变更单、派工单、工单、原因、责任人" />
+              </div>
+              <label>
+                状态
+                <select id="statusFilter">
+                  <option value="all">全部状态</option>
+                  <option value="待评估">待评估</option>
+                  <option value="待审批">待审批</option>
+                  <option value="已批准">已批准</option>
+                  <option value="已生效">已生效</option>
+                  <option value="已驳回">已驳回</option>
+                </select>
+              </label>
+              <label>
+                类型
+                <select id="typeFilter">
+                  <option value="all">全部类型</option>
+                  <option value="改派人员">改派人员</option>
+                  <option value="改工位">改工位</option>
+                  <option value="改数量">改数量</option>
+                  <option value="改时间">改时间</option>
+                  <option value="异常改派">异常改派</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="lineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="change-board">
+              <div class="task-lane">
+                <div class="section-title">
+                  <h3>变更申请池</h3>
+                </div>
+                <div id="changeList" class="task-list"></div>
+              </div>
+
+              <div class="change-focus">
+                <section class="compare-panel">
+                  <div class="section-title">
+                    <h3>变更前后对比</h3>
+                    <span id="activeChangeText">CHG-001</span>
+                  </div>
+                  <div id="compareBoard" class="compare-board"></div>
+                </section>
+
+                <section class="impact-panel">
+                  <div class="section-title">
+                    <h3>影响范围</h3>
+                    <span>派工 · 物料 · 质量 · 排程</span>
+                  </div>
+                  <div id="impactBoard" class="impact-board"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="dispatch-table-panel">
+              <div class="section-title">
+                <h3>变更明细</h3>
+                <div class="section-actions">
+                  <button id="showDetailBtn" type="button" hidden>显示详情</button>
+                  <button id="changeNoticeBtn" type="button">生成变更通知</button>
+                </div>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="change-table">
+                  <thead>
+                    <tr>
+                      <th>变更单</th>
+                      <th>工单 / 派工单</th>
+                      <th>类型</th>
+                      <th>原因</th>
+                      <th>风险</th>
+                      <th>负责人</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="changeTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside id="changeDetailPanel" class="order-detail-panel change-detail-panel">
+            <div class="detail-head">
+              <div>
+                <span id="detailStatus">待评估</span>
+                <h2 id="detailChangeNo">CHG-001</h2>
+                <p id="detailTitle">改派人员 · D-002</p>
+              </div>
+              <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
+            </div>
+
+            <div class="detail-grid" id="detailGrid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>变更校验</h3>
+                <button id="evaluateBtn" type="button">重新评估</button>
+              </div>
+              <div id="gateList" class="gate-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>同步计划</h3>
+              </div>
+              <div id="syncList" class="readiness-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>联动动作</h3>
+              </div>
+              <div class="action-grid dispatch-actions">
+                <button id="submitBtn" type="button">提交审批</button>
+                <button id="approveBtn" type="button">批准变更</button>
+                <button id="effectiveBtn" type="button">执行生效</button>
+                <button id="syncBtn" type="button">同步下发</button>
+                <button id="rejectBtn" class="danger-action" type="button">驳回变更</button>
+                <button id="rollbackBtn" type="button">回退方案</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>最近记录</h3>
+              </div>
+              <div id="changeLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./task-change.js"></script>
+  </body>
+</html>

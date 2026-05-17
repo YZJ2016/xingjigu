@@ -220,6 +220,38 @@ function applyMenuEntry(moduleId, entry) {
     window.location.href = "./orders/kit-check.html";
     return;
   }
+  if (moduleId === "dispatch" && entry === "派工单") {
+    window.location.href = "./dispatch/dispatch-orders.html";
+    return;
+  }
+  if (moduleId === "dispatch" && entry === "工序任务") {
+    window.location.href = "./dispatch/operation-tasks.html";
+    return;
+  }
+  if (moduleId === "dispatch" && entry === "班组任务") {
+    window.location.href = "./dispatch/team-tasks.html";
+    return;
+  }
+  if (moduleId === "dispatch" && entry === "任务下达") {
+    window.location.href = "./dispatch/task-release.html";
+    return;
+  }
+  if (moduleId === "dispatch" && entry === "任务变更") {
+    window.location.href = "./dispatch/task-change.html";
+    return;
+  }
+  if (moduleId === "dispatch" && entry === "SOP 查看") {
+    window.location.href = "./dispatch/sop-view.html";
+    return;
+  }
+  if (moduleId === "dispatch" && entry === "开工检查") {
+    window.location.href = "./dispatch/start-check.html";
+    return;
+  }
+  if (moduleId === "station" && entry === "员工登录") {
+    window.location.href = "./station/employee-login.html";
+    return;
+  }
   const actions = {
     生产总览: () => {
       state.line = "全部产线";

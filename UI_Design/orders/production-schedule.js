@@ -96,6 +96,14 @@ function renderFrameMenu() {
       else if (moduleId === "orders" && entry === "交期预警") window.location.href = "./delivery-warning.html";
       else if (moduleId === "orders" && entry === "计划调整") window.location.href = "./plan-adjustment.html";
       else if (moduleId === "orders" && entry === "齐套检查") window.location.href = "./kit-check.html";
+      else if (moduleId === "dispatch" && entry === "派工单") window.location.href = "../dispatch/dispatch-orders.html";
+      else if (moduleId === "dispatch" && entry === "工序任务") window.location.href = "../dispatch/operation-tasks.html";
+      else if (moduleId === "dispatch" && entry === "班组任务") window.location.href = "../dispatch/team-tasks.html";
+      else if (moduleId === "dispatch" && entry === "任务下达") window.location.href = "../dispatch/task-release.html";
+      else if (moduleId === "dispatch" && entry === "任务变更") window.location.href = "../dispatch/task-change.html";
+      else if (moduleId === "dispatch" && entry === "SOP 查看") window.location.href = "../dispatch/sop-view.html";
+      else if (moduleId === "dispatch" && entry === "开工检查") window.location.href = "../dispatch/start-check.html";
+      else if (moduleId === "station" && entry === "员工登录") window.location.href = "../station/employee-login.html";
       else showToast(`${entry} 页面待建设`);
     });
   });

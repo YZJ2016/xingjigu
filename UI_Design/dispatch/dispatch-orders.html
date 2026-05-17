@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 派工单</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../orders/production-orders.css" />
+    <link rel="stylesheet" href="./dispatch-orders.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="dispatchModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A / Line-B / Line-C</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main dispatch-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">派工与生产任务 / 派工单</div>
+            <h1>派工单工作台</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="releaseReadyBtn" class="primary-action" type="button">批量下达可执行</button>
+            <button id="resetDispatchBtn" class="secondary-action" type="button">重置派工演示</button>
+            <a class="secondary-link" href="../orders/production-schedule.html">生产排程</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">赵</span>
+              <span>车间主任</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="dispatch-metrics" aria-label="派工单统计">
+          <article>
+            <span>待下达</span>
+            <strong id="metricDraft">0</strong>
+            <em>排程确认后待车间确认</em>
+          </article>
+          <article>
+            <span>待接单</span>
+            <strong id="metricReleased">0</strong>
+            <em>已推送到班组和工位</em>
+          </article>
+          <article>
+            <span>生产中</span>
+            <strong id="metricRunning">0</strong>
+            <em>已通过开工校验门</em>
+          </article>
+          <article>
+            <span>异常锁定</span>
+            <strong id="metricBlocked">0</strong>
+            <em>需处理资源、物料或质量问题</em>
+          </article>
+        </section>
+
+        <section class="dispatch-layout">
+          <div class="dispatch-left">
+            <div class="toolbar dispatch-toolbar">
+              <div class="search-box">
+                <label for="dispatchSearch">搜索</label>
+                <input id="dispatchSearch" type="search" placeholder="派工单、工单号、产品、工序、班组" />
+              </div>
+              <label>
+                状态
+                <select id="statusFilter">
+                  <option value="all">全部状态</option>
+                  <option value="待下达">待下达</option>
+                  <option value="待接单">待接单</option>
+                  <option value="生产中">生产中</option>
+                  <option value="异常锁定">异常锁定</option>
+                  <option value="已完工">已完工</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="lineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+              <label>
+                班组
+                <select id="teamFilter">
+                  <option value="all">全部班组</option>
+                  <option value="A1 班">A1 班</option>
+                  <option value="B1 班">B1 班</option>
+                  <option value="C1 班">C1 班</option>
+                  <option value="设备组">设备组</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="dispatch-board">
+              <div class="dispatch-lane">
+                <div class="section-title">
+                  <h3>今日派工队列</h3>
+                </div>
+                <div id="dispatchList" class="dispatch-list"></div>
+              </div>
+
+              <div class="dispatch-focus">
+                <section class="dispatch-flow-panel">
+                  <div class="section-title">
+                    <h3>当前工单工序链</h3>
+                    <span id="flowOrderText">MO-202606-0001</span>
+                  </div>
+                  <div id="operationFlow" class="operation-flow"></div>
+                </section>
+
+                <section class="resource-panel">
+                  <div class="section-title">
+                    <h3>资源占用</h3>
+                    <span>设备 · 工位 · 班组</span>
+                  </div>
+                  <div id="resourceBoard" class="resource-board"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="dispatch-table-panel">
+              <div class="section-title">
+                <h3>派工单明细</h3>
+                <div class="section-actions">
+                  <button id="showDetailBtn" type="button" hidden>显示详情</button>
+                  <button id="exportTaskBtn" type="button">生成任务卡</button>
+                </div>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="dispatch-table">
+                  <thead>
+                    <tr>
+                      <th>派工单</th>
+                      <th>工单 / 产品</th>
+                      <th>工序</th>
+                      <th>计划窗口</th>
+                      <th>资源</th>
+                      <th>数量</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dispatchTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside id="dispatchDetailPanel" class="order-detail-panel dispatch-detail-panel">
+            <div class="detail-head">
+              <div>
+                <span id="detailStatus">待下达</span>
+                <h2 id="detailDispatchNo">D-001</h2>
+                <p id="detailTitle">SMT 贴片 · 智能温控控制器 TCU-100</p>
+              </div>
+              <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
+            </div>
+
+            <div class="detail-grid" id="detailGrid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>开工校验门</h3>
+                <button id="runGateBtn" type="button">重新校验</button>
+              </div>
+              <div id="gateList" class="gate-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>执行准备</h3>
+              </div>
+              <div id="readinessList" class="readiness-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>联动动作</h3>
+              </div>
+              <div class="action-grid dispatch-actions">
+                <button id="releaseBtn" type="button">下达派工</button>
+                <button id="acceptBtn" type="button">班组接单</button>
+                <button id="startBtn" type="button">扫码开工</button>
+                <button id="completeBtn" type="button">工序完工</button>
+                <button id="blockBtn" class="danger-action" type="button">异常锁定</button>
+                <button id="reassignBtn" type="button">资源重分配</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>最近记录</h3>
+              </div>
+              <div id="dispatchLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./dispatch-orders.js"></script>
+  </body>
+</html>
