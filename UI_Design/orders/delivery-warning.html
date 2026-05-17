@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 交期预警</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./production-orders.css" />
+    <link rel="stylesheet" href="./production-schedule.css" />
+    <link rel="stylesheet" href="./delivery-warning.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="orderModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>订单交付</span>
+              <span>风险闭环</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main order-main warning-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">订单与计划 / 交期预警</div>
+            <h1>交期预警中心</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="refreshWarningBtn" class="primary-action" type="button">刷新预警</button>
+            <button id="resetWarningPageBtn" class="secondary-action" type="button">重置预警演示</button>
+            <a class="secondary-link" href="./production-schedule.html">生产排程</a>
+            <a class="secondary-link" href="./capacity-load.html">产能负荷</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">陈</span>
+              <span>计划主管</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="order-metrics" aria-label="交期预警统计">
+          <article>
+            <span>高风险</span>
+            <strong id="metricHighRisk">0</strong>
+            <em>预计延期或剩余缓冲不足</em>
+          </article>
+          <article>
+            <span>中风险</span>
+            <strong id="metricMediumRisk">0</strong>
+            <em>需计划跟踪和资源确认</em>
+          </article>
+          <article>
+            <span>本周到期</span>
+            <strong id="metricDueWeek">0</strong>
+            <em>承诺交期在 7 天内</em>
+          </article>
+          <article>
+            <span>平均缓冲</span>
+            <strong id="metricBuffer">0天</strong>
+            <em>预计完工到承诺交期</em>
+          </article>
+        </section>
+
+        <section class="warning-layout">
+          <div class="warning-left-panel">
+            <div class="toolbar warning-toolbar">
+              <div class="search-box">
+                <label for="warningSearch">搜索</label>
+                <input id="warningSearch" type="search" placeholder="工单号、产品、客户、原因" />
+              </div>
+              <label>
+                风险等级
+                <select id="levelFilter">
+                  <option value="all">全部等级</option>
+                  <option value="高">高风险</option>
+                  <option value="中">中风险</option>
+                  <option value="低">低风险</option>
+                </select>
+              </label>
+              <label>
+                风险原因
+                <select id="reasonFilter">
+                  <option value="all">全部原因</option>
+                  <option value="缺料">缺料</option>
+                  <option value="产能">产能</option>
+                  <option value="设备">设备</option>
+                  <option value="质量">质量</option>
+                  <option value="评审">评审</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="warning-panel">
+              <div class="section-title">
+                <h3>交期预警列表</h3>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="warning-table">
+                  <thead>
+                    <tr>
+                      <th>工单号</th>
+                      <th>产品</th>
+                      <th>承诺交期</th>
+                      <th>预计完工</th>
+                      <th>缓冲</th>
+                      <th>等级</th>
+                      <th>原因</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="warningTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="warning-panel">
+              <div class="section-title">
+                <h3>交付时间线</h3>
+              </div>
+              <div id="deliveryTimeline" class="delivery-timeline"></div>
+            </section>
+          </div>
+
+          <aside class="order-detail-panel warning-detail-panel">
+            <div class="detail-head">
+              <span id="detailWarningLevel">高风险</span>
+              <h2 id="detailOrderId">MO-202606-0005</h2>
+              <p id="detailProduct">电源控制模块 PCM-60</p>
+            </div>
+
+            <div class="detail-grid" id="detailGrid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>原因拆解</h3>
+                <button id="confirmFollowBtn" type="button">标记已跟进</button>
+              </div>
+              <div id="reasonList" class="reason-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>处置建议</h3>
+              </div>
+              <div id="actionList" class="warning-action-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>协同动作</h3>
+              </div>
+              <div class="action-grid warning-actions">
+                <button id="expediteBtn" type="button">设为加急</button>
+                <button id="materialEscalateBtn" type="button">催料升级</button>
+                <button id="capacityEscalateBtn" type="button">申请产能协调</button>
+                <button id="qualityHoldBtn" type="button">质量会签</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>最近记录</h3>
+              </div>
+              <div id="warningLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./delivery-warning.js"></script>
+  </body>
+</html>

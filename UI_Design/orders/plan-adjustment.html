@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 计划调整</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./production-orders.css" />
+    <link rel="stylesheet" href="./production-schedule.css" />
+    <link rel="stylesheet" href="./plan-adjustment.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="orderModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>调整申请</span>
+              <span>影响评估</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main order-main adjustment-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">订单与计划 / 计划调整</div>
+            <h1>计划调整工作台</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="createAdjustmentBtn" class="primary-action" type="button">生成调整建议</button>
+            <button id="resetAdjustmentPageBtn" class="secondary-action" type="button">重置调整演示</button>
+            <a class="secondary-link" href="./delivery-warning.html">交期预警</a>
+            <a class="secondary-link" href="./production-schedule.html">生产排程</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">周</span>
+              <span>计划主管</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="order-metrics" aria-label="计划调整统计">
+          <article>
+            <span>待调整</span>
+            <strong id="metricPendingAdjust">0</strong>
+            <em>排程或交期需重新确认</em>
+          </article>
+          <article>
+            <span>待会签</span>
+            <strong id="metricCountersign">0</strong>
+            <em>物料、设备、质量需确认</em>
+          </article>
+          <article>
+            <span>可确认</span>
+            <strong id="metricReady">0</strong>
+            <em>调整后可同步排程</em>
+          </article>
+          <article>
+            <span>影响订单</span>
+            <strong id="metricImpacted">0</strong>
+            <em>调整窗口内相关订单</em>
+          </article>
+        </section>
+
+        <section id="adjustmentLayout" class="adjustment-layout">
+          <div class="adjustment-left-panel">
+            <div class="toolbar adjustment-toolbar">
+              <div class="search-box">
+                <label for="adjustmentSearch">搜索</label>
+                <input id="adjustmentSearch" type="search" placeholder="工单号、产品、客户、原因" />
+              </div>
+              <label>
+                调整原因
+                <select id="reasonFilter">
+                  <option value="all">全部原因</option>
+                  <option value="缺料">缺料</option>
+                  <option value="交期">交期</option>
+                  <option value="设备">设备</option>
+                  <option value="质量">质量</option>
+                  <option value="产能">产能</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="lineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="adjustment-panel">
+              <div class="section-title">
+                <h3>调整申请池</h3>
+                <button id="openDetailBtn" type="button" hidden>打开详情</button>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="adjustment-table">
+                  <colgroup>
+                    <col class="adjust-col-order" />
+                    <col class="adjust-col-product" />
+                    <col class="adjust-col-window" />
+                    <col class="adjust-col-window" />
+                    <col class="adjust-col-reason" />
+                    <col class="adjust-col-impact" />
+                    <col class="adjust-col-status" />
+                    <col class="adjust-col-action" />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>工单号</th>
+                      <th>产品</th>
+                      <th>当前计划</th>
+                      <th>建议计划</th>
+                      <th>原因</th>
+                      <th>影响</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adjustmentTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="adjustment-panel">
+              <div class="section-title">
+                <h3>调整前后对比</h3>
+              </div>
+              <div id="compareBoard" class="compare-board"></div>
+            </section>
+          </div>
+
+          <aside id="adjustmentDetailPanel" class="order-detail-panel adjustment-detail-panel">
+            <div class="detail-head">
+              <div class="detail-head__top">
+                <span id="detailAdjustmentStatus">待调整</span>
+                <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭计划调整详情">×</button>
+              </div>
+              <h2 id="detailOrderId">MO-202606-0005</h2>
+              <p id="detailProduct">电源控制模块 PCM-60</p>
+            </div>
+
+            <div class="detail-grid" id="detailGrid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>影响评估</h3>
+                <button id="approveAdjustmentBtn" type="button">确认调整</button>
+              </div>
+              <div id="impactList" class="impact-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>会签状态</h3>
+                <button id="confirmCountersignBtn" type="button">会签完成</button>
+              </div>
+              <div id="countersignList" class="countersign-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>调整动作</h3>
+              </div>
+              <div class="action-grid adjustment-actions">
+                <button id="moveEarlierBtn" type="button">提前 1 天</button>
+                <button id="moveLaterBtn" type="button">后移 1 天</button>
+                <button id="splitBatchBtn" type="button">拆分批次</button>
+                <button id="rollbackAdjustBtn" class="danger-action" type="button">退回待调整</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>最近记录</h3>
+              </div>
+              <div id="adjustmentLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./plan-adjustment.js"></script>
+  </body>
+</html>

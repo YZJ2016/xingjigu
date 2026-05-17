@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 生产排程</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./production-orders.css" />
+    <link rel="stylesheet" href="./production-schedule.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="orderModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A / Line-B / Line-C</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main order-main schedule-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">订单与计划 / 生产排程</div>
+            <h1>生产排程工作台</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="autoPlanBtn" class="primary-action" type="button">生成排程建议</button>
+            <button id="resetSchedulePageBtn" class="secondary-action" type="button">重置排程演示</button>
+            <a class="secondary-link" href="./order-reviews.html">订单评审</a>
+            <a class="secondary-link" href="./production-orders.html">生产订单</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">周</span>
+              <span>计划主管</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="order-metrics" aria-label="生产排程统计">
+          <article>
+            <span>待排程</span>
+            <strong id="metricUnplanned">0</strong>
+            <em>评审通过但未确认计划</em>
+          </article>
+          <article>
+            <span>待调整</span>
+            <strong id="metricAdjust">0</strong>
+            <em>交期、物料或设备约束</em>
+          </article>
+          <article>
+            <span>已确认</span>
+            <strong id="metricConfirmed">0</strong>
+            <em>可下发派工和备料</em>
+          </article>
+          <article>
+            <span>瓶颈负荷</span>
+            <strong id="metricBottleneck">0%</strong>
+            <em>老化 / 测试资源最高占用</em>
+          </article>
+        </section>
+
+        <section class="schedule-layout">
+          <div class="schedule-left-panel">
+            <div class="toolbar schedule-toolbar">
+              <div class="search-box">
+                <label for="scheduleSearch">搜索</label>
+                <input id="scheduleSearch" type="search" placeholder="工单号、产品、客户、计划员" />
+              </div>
+              <label>
+                待排状态
+                <select id="scheduleFilter">
+                  <option value="all">全部待排</option>
+                  <option value="未排程">未排程</option>
+                  <option value="待调整">待调整</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="lineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="schedule-board">
+              <section class="candidate-panel">
+                <div class="section-title">
+                  <h3>待排订单</h3>
+                </div>
+                <div id="candidateList" class="candidate-list"></div>
+              </section>
+
+              <section class="timeline-panel">
+                <div class="section-title">
+                  <h3>产线排程甘特图</h3>
+                  <div class="timeline-legend">
+                    <span><i class="legend-plan"></i>建议</span>
+                    <span><i class="legend-risk"></i>待调整</span>
+                    <span><i class="legend-done"></i>已确认</span>
+                  </div>
+                </div>
+                <div id="timelineGrid" class="timeline-grid"></div>
+              </section>
+            </div>
+
+            <section class="confirmed-panel">
+              <div class="section-title">
+                <h3>已确认计划</h3>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="confirmed-table">
+                  <thead>
+                    <tr>
+                      <th>工单号</th>
+                      <th>产品</th>
+                      <th>产线</th>
+                      <th>批次</th>
+                      <th>计划窗口</th>
+                      <th>联动状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="confirmedTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="operation-panel">
+              <div class="section-title">
+                <h3>工序级计划</h3>
+                <button id="confirmPlanBtn" type="button">确认当前排程</button>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="operation-table">
+                  <thead>
+                    <tr>
+                      <th>工序</th>
+                      <th>计划开始</th>
+                      <th>计划结束</th>
+                      <th>资源</th>
+                      <th>数量</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="operationTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside class="order-detail-panel schedule-detail-panel">
+            <div class="detail-head">
+              <span id="detailScheduleStatus">未排程</span>
+              <h2 id="detailOrderId">MO-202606-0001</h2>
+              <p id="detailProduct">智能温控控制器 TCU-100</p>
+            </div>
+
+            <div class="detail-grid" id="detailGrid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>排程策略</h3>
+                <button id="splitBatchBtn" type="button">拆分批次</button>
+              </div>
+              <div id="strategyList" class="strategy-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>资源约束</h3>
+                <button id="resolveConstraintBtn" type="button">标记约束已确认</button>
+              </div>
+              <div id="constraintList" class="constraint-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>联动动作</h3>
+              </div>
+              <div class="action-grid schedule-actions">
+                <button id="markMaterialBtn" type="button">标记缺料</button>
+                <button id="markEquipmentBtn" type="button">标记设备占用</button>
+                <button id="releaseDispatchBtn" type="button">下发派工准备</button>
+                <button id="rollbackPlanBtn" class="danger-action" type="button">退回待调整</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>最近记录</h3>
+              </div>
+              <div id="scheduleLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./production-schedule.js"></script>
+  </body>
+</html>

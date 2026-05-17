@@ -1,0 +1,311 @@
+.schedule-layout {
+  display: grid;
+  grid-template-columns: minmax(820px, 1fr) 410px;
+  gap: 14px;
+  align-items: start;
+}
+
+.candidate-panel,
+.timeline-panel,
+.confirmed-panel,
+.operation-panel {
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+.schedule-left-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.schedule-toolbar {
+  grid-template-columns: minmax(280px, 1fr) 150px 150px;
+  margin-bottom: 0;
+}
+
+.schedule-board {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.candidate-panel,
+.timeline-panel,
+.confirmed-panel,
+.operation-panel {
+  padding: 14px;
+  box-shadow: none;
+}
+
+.candidate-list {
+  display: grid;
+  gap: 9px;
+  max-height: 590px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.candidate-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.64);
+  cursor: pointer;
+}
+
+.candidate-card:hover,
+.candidate-card.is-active {
+  border-color: rgba(0, 122, 255, 0.34);
+  background: rgba(0, 122, 255, 0.08);
+}
+
+.candidate-card__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.candidate-card strong,
+.candidate-card span,
+.candidate-card em {
+  display: block;
+}
+
+.candidate-card strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.candidate-card span {
+  margin-top: 6px;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.candidate-card em {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.timeline-legend {
+  display: flex;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.timeline-legend span {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.timeline-legend i {
+  width: 18px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.legend-plan {
+  background: var(--blue);
+}
+
+.legend-risk {
+  background: var(--orange);
+}
+
+.legend-done {
+  background: var(--green);
+}
+
+.timeline-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  overflow: auto;
+}
+
+.timeline-head,
+.timeline-row {
+  display: grid;
+  grid-template-columns: 82px repeat(7, minmax(112px, 1fr));
+  gap: 8px;
+  min-width: 920px;
+}
+
+.timeline-head {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.timeline-line {
+  display: grid;
+  place-items: center start;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.gantt-lane {
+  grid-column: 2 / -1;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(112px, 1fr));
+  grid-template-rows: repeat(3, 42px);
+  min-height: 142px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 9px;
+  background:
+    repeating-linear-gradient(90deg, rgba(60, 60, 67, 0.08) 0 1px, transparent 1px calc(100% / 7)),
+    rgba(255, 255, 255, 0.54);
+}
+
+.gantt-item {
+  grid-column: var(--start) / span var(--span);
+  grid-row: calc(var(--lane) + 1);
+  min-width: 0;
+  border: 1px solid rgba(0, 122, 255, 0.18);
+  border-radius: 11px;
+  padding: 7px 9px;
+  background: rgba(0, 122, 255, 0.12);
+  color: #0057c2;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gantt-item strong,
+.gantt-item span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gantt-item span {
+  margin-top: 3px;
+  color: rgba(0, 87, 194, 0.72);
+  font-weight: 760;
+}
+
+.gantt-item.is-risk {
+  border-color: rgba(255, 159, 10, 0.24);
+  background: rgba(255, 159, 10, 0.16);
+  color: #9a5d00;
+}
+
+.gantt-item.is-confirmed {
+  border-color: rgba(52, 199, 89, 0.24);
+  background: rgba(52, 199, 89, 0.15);
+  color: #176d31;
+}
+
+.gantt-item.is-active {
+  outline: 2px solid rgba(0, 122, 255, 0.28);
+  outline-offset: 2px;
+}
+
+.operation-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.operation-table {
+  min-width: 820px;
+}
+
+.confirmed-table {
+  min-width: 920px;
+  table-layout: fixed;
+}
+
+.confirmed-table th,
+.confirmed-table td {
+  white-space: nowrap;
+}
+
+.operation-table th,
+.operation-table td {
+  white-space: nowrap;
+}
+
+.strategy-list,
+.constraint-list {
+  display: grid;
+  gap: 8px;
+}
+
+.strategy-list div,
+.constraint-list div {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.strategy-list span,
+.constraint-list span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.strategy-list strong,
+.constraint-list strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.strategy-list em,
+.constraint-list em {
+  color: var(--blue);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.schedule-actions button:nth-child(3),
+.schedule-actions button:nth-child(4) {
+  grid-column: span 2;
+}
+
+.schedule-detail-panel {
+  top: 18px;
+}
+
+@media (max-width: 1380px) {
+  .schedule-layout,
+  .schedule-board {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-detail-panel {
+    position: static;
+  }
+}

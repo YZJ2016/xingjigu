@@ -1,0 +1,244 @@
+.adjustment-layout {
+  display: grid;
+  grid-template-columns: minmax(820px, 1fr) 410px;
+  gap: 14px;
+  align-items: start;
+}
+
+.adjustment-layout.is-detail-closed {
+  grid-template-columns: minmax(820px, 1fr);
+}
+
+.adjustment-left-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.adjustment-toolbar {
+  grid-template-columns: minmax(280px, 1fr) 150px 150px;
+  margin-bottom: 0;
+}
+
+.adjustment-panel {
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 20px;
+  padding: 14px;
+  background: var(--surface);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+.adjustment-panel .section-title button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 12px;
+  background: var(--surface-strong);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.detail-head__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.detail-head__top .icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+.adjustment-table {
+  min-width: 1240px;
+  table-layout: fixed;
+}
+
+.adjustment-table th,
+.adjustment-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adjust-col-order {
+  width: 136px;
+}
+
+.adjust-col-product {
+  width: 255px;
+}
+
+.adjust-col-window {
+  width: 118px;
+}
+
+.adjust-col-reason {
+  width: 78px;
+}
+
+.adjust-col-impact {
+  width: 330px;
+}
+
+.adjust-col-status {
+  width: 92px;
+}
+
+.adjust-col-action {
+  width: 94px;
+}
+
+.adjustment-impact-cell {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.compare-column {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.compare-column h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+.compare-item {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.compare-item span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.compare-item strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.impact-list {
+  display: grid;
+  gap: 8px;
+}
+
+.impact-list div {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.adjustment-detail-panel .countersign-list div {
+  grid-template-columns: 58px minmax(0, 1fr) 64px;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 9px 10px;
+}
+
+.adjustment-detail-panel .countersign-list span {
+  display: inline-flex;
+  min-width: 42px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(88, 86, 214, 0.1);
+  color: #3d3a9f;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.adjustment-detail-panel .countersign-list strong {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.adjustment-detail-panel .countersign-list em {
+  min-width: 54px;
+  border-radius: 999px;
+  padding: 4px 7px;
+  background: rgba(52, 199, 89, 0.12);
+  color: #176d31;
+  font-size: 11px;
+  text-align: center;
+}
+
+.adjustment-detail-panel .countersign-list em.is-pending {
+  background: rgba(255, 159, 10, 0.15);
+  color: #9a5d00;
+}
+
+.impact-list span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.impact-list strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.impact-list em {
+  color: var(--blue);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.adjustment-actions button:nth-child(3),
+.adjustment-actions button:nth-child(4) {
+  grid-column: span 2;
+}
+
+.adjustment-detail-panel {
+  top: 18px;
+}
+
+.adjustment-detail-panel.is-closed {
+  display: none;
+}
+
+@media (max-width: 1380px) {
+  .adjustment-layout,
+  .compare-board {
+    grid-template-columns: 1fr;
+  }
+
+  .adjustment-detail-panel {
+    position: static;
+  }
+}

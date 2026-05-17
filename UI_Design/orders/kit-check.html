@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 齐套检查</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./production-orders.css" />
+    <link rel="stylesheet" href="./production-schedule.css" />
+    <link rel="stylesheet" href="./kit-check.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="orderModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>BOM 需求</span>
+              <span>库存 / 在途 / 替代料</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main order-main kit-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">订单与计划 / 齐套检查</div>
+            <h1>齐套检查工作台</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="batchKitBtn" class="primary-action" type="button">批量确认低风险</button>
+            <button id="resetKitPageBtn" class="secondary-action" type="button">重置齐套演示</button>
+            <a class="secondary-link" href="./production-schedule.html">生产排程</a>
+            <a class="secondary-link" href="./plan-adjustment.html">计划调整</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">吴</span>
+              <span>物料员</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="order-metrics" aria-label="齐套检查统计">
+          <article>
+            <span>待检查</span>
+            <strong id="metricPendingKit">0</strong>
+            <em>未完成物料齐套判断</em>
+          </article>
+          <article>
+            <span>缺料订单</span>
+            <strong id="metricShortage">0</strong>
+            <em>存在关键物料缺口</em>
+          </article>
+          <article>
+            <span>可齐套</span>
+            <strong id="metricReadyKit">0</strong>
+            <em>库存或在途可覆盖需求</em>
+          </article>
+          <article>
+            <span>待替代</span>
+            <strong id="metricSubstitute">0</strong>
+            <em>需确认替代料或拆批</em>
+          </article>
+        </section>
+
+        <section id="kitLayout" class="kit-layout">
+          <div class="kit-left-panel">
+            <div class="toolbar kit-toolbar">
+              <div class="search-box">
+                <label for="kitSearch">搜索</label>
+                <input id="kitSearch" type="search" placeholder="工单号、产品、客户、物料" />
+              </div>
+              <label>
+                齐套状态
+                <select id="kitFilter">
+                  <option value="all">全部状态</option>
+                  <option value="齐套">齐套</option>
+                  <option value="缺料">缺料</option>
+                  <option value="待检查">待检查</option>
+                  <option value="待替代">待替代</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="lineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="kit-panel">
+              <div class="section-title">
+                <h3>订单齐套列表</h3>
+                <button id="openDetailBtn" type="button" hidden>打开详情</button>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="kit-table">
+                  <colgroup>
+                    <col class="kit-col-order" />
+                    <col class="kit-col-product" />
+                    <col class="kit-col-line" />
+                    <col class="kit-col-window" />
+                    <col class="kit-col-status" />
+                    <col class="kit-col-gap" />
+                    <col class="kit-col-owner" />
+                    <col class="kit-col-action" />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>工单号</th>
+                      <th>产品</th>
+                      <th>产线</th>
+                      <th>计划窗口</th>
+                      <th>齐套状态</th>
+                      <th>缺口</th>
+                      <th>责任人</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="kitTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="kit-panel">
+              <div class="section-title">
+                <h3>缺料清单</h3>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="material-table">
+                  <thead>
+                    <tr>
+                      <th>物料</th>
+                      <th>需求</th>
+                      <th>可用</th>
+                      <th>在途</th>
+                      <th>缺口</th>
+                      <th>到货承诺</th>
+                      <th>建议</th>
+                    </tr>
+                  </thead>
+                  <tbody id="materialTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside id="kitDetailPanel" class="order-detail-panel kit-detail-panel">
+            <div class="detail-head">
+              <div class="detail-head__top">
+                <span id="detailKitStatus">缺料</span>
+                <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭齐套检查详情">×</button>
+              </div>
+              <h2 id="detailOrderId">MO-202606-0005</h2>
+              <p id="detailProduct">电源控制模块 PCM-60</p>
+            </div>
+
+            <div class="detail-grid" id="detailGrid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>BOM 齐套明细</h3>
+                <button id="confirmKitBtn" type="button">确认齐套</button>
+              </div>
+              <div id="bomList" class="bom-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>补料与替代</h3>
+                <button id="applySubstituteBtn" type="button">启用替代料</button>
+              </div>
+              <div id="supplyList" class="supply-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>联动动作</h3>
+              </div>
+              <div class="action-grid kit-actions">
+                <button id="splitBatchBtn" type="button">建议拆批</button>
+                <button id="escalateBuyerBtn" type="button">催采购</button>
+                <button id="lockMaterialBtn" type="button">锁定库存</button>
+                <button id="releaseScheduleBtn" type="button">放行排程</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>最近记录</h3>
+              </div>
+              <div id="kitLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./kit-check.js"></script>
+  </body>
+</html>

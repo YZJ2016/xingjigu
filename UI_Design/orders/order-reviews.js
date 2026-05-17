@@ -78,6 +78,11 @@ function renderFrameMenu() {
       if (moduleId === "workbench") window.location.href = "../index.html";
       else if (moduleId === "orders" && entry === "生产订单") window.location.href = "./production-orders.html";
       else if (moduleId === "orders" && entry === "订单评审") window.location.href = "./order-reviews.html";
+      else if (moduleId === "orders" && entry === "生产排程") window.location.href = "./production-schedule.html";
+      else if (moduleId === "orders" && entry === "产能负荷") window.location.href = "./capacity-load.html";
+      else if (moduleId === "orders" && entry === "交期预警") window.location.href = "./delivery-warning.html";
+      else if (moduleId === "orders" && entry === "计划调整") window.location.href = "./plan-adjustment.html";
+      else if (moduleId === "orders" && entry === "齐套检查") window.location.href = "./kit-check.html";
       else showToast(`${entry} 页面待建设`);
     });
   });

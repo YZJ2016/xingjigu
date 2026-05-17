@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 产能负荷</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./production-orders.css" />
+    <link rel="stylesheet" href="./production-schedule.css" />
+    <link rel="stylesheet" href="./capacity-load.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="orderModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>产线 / 关键资源</span>
+              <span>7 天滚动负荷</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main order-main capacity-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">订单与计划 / 产能负荷</div>
+            <h1>产能负荷分析</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="balanceBtn" class="primary-action" type="button">生成均衡建议</button>
+            <button id="resetCapacityPageBtn" class="secondary-action" type="button">重置负荷演示</button>
+            <a class="secondary-link" href="./production-schedule.html">生产排程</a>
+            <a class="secondary-link" href="./production-orders.html">生产订单</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">李</span>
+              <span>计划员</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="order-metrics" aria-label="产能负荷统计">
+          <article>
+            <span>平均负荷</span>
+            <strong id="metricAvgLoad">0%</strong>
+            <em>已评审订单占用产能</em>
+          </article>
+          <article>
+            <span>超载资源</span>
+            <strong id="metricOverload">0</strong>
+            <em>超过标准可用产能</em>
+          </article>
+          <article>
+            <span>瓶颈资源</span>
+            <strong id="metricBottleneck">-</strong>
+            <em>最高负荷产线或工位</em>
+          </article>
+          <article>
+            <span>可释放产能</span>
+            <strong id="metricSlack">0h</strong>
+            <em>低负荷资源剩余能力</em>
+          </article>
+        </section>
+
+        <section class="capacity-layout">
+          <div class="capacity-left-panel">
+            <div class="toolbar capacity-toolbar">
+              <div class="search-box">
+                <label for="capacitySearch">搜索</label>
+                <input id="capacitySearch" type="search" placeholder="工单号、产品、客户、资源" />
+              </div>
+              <label>
+                资源类型
+                <select id="resourceFilter">
+                  <option value="all">全部资源</option>
+                  <option value="line">产线</option>
+                  <option value="bottleneck">关键资源</option>
+                </select>
+              </label>
+              <label>
+                负荷状态
+                <select id="loadFilter">
+                  <option value="all">全部负荷</option>
+                  <option value="over">超载</option>
+                  <option value="tight">偏紧</option>
+                  <option value="normal">正常</option>
+                  <option value="idle">富余</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="capacity-panel">
+              <div class="section-title">
+                <h3>7 天资源负荷矩阵</h3>
+              </div>
+              <div id="loadMatrix" class="load-matrix"></div>
+            </section>
+
+            <section class="capacity-panel">
+              <div class="section-title">
+                <h3>订单占用明细</h3>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="capacity-table">
+                  <thead>
+                    <tr>
+                      <th>工单号</th>
+                      <th>产品</th>
+                      <th>资源</th>
+                      <th>计划窗口</th>
+                      <th>占用工时</th>
+                      <th>负荷影响</th>
+                    </tr>
+                  </thead>
+                  <tbody id="loadOrderBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside class="order-detail-panel capacity-detail-panel">
+            <div class="detail-head">
+              <span id="detailResourceType">产线</span>
+              <h2 id="detailResourceName">Line-A</h2>
+              <p id="detailResourceMeta">7 天可用产能与订单占用</p>
+            </div>
+
+            <div class="detail-grid" id="detailGrid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>每日负荷</h3>
+                <button id="focusOverloadBtn" type="button">定位超载</button>
+              </div>
+              <div id="dailyLoadList" class="daily-load-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>产能约束</h3>
+              </div>
+              <div id="constraintList" class="constraint-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>均衡建议</h3>
+              </div>
+              <div id="suggestionList" class="suggestion-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./capacity-load.js"></script>
+  </body>
+</html>

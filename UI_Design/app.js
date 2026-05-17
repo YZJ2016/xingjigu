@@ -200,6 +200,26 @@ function applyMenuEntry(moduleId, entry) {
     window.location.href = "./orders/order-reviews.html";
     return;
   }
+  if (moduleId === "orders" && entry === "生产排程") {
+    window.location.href = "./orders/production-schedule.html";
+    return;
+  }
+  if (moduleId === "orders" && entry === "产能负荷") {
+    window.location.href = "./orders/capacity-load.html";
+    return;
+  }
+  if (moduleId === "orders" && entry === "交期预警") {
+    window.location.href = "./orders/delivery-warning.html";
+    return;
+  }
+  if (moduleId === "orders" && entry === "计划调整") {
+    window.location.href = "./orders/plan-adjustment.html";
+    return;
+  }
+  if (moduleId === "orders" && entry === "齐套检查") {
+    window.location.href = "./orders/kit-check.html";
+    return;
+  }
   const actions = {
     生产总览: () => {
       state.line = "全部产线";
