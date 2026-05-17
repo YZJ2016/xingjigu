@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 首页工作台</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="moduleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">多订单生产运行</div>
+            <h1>生产首页工作台</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="searchToggle" class="icon-button" aria-label="搜索">⌕</button>
+            <button id="messageToggle" class="icon-button" aria-label="消息">◌</button>
+            <button id="newExceptionBtn" class="primary-action">新建异常</button>
+            <button id="resetDemoBtn" class="secondary-action">重置演示</button>
+            <div class="user-chip">
+              <span class="avatar">陈</span>
+              <span>生产经理</span>
+            </div>
+          </div>
+        </header>
+
+        <section id="searchPanel" class="search-panel" hidden>
+          <label for="globalSearch">全局搜索</label>
+          <input id="globalSearch" type="search" placeholder="搜索工单、派工单、物料批次、设备、异常..." />
+          <div id="searchResults" class="search-results"></div>
+        </section>
+
+        <section class="hero-panel">
+          <div class="hero-copy">
+            <div id="statusLine" class="status-line">
+              <span class="status-dot status-dot--green"></span>
+              3 条产线 · 6 个订单运行中
+            </div>
+            <h2>多产品、多订单、多产线的实时生产总控</h2>
+            <div id="heroSummary" class="hero-summary" aria-label="生产运行摘要"></div>
+            <div class="hero-quick-actions">
+              <button type="button" data-hero-action="urgent">查看紧急订单</button>
+              <button type="button" data-hero-action="risk">处理未关闭风险</button>
+              <button type="button" data-hero-action="line">切换繁忙产线</button>
+            </div>
+            <div class="hero-global-controls">
+              <select id="lineSelect" aria-label="选择产线">
+                <option>全部产线</option>
+                <option>Line-A</option>
+                <option>Line-B</option>
+                <option>Line-C</option>
+              </select>
+              <select id="shiftSelect" aria-label="选择班次">
+                <option>白班</option>
+                <option>夜班</option>
+              </select>
+              <button id="refreshDataBtn" class="secondary-action">刷新数据</button>
+            </div>
+          </div>
+          <div class="hero-order">
+            <div class="hero-order__label">当前关注订单</div>
+            <div class="hero-order__top">
+              <span id="orderNo">MO-202606-0001</span>
+              <strong id="orderStatus">已下达</strong>
+            </div>
+            <div id="orderProduct" class="hero-order__product">智能温控控制器 TCU-100</div>
+            <div class="progress-track">
+              <span id="orderProgressBar" style="width: 43%"></span>
+            </div>
+            <div id="orderMeta" class="hero-order__meta">
+              <span>计划 1,000 台</span>
+              <span>完成 428 台</span>
+              <span>交期 2026-06-30</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="kpi-grid" aria-label="关键运营指标">
+          <article class="kpi-card" data-kpi="output" role="button" tabindex="0">
+            <div class="kpi-card__label">今日产量</div>
+            <div id="kpiOutput" class="kpi-card__value">428</div>
+            <div class="kpi-card__hint positive">较计划 +3.2%</div>
+          </article>
+          <article class="kpi-card" data-kpi="quality" role="button" tabindex="0">
+            <div class="kpi-card__label">良品率</div>
+            <div id="kpiQuality" class="kpi-card__value">98.7%</div>
+            <div class="kpi-card__hint positive">FQC 通过率 99.1%</div>
+          </article>
+          <article class="kpi-card" data-kpi="equipment" role="button" tabindex="0">
+            <div class="kpi-card__label">设备 OEE</div>
+            <div id="kpiOee" class="kpi-card__value">86.4%</div>
+            <div class="kpi-card__hint warning">老化房等待 18 分钟</div>
+          </article>
+          <article class="kpi-card" data-kpi="risk" role="button" tabindex="0">
+            <div class="kpi-card__label">异常待闭环</div>
+            <div id="kpiRisks" class="kpi-card__value">6</div>
+            <div class="kpi-card__hint danger">2 项超过 SLA</div>
+          </article>
+        </section>
+
+        <section id="contextPanel" class="context-panel">
+          <div>
+            <span class="context-panel__label">当前关注</span>
+            <strong id="contextTitle">生产总览</strong>
+            <p id="contextText">点击 KPI、流程节点、现场任务或风险项，可在这里切换工作上下文。</p>
+          </div>
+          <button id="clearContextBtn" class="text-button">重置</button>
+        </section>
+
+        <section class="content-grid">
+          <div class="content-column">
+            <article class="panel panel--wide">
+              <div class="panel-header">
+                <div>
+                  <h3>生产订单池</h3>
+                  <p>多产品订单并行运行，点击订单切换工作上下文</p>
+                </div>
+                <div class="panel-actions">
+                  <button id="showAllOrdersBtn" class="text-button">全部产线</button>
+                  <button id="toggleOrderPoolBtn" class="text-button">展开</button>
+                </div>
+              </div>
+              <div id="orderPool" class="order-pool"></div>
+            </article>
+
+            <article class="panel panel--wide">
+              <div class="panel-header">
+                <div>
+                  <h3>当前选中订单进度</h3>
+                  <p id="flowSubtitle">从订单接收到成品入库的关键节点</p>
+                </div>
+                <button class="text-button">查看追溯</button>
+              </div>
+              <div id="flowTimeline" class="flow-timeline"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>现场执行</h3>
+                  <p id="operationSubtitle">Line-A 工序级状态</p>
+                </div>
+              </div>
+              <div id="operationList" class="operation-list"></div>
+            </article>
+
+            <article class="panel panel--wide">
+              <div class="panel-header">
+                <div>
+                  <h3>常用业务入口</h3>
+                  <p>按工厂人员的日常工作方式组织菜单</p>
+                </div>
+                <button class="text-button">入口管理</button>
+              </div>
+              <div id="submenuPreview" class="submenu-preview"></div>
+            </article>
+          </div>
+
+          <div class="content-column">
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>产线负荷</h3>
+                  <p>按产线查看当前任务压力</p>
+                </div>
+              </div>
+              <div id="lineLoad" class="load-list"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>产品分布</h3>
+                  <p>当前在制产品与完成进度</p>
+                </div>
+              </div>
+              <div id="productMix" class="mix-grid"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>风险中心</h3>
+                  <p>异常、质量、设备、缺料统一待办</p>
+                </div>
+                <button id="showAllRisksBtn" class="text-button">全部</button>
+              </div>
+              <div id="riskList" class="risk-list"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>我的待办</h3>
+                  <p>可直接勾选完成</p>
+                </div>
+              </div>
+              <div id="todoList" class="todo-list"></div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <aside id="drawer" class="drawer" aria-live="polite" hidden>
+      <div class="drawer__header">
+        <div>
+          <span id="drawerLabel" class="drawer__label">详情</span>
+          <h3 id="drawerTitle">详情</h3>
+        </div>
+        <button id="drawerClose" class="icon-button" aria-label="关闭">×</button>
+      </div>
+      <div id="drawerBody" class="drawer__body"></div>
+    </aside>
+
+    <div id="modalBackdrop" class="modal-backdrop" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal__header">
+          <h3 id="modalTitle">新建异常</h3>
+          <button id="modalClose" class="icon-button" aria-label="关闭">×</button>
+        </div>
+        <form id="exceptionForm" class="form-grid">
+          <label>
+            异常类型
+            <select id="exceptionType">
+              <option>设备</option>
+              <option>质量</option>
+              <option>缺料</option>
+              <option>单据</option>
+            </select>
+          </label>
+          <label>
+            影响工序
+            <select id="exceptionStep">
+              <option>SMT 贴片</option>
+              <option>DIP 插件</option>
+              <option>程序烧录</option>
+              <option>功能测试</option>
+            </select>
+          </label>
+          <label class="form-grid__wide">
+            异常说明
+            <textarea id="exceptionDesc" rows="4" placeholder="描述现场情况、影响范围和已采取动作"></textarea>
+          </label>
+          <div class="modal__actions">
+            <button type="button" id="modalCancel" class="secondary-action">取消</button>
+            <button type="submit" class="primary-action">提交异常</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

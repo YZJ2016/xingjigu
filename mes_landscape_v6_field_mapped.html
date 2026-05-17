@@ -1,0 +1,686 @@
+
+<style>
+*{box-sizing:border-box;}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+.wrap{font-size:13px;padding:4px 0 16px;}
+.top-bar{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.top-title{font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.sys-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center;}
+.sys-badge{font-size:11px;padding:2px 9px;border-radius:4px;font-weight:500;}
+.module{border-radius:10px;margin-bottom:7px;border:0.5px solid;overflow:hidden;}
+.mod-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none;}
+.mod-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;color:#fff;}
+.mod-title{font-size:13px;font-weight:500;flex:1;min-width:150px;line-height:1.35;}
+.mod-tag{font-size:11px;opacity:.7;line-height:1.35;text-align:right;}
+.mod-arr{font-size:11px;transition:transform .25s;flex-shrink:0;}
+.mod-body{display:none;padding:0 14px 14px;}
+.mod-body.open{display:block;}
+.tab-row{display:flex;gap:0;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:10px;flex-wrap:wrap;}
+.tab{padding:7px 13px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--color-text-secondary);margin-bottom:-0.5px;white-space:nowrap;}
+.tab.active{color:var(--color-text-primary);font-weight:500;border-bottom-color:currentColor;}
+.panel{display:none;}.panel.active{display:block;}
+.sub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:7px;}
+.sub-card{border-radius:6px;padding:8px 10px;border:0.5px solid;}
+.sub-name{font-size:12px;font-weight:500;margin:0 0 3px;}
+.sub-desc{font-size:11px;margin:0;line-height:1.55;}
+.flow-wrap{overflow-x:auto;}
+.flow-sep{text-align:center;color:var(--color-text-tertiary);font-size:12px;margin:3px 0;}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-tertiary);}
+.legend-dot{width:10px;height:10px;border-radius:2px;}
+/* data flow */
+.io-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.io-panel{border-radius:7px;padding:9px 11px;border:0.5px solid;}
+.io-title{font-size:11px;font-weight:500;margin:0 0 6px;display:flex;align-items:center;gap:4px;}
+.io-group-label{font-size:10px;font-weight:500;opacity:.65;margin:6px 0 3px;}
+.io-tag{font-size:10px;padding:2px 7px;border-radius:3px;display:inline-block;margin:2px 2px 2px 0;line-height:1.4;}
+.io-divider{border:none;border-top:0.5px dashed var(--color-border-secondary);margin:10px 0 8px;}
+.field-map-title{font-size:10px;font-weight:500;color:var(--color-text-tertiary);margin:0 0 6px;letter-spacing:.3px;}
+.fmap-group{margin-bottom:8px;}
+.fmap-group-label{font-size:10px;font-weight:500;margin:0 0 3px;opacity:.75;}
+.fmap-row{display:flex;align-items:baseline;gap:6px;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:10px;flex-wrap:wrap;}
+.fmap-row:last-child{border-bottom:none;}
+.fmap-item{color:var(--color-text-secondary);min-width:140px;flex-shrink:0;}
+.fmap-arrow{color:var(--color-text-tertiary);flex-shrink:0;}
+.fmap-field{font-family:var(--font-mono);font-size:10px;color:var(--color-text-primary);overflow-wrap:anywhere;}
+.fmap-table{font-size:10px;color:var(--color-text-tertiary);flex-shrink:0;}
+/* db table */
+.db-search{padding:5px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:11px;background:var(--color-background-primary);color:var(--color-text-primary);width:100%;margin-bottom:8px;}
+.tbl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:8px;}
+.tbl-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;}
+.tbl-hdr{padding:8px 11px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.tbl-name{font-size:12px;font-weight:500;flex:1;color:var(--color-text-primary);font-family:var(--font-mono);}
+.tbl-label{font-size:11px;color:var(--color-text-tertiary);}
+.tbl-arr{font-size:10px;transition:transform .2s;color:var(--color-text-tertiary);}
+.tbl-body{display:none;border-top:0.5px solid var(--color-border-tertiary);}
+.tbl-body.open{display:block;}
+.tbl-desc-row{padding:4px 11px 5px;font-size:11px;color:var(--color-text-tertiary);border-bottom:0.5px solid var(--color-border-tertiary);}
+.field-row{display:flex;align-items:baseline;gap:5px;padding:4px 11px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;flex-wrap:wrap;}
+.field-row:last-child{border-bottom:none;}
+.fn{font-family:var(--font-mono);font-size:10px;color:var(--color-text-primary);min-width:145px;flex-shrink:0;}
+.fn.pk{color:#0F6E56;}.fn.fk{color:#534AB7;}
+.type-b{font-size:10px;padding:1px 4px;border-radius:3px;background:var(--color-background-secondary);color:var(--color-text-secondary);flex-shrink:0;font-family:var(--font-mono);}
+.fd{font-size:10px;color:var(--color-text-tertiary);flex:1;line-height:1.4;min-width:120px;overflow-wrap:anywhere;}
+.flag{font-size:9px;padding:1px 3px;border-radius:2px;margin-right:1px;}
+.flag-pk{background:#E1F5EE;color:#085041;}
+.flag-fk{background:#EEEDFE;color:#3C3489;}
+.flag-idx{background:#F1EFE8;color:#5F5E5A;}
+.rel-sec{padding:6px 11px;border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);}
+.rel-t{font-size:10px;font-weight:500;color:var(--color-text-secondary);margin:0 0 3px;}
+.rel-chip{display:inline-flex;align-items:center;font-size:10px;padding:1px 7px;border-radius:10px;margin:2px;border:0.5px solid;}
+.ext-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.ext-card{border-radius:8px;padding:9px 12px;border:0.5px solid;}
+.ext-title{font-size:12px;font-weight:500;margin:0 0 5px;}
+.ext-item{font-size:11px;margin:2px 2px 2px 0;padding:1px 6px;border-radius:3px;display:inline-block;}
+.sec-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);margin:8px 0 4px;letter-spacing:.4px;}
+@media (max-width:720px){
+  .io-grid,.ext-row{grid-template-columns:1fr;}
+  .mod-hdr{align-items:flex-start;flex-wrap:wrap;}
+  .mod-tag{width:100%;padding-left:30px;text-align:left;}
+}
+</style>
+
+<h2 class="sr-only">MES 全景图 V6：四 Tab 视图，数据流 Tab 新增表字段映射</h2>
+<div class="wrap">
+<div class="top-bar">
+  <span class="top-title">MES 全景图（流程图 · 子功能 · 数据流+字段映射 · 数据库表）</span>
+  <div style="display:flex;gap:6px;">
+    <button onclick="expandAll()" style="font-size:11px;color:var(--color-text-secondary);">全部展开</button>
+    <button onclick="collapseAll()" style="font-size:11px;color:var(--color-text-secondary);">全部收起</button>
+  </div>
+</div>
+<div class="sys-row">
+  <span class="sys-badge" style="background:#EEEDFE;color:#3C3489;">ERP 订单</span>
+  <span style="font-size:11px;color:var(--color-text-tertiary);">→</span>
+  <span class="sys-badge" style="background:#EEEDFE;color:#3C3489;">PLM 工艺 BOM</span>
+  <span style="font-size:11px;color:var(--color-text-tertiary);">→ MES →</span>
+  <span class="sys-badge" style="background:#E1F5EE;color:#085041;">WMS</span>
+  <span class="sys-badge" style="background:#E1F5EE;color:#085041;">SCADA/PLC</span>
+  <span class="sys-badge" style="background:#E1F5EE;color:#085041;">BI 平台</span>
+</div>
+<p class="sec-label">▸ 上游系统输入数据</p>
+<div class="ext-row">
+  <div class="ext-card" style="background:#EEEDFE;border-color:#AFA9EC;">
+    <p class="ext-title" style="color:#3C3489;">ERP / 计划系统 → MES</p>
+    <span class="ext-item" style="background:#CECBF6;color:#26215C;">生产订单（工单·产品·数量·交期）</span>
+    <span class="ext-item" style="background:#CECBF6;color:#26215C;">客户优先级</span>
+    <span class="ext-item" style="background:#CECBF6;color:#26215C;">物料主数据</span>
+    <span class="ext-item" style="background:#CECBF6;color:#26215C;">库存水位·安全库存</span>
+    <span class="ext-item" style="background:#CECBF6;color:#26215C;">采购到货计划</span>
+  </div>
+  <div class="ext-card" style="background:#EEEDFE;border-color:#AFA9EC;">
+    <p class="ext-title" style="color:#3C3489;">PLM / 工艺系统 → MES</p>
+    <span class="ext-item" style="background:#CECBF6;color:#26215C;">BOM（用量·替代料）</span>
+    <span class="ext-item" style="background:#CECBF6;color:#26215C;">工艺路线（工序·设备·标准工时）</span>
+    <span class="ext-item" style="background:#CECBF6;color:#26215C;">工艺参数规格（上下限）</span>
+    <span class="ext-item" style="background:#CECBF6;color:#26215C;">电子 SOP</span>
+    <span class="ext-item" style="background:#CECBF6;color:#26215C;">检验规范·AQL 方案</span>
+  </div>
+</div>
+<p class="sec-label">▸ MES 核心模块</p>
+<div id="mods"></div>
+<p class="sec-label">▸ 下游系统输出数据</p>
+<div class="ext-row">
+  <div class="ext-card" style="background:#E1F5EE;border-color:#5DCAA5;">
+    <p class="ext-title" style="color:#085041;">MES → ERP 回传</p>
+    <span class="ext-item" style="background:#9FE1CB;color:#04342C;">工单完工确认（实际产量·完工时间）</span>
+    <span class="ext-item" style="background:#9FE1CB;color:#04342C;">实际用料量（触发成本核算）</span>
+    <span class="ext-item" style="background:#9FE1CB;color:#04342C;">实际工时（触发工资核算）</span>
+    <span class="ext-item" style="background:#9FE1CB;color:#04342C;">库存变动</span>
+    <span class="ext-item" style="background:#9FE1CB;color:#04342C;">工单状态关闭</span>
+  </div>
+  <div class="ext-card" style="background:#E1F5EE;border-color:#5DCAA5;">
+    <p class="ext-title" style="color:#085041;">MES → 其他系统</p>
+    <span class="ext-item" style="background:#9FE1CB;color:#04342C;">→ WMS：成品入库指令·库位·出货清单</span>
+    <span class="ext-item" style="background:#9FE1CB;color:#04342C;">→ SCADA：设备参数指令·报警响应</span>
+    <span class="ext-item" style="background:#9FE1CB;color:#04342C;">→ BI：OEE·良品率·交付达成·成本</span>
+    <span class="ext-item" style="background:#9FE1CB;color:#04342C;">→ 客户：批次追溯档案·质量证书</span>
+  </div>
+</div>
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#7F77DD;"></div>计划类</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1D9E75;"></div>执行类</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#D85A30;"></div>管控类</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#888780;"></div>追溯分析</div>
+  <div class="legend-item"><span style="font-family:var(--font-mono);font-size:10px;color:#0F6E56;font-weight:500;">PK</span><span style="font-size:11px;color:var(--color-text-tertiary);">主键</span></div>
+  <div class="legend-item"><span style="font-family:var(--font-mono);font-size:10px;color:#534AB7;font-weight:500;">FK</span><span style="font-size:11px;color:var(--color-text-tertiary);">外键</span></div>
+  <div class="legend-item"><span style="font-size:10px;background:#F1EFE8;color:#5F5E5A;padding:1px 3px;border-radius:2px;">IDX</span><span style="font-size:11px;color:var(--color-text-tertiary);">索引</span></div>
+</div>
+</div>
+
+<script>
+var AD='<defs><marker id="ARR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
+function escSvg(s){return String(s).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]);});}
+function textWidth(s,fs){var w=0;String(s).split('').forEach(function(ch){w+=/[\u4e00-\u9fa5]/.test(ch)?fs:fs*0.58;});return w;}
+function fitText(s,fs,fw,fill,x,y,maxW){var txt=escSvg(s),attrs='font-size="'+fs+'" fill="'+fill+'" x="'+x+'" y="'+y+'" text-anchor="middle" dominant-baseline="central"';if(fw)attrs+=' font-weight="'+fw+'"';if(maxW&&textWidth(s,fs)>maxW){attrs+=' textLength="'+Math.max(20,maxW).toFixed(1)+'" lengthAdjust="spacingAndGlyphs"';}return'<text '+attrs+'>'+txt+'</text>';}
+function box(x,y,w,h,f,s,t,b,tc,sc){var mx=x+w/2,ty=y+h/2-(b?8:0),sy=y+h/2+10,maxW=w-12;var t2=b?fitText(b,10,null,sc,mx,sy,maxW):'';return'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="'+f+'" stroke="'+s+'" stroke-width="0.5"/>'+fitText(t,11,500,tc,mx,ty,maxW)+t2;}
+function hl(x1,y,x2,c){return'<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="'+c+'" stroke-width="1" marker-end="url(#ARR)"/>';}
+function vl(x,y1,y2,c){return'<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="'+c+'" stroke-width="0.8" marker-end="url(#ARR)"/>';}
+function dl(x,y1,y2,c){return'<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="'+c+'" stroke-width="0.8" stroke-dasharray="3 2"/>';}
+function db(x,y,w,h,f,s,t,b,tc,sc){var mx=x+w/2,ty=y+h/2-(b?8:0),sy=y+h/2+10,maxW=w-12;var t2=b?fitText(b,10,null,sc,mx,sy,maxW):'';return'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="'+f+'" stroke="'+s+'" stroke-width="0.5" stroke-dasharray="4 3"/>'+fitText(t,11,500,tc,mx,ty,maxW)+t2;}
+
+// Render field mapping rows
+function fmapRows(maps){
+  var h='';
+  maps.forEach(function(g){
+    h+='<div class="fmap-group">';
+    h+='<p class="fmap-group-label">'+g.label+'</p>';
+    g.rows.forEach(function(r){
+      h+='<div class="fmap-row">'
+        +'<span class="fmap-item">'+r.item+'</span>'
+        +'<span class="fmap-arrow">→</span>'
+        +'<span class="fmap-table">['+r.tbl+']</span>'
+        +'<span class="fmap-field">.'+r.field+'</span>'
+        +'</div>';
+    });
+    h+='</div>';
+  });
+  return h;
+}
+
+function buildDF(n){
+  var lb='rgba(255,255,255,0.55)',bc=n.border,tc=n.tc;
+  var ih='',oh='';
+  n.inputs.forEach(function(g){ih+='<p class="io-group-label" style="color:'+tc+';">'+g.cat+'</p>';g.tags.forEach(function(t){ih+='<span class="io-tag" style="background:rgba(255,255,255,0.7);color:'+tc+';">'+t+'</span>';});});
+  n.outputs.forEach(function(g){oh+='<p class="io-group-label" style="color:'+tc+';">'+g.cat+'</p>';g.tags.forEach(function(t){oh+='<span class="io-tag" style="background:rgba(255,255,255,0.7);color:'+tc+';">'+t+'</span>';});});
+  var imapH=n.input_maps?'<hr class="io-divider"><p class="field-map-title">▸ 数据项 → 表.字段 映射</p>'+fmapRows(n.input_maps):'';
+  var omapH=n.output_maps?'<hr class="io-divider"><p class="field-map-title">▸ 数据项 → 表.字段 映射</p>'+fmapRows(n.output_maps):'';
+  var ti=n.inputs.reduce(function(s,g){return s+g.tags.length;},0);
+  var to=n.outputs.reduce(function(s,g){return s+g.tags.length;},0);
+  return'<div class="io-grid">'
+    +'<div class="io-panel" style="background:'+lb+';border-color:'+bc+';"><p class="io-title" style="color:'+tc+';">← 输入数据 <span style="font-weight:400;opacity:.6;">('+ti+' 项)</span></p>'+ih+imapH+'</div>'
+    +'<div class="io-panel" style="background:'+lb+';border-color:'+bc+';"><p class="io-title" style="color:'+tc+';">→ 输出数据 <span style="font-weight:400;opacity:.6;">('+to+' 项)</span></p>'+oh+omapH+'</div>'
+    +'</div>';
+}
+
+function buildDB(n){
+  var mc=n.color;
+  var html='<input class="db-search" placeholder="搜索表名或字段…" oninput="filterDB(this,\'dbc-'+n._idx+'\')" />';
+  html+='<div class="tbl-grid" id="dbc-'+n._idx+'">';
+  n.tables.forEach(function(tbl,ti){
+    var key='tbl-'+n._idx+'-'+ti;
+    html+='<div class="tbl-card"><div class="tbl-hdr" onclick="toggleTbl(\''+key+'\')" style="border-left:3px solid '+mc+';">';
+    html+='<span><span class="tbl-name">'+tbl.name+'</span> <span class="tbl-label">'+tbl.label+'</span></span>';
+    html+='<span style="font-size:10px;color:var(--color-text-tertiary);margin-left:4px;">'+tbl.fields.length+'字段</span>';
+    html+='<span class="tbl-arr" id="arr-'+key+'">▾</span></div>';
+    html+='<div class="tbl-body" id="'+key+'">';
+    if(tbl.desc)html+='<div class="tbl-desc-row">'+tbl.desc+'</div>';
+    tbl.fields.forEach(function(f){
+      html+='<div class="field-row"><span class="fn'+(f.pk?' pk':f.fk?' fk':'')+'">'+(f.pk?'<span class="flag flag-pk">PK</span>':'')+(f.fk?'<span class="flag flag-fk">FK</span>':'')+(f.idx&&!f.pk?'<span class="flag flag-idx">IDX</span>':'')+f.n+'</span>';
+      html+='<span class="type-b">'+f.t+'</span><span class="fd">'+f.desc+(f.fk?' → '+f.fk:'')+'</span></div>';
+    });
+    if(tbl.rels&&tbl.rels.length){html+='<div class="rel-sec"><p class="rel-t">关联关系</p>';tbl.rels.forEach(function(r){html+='<span class="rel-chip" style="border-color:'+mc+';color:'+mc+';">'+r+'</span>';});html+='</div>';}
+    html+='</div></div>';
+  });
+  html+='</div>';return html;
+}
+
+function filterDB(inp,cid){var q=inp.value.toLowerCase().trim();var c=document.getElementById(cid);if(!c)return;c.querySelectorAll('.tbl-card').forEach(function(card){card.style.display=(!q||card.innerText.toLowerCase().includes(q))?'':'none';});}
+function toggleTbl(key){var el=document.getElementById(key),a=document.getElementById('arr-'+key);if(!el)return;var o=el.classList.toggle('open');if(a)a.style.transform=o?'rotate(180deg)':'';}
+function switchTab(mi,tab){['flow','subs','data','dbtab'].forEach(function(t){var el=document.getElementById('panel-'+mi+'-'+t),tb=document.getElementById('tab-'+mi+'-'+t);if(el)el.classList.toggle('active',t===tab);if(tb)tb.classList.toggle('active',t===tab);});}
+function toggle(i){var b=document.getElementById('body-'+i),a=document.getElementById('arr-'+i);var o=b.classList.contains('open');b.classList.toggle('open',!o);a.style.transform=o?'':'rotate(180deg)';}
+function expandAll(){M.forEach(function(_,i){document.getElementById('body-'+i).classList.add('open');document.getElementById('arr-'+i).style.transform='rotate(180deg)';});}
+function collapseAll(){M.forEach(function(_,i){document.getElementById('body-'+i).classList.remove('open');document.getElementById('arr-'+i).style.transform='';});}
+
+var M=[
+// ① APS
+{num:"①",title:"计划排程（APS）",tag:"订单分解·产能约束·优先级调度",color:"#7F77DD",bg:"#EEEDFE",border:"#AFA9EC",tc:"#3C3489",
+subs:[{n:"订单分解与优先级",d:"ERP 订单按 BOM 展开至工序级，依交期/优先级自动计算权重队列"},{n:"有限产能排程（CRP）",d:"同步考虑设备可用窗口、班次、工装数量，超产能自动后推预警"},{n:"多目标优化算法",d:"同时优化设备利用率、最小换型、交期达成、WIP，支持遗传算法/CP"},{n:"What-if 模拟",d:"沙盒对比插单/停机等多方案 KPI，决策前先模拟"},{n:"动态重排",d:"车间实绩回传触发秒级重排，新排程自动推送工位"},{n:"物料需求联动",d:"排程后反向推算各工序物料需求时间点，驱动备料和采购预警"},{n:"甘特图交互",d:"计划员拖拽调整，实时检测冲突，人工锁定不被自动覆盖"},{n:"交期承诺（CTP）",d:"销售报价时实时查询产能，给出精确最早可交货日期"}],
+inputs:[{cat:"来自 ERP",tags:["生产订单（工单·产品·数量·交期·优先级）","物料主数据","库存水位·安全库存","采购到货计划"]},{cat:"来自 PLM",tags:["工艺路线（工序·设备·标准工时）","BOM（用量·替代料）"]},{cat:"来自 MES 内部",tags:["设备产能日历（维保窗口·班次·OEE 历史）","实际工时反馈","物料在途·在制数量"]}],
+outputs:[{cat:"→ 派工模块",tags:["工序级排程表（工单×工序×设备×时间）","派工优先级队列","资源占用时间窗口"]},{cat:"→ 物料模块",tags:["物料需求时间计划","缺料预警清单"]},{cat:"→ ERP",tags:["交期承诺 CTP","产能瓶颈预警"]},{cat:"→ 展示层",tags:["甘特图排程可视化","产能负荷分析报表"]}],
+input_maps:[
+  {label:"来自 ERP",rows:[
+    {item:"生产订单工单号",tbl:"production_order",field:"order_no, erp_order_ref"},
+    {item:"计划数量",tbl:"production_order",field:"planned_qty"},
+    {item:"交期",tbl:"production_order",field:"due_date"},
+    {item:"客户优先级",tbl:"production_order",field:"priority"}
+  ]},
+  {label:"来自 PLM",rows:[
+    {item:"工序·设备·标准工时",tbl:"route_operation",field:"seq_no, resource_id, std_time_min"},
+    {item:"BOM 用量",tbl:"bom_item",field:"qty, unit"}
+  ]},
+  {label:"来自 MES 内部",rows:[
+    {item:"设备可用时间窗口",tbl:"equipment_state_log",field:"state_code, state_start, state_end"},
+    {item:"实际工时反馈",tbl:"dispatch_order",field:"actual_time_min"},
+    {item:"物料在制数量",tbl:"wip_tracking",field:"qty_in, qty_out, status"}
+  ]}
+],
+output_maps:[
+  {label:"→ 派工模块",rows:[
+    {item:"工序级排程表",tbl:"production_operation",field:"op_id, order_id, resource_id, plan_start, plan_end"},
+    {item:"排程快照",tbl:"scheduling_result",field:"snap_id, op_id, plan_start, plan_end, otd_score"}
+  ]},
+  {label:"→ ERP 交期承诺",rows:[
+    {item:"计划完工时间",tbl:"production_order",field:"plan_end"},
+    {item:"工单状态",tbl:"production_order",field:"status"}
+  ]}
+],
+tables:[
+  {name:"production_order",label:"生产订单",desc:"承接 ERP 下达的生产订单主表",fields:[{n:"order_id",t:"BIGINT",pk:true,desc:"工单唯一 ID"},{n:"order_no",t:"VARCHAR(50)",idx:true,desc:"工单编号，与 ERP 一致"},{n:"product_id",t:"BIGINT",fk:"product_master",desc:"产品 ID"},{n:"planned_qty",t:"DECIMAL(18,4)",desc:"计划生产数量"},{n:"completed_qty",t:"DECIMAL(18,4)",desc:"已完工数量"},{n:"plan_start",t:"DATETIME",idx:true,desc:"APS 计划开始时间"},{n:"plan_end",t:"DATETIME",idx:true,desc:"APS 计划完工时间"},{n:"due_date",t:"DATETIME",desc:"客户交期"},{n:"priority",t:"INT",desc:"优先级权重"},{n:"status",t:"TINYINT",desc:"0待排程 1已排程 2生产中 3完工 4关闭"},{n:"erp_order_ref",t:"VARCHAR(50)",desc:"ERP 工单号"}],rels:["→ production_operation.order_id","→ scheduling_result.op_id"]},
+  {name:"production_operation",label:"工序排程",desc:"工单拆解后的工序级排程记录",fields:[{n:"op_id",t:"BIGINT",pk:true,desc:"工序排程 ID"},{n:"order_id",t:"BIGINT",fk:"production_order",desc:"关联生产工单"},{n:"route_op_id",t:"BIGINT",fk:"route_operation",desc:"关联工艺路线工序"},{n:"seq_no",t:"INT",desc:"工序顺序号"},{n:"resource_id",t:"BIGINT",fk:"resource_master",desc:"分配的设备/工位 ID"},{n:"operator_id",t:"BIGINT",fk:"employee",desc:"分配的操作员"},{n:"plan_start",t:"DATETIME",desc:"工序计划开始"},{n:"plan_end",t:"DATETIME",desc:"工序计划完成"},{n:"std_time_min",t:"DECIMAL(10,2)",desc:"标准工时（分钟）"},{n:"status",t:"TINYINT",desc:"0待开工 1进行中 2完工 3异常"}],rels:["← production_order.order_id","→ dispatch_order.op_id"]},
+  {name:"scheduling_result",label:"排程快照",desc:"每次 APS 排程结果的历史快照",fields:[{n:"snap_id",t:"BIGINT",pk:true,desc:"快照 ID"},{n:"snap_time",t:"DATETIME",desc:"排程执行时间"},{n:"trigger_type",t:"VARCHAR(20)",desc:"manual/insert_order/equipment_down"},{n:"op_id",t:"BIGINT",fk:"production_operation",desc:"工序 ID"},{n:"plan_start",t:"DATETIME",desc:"本次排程计划开始"},{n:"plan_end",t:"DATETIME",desc:"本次排程计划完成"},{n:"resource_id",t:"BIGINT",desc:"分配资源"},{n:"otd_score",t:"DECIMAL(5,2)",desc:"预测 OTD 得分"}]}
+],
+svgFn:function(){var P="#7F77DD",F="#EEEDFE",S="#AFA9EC",TC="#3C3489",SC="#534AB7",FD="#F5F4FF",GF="#E1F5EE",GS="#5DCAA5",GTC="#085041",GR="#F1EFE8",GRS="#B4B2A9",GRTC="#444441";var s='';[{x:10,w:105,l:"ERP 订单输入",b:"产能·工艺·库存"},{x:130,w:95,l:"订单分解",b:"BOM展开·优先级"},{x:240,w:95,l:"约束求解",b:"有限产能·防冲"},{x:350,w:105,l:"排程优化",b:"最小换型·最大产出"},{x:470,w:105,l:"甘特图输出",b:"排程表·派工单"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(115,32,130,P);s+=hl(225,32,240,P);s+=hl(335,32,350,P);s+=hl(455,32,470,P);s+=db(130,80,445,44,FD,S,"模拟与动态重排层","What-if 模拟 · 异常触发重排 · 人工干预锁定",TC,SC);s+=dl(287,54,80,P);s+=dl(407,54,80,P);[{x:10,w:118,l:"工序级排程表"},{x:143,w:100,l:"派工单下达"},{x:258,w:105,l:"物料需求计划"},{x:378,w:100,l:"交期承诺 CTP"},{x:493,w:82,l:"ERP 回传"}].forEach(function(b){s+=box(b.x,152,b.w,40,GF,GS,b.l,null,GTC,GTC);});s+=vl(345,124,152,P);s+=db(10,208,565,30,GR,GRS,"实绩反馈修正产能模型 — 实际工时回传 APS，持续校准排程精度",null,GRTC,GRTC);return'<svg width="100%" viewBox="0 0 585 250" role="img"><title>APS 排程流程</title>'+AD+s+'</svg>';}
+},
+// ② 派工
+{num:"②",title:"作业派工",tag:"任务下达·资源分配·SOP 推送",color:"#1D9E75",bg:"#E1F5EE",border:"#5DCAA5",tc:"#085041",
+subs:[{n:"工单拆分与绑定",d:"排程结果转工序级工单，绑定工艺路线版本，标注优先级与交期"},{n:"四维资源分配",d:"设备×工位×操作员（资质）×工装夹具，实时防冲突匹配"},{n:"电子 SOP 下发",d:"图文操作步骤+工艺参数+检验要求推送工位终端，PLM 变更自动刷新"},{n:"资质管控",d:"开工前校验员工资质有效期，未通过锁定工单禁止开工"},{n:"进度看板",d:"四态（待开工/进行中/逾期/完成）实时展示"},{n:"异常响应",d:"操作员触发异常后自动推送责任人，处置后工单恢复并记录根因"},{n:"多模式派工",d:"推式/拉式/混合式三种模式，按产线灵活配置"},{n:"工时采集反馈",d:"实际工时回传 APS 修正产能模型，驱动标准工时持续校准"}],
+inputs:[{cat:"来自 APS",tags:["工序级排程表（工单·工序·设备·时间·优先级）"]},{cat:"来自 PLM",tags:["电子 SOP（步骤·参数·检验要求·安全提示）","工艺路线版本号"]},{cat:"来自 MES 内部",tags:["操作员资质档案（类型·有效期）","设备实时状态（可用/故障/维保）","工装夹具库存状态"]}],
+outputs:[{cat:"→ 工位终端",tags:["工单任务卡（工序·产品·数量·交期·SOP）","优先级看板数据"]},{cat:"→ 物料模块",tags:["领料指令（工单·BOM·数量·配送工位）"]},{cat:"→ 过程监控",tags:["工单-设备绑定关系","工序开工时间戳"]},{cat:"→ 质量模块",tags:["首件检验触发信号","IPQC 巡检触发计划"]},{cat:"→ 完工模块",tags:["工序交接记录（数量·时间·责任人）"]}],
+input_maps:[
+  {label:"来自 APS",rows:[
+    {item:"工单+工序排程",tbl:"production_operation",field:"op_id, order_id, resource_id, plan_start, plan_end, std_time_min"},
+    {item:"工位分配",tbl:"production_operation",field:"resource_id（关联 workstation）"}
+  ]},
+  {label:"来自 PLM",rows:[
+    {item:"SOP 文档",tbl:"sop_version",field:"sop_version_id, content_url, key_params, version_no"},
+    {item:"工艺参数关键值",tbl:"sop_version",field:"key_params（JSON）"}
+  ]},
+  {label:"来自 MES 内部",rows:[
+    {item:"操作员资质有效期",tbl:"operator_qualification",field:"operator_id, route_op_id, expire_date, status"},
+    {item:"设备实时状态",tbl:"equipment_state_log",field:"equipment_id, state_code, state_start"}
+  ]}
+],
+output_maps:[
+  {label:"→ 派工单写入",rows:[
+    {item:"工单任务下达",tbl:"dispatch_order",field:"dispatch_id, op_id, workstation_id, operator_id, sop_version_id, plan_qty"},
+    {item:"开工时间戳",tbl:"dispatch_order",field:"start_time"},
+    {item:"派工模式",tbl:"dispatch_order",field:"dispatch_mode"}
+  ]},
+  {label:"→ 质量触发",rows:[
+    {item:"首件检验触发",tbl:"inspection_plan",field:"frequency_type=first_piece（关联 route_op_id）"}
+  ]}
+],
+tables:[
+  {name:"dispatch_order",label:"派工单",desc:"下达到工位的可执行任务单",fields:[{n:"dispatch_id",t:"BIGINT",pk:true,desc:"派工单 ID"},{n:"op_id",t:"BIGINT",fk:"production_operation",desc:"关联工序排程"},{n:"dispatch_no",t:"VARCHAR(50)",idx:true,desc:"派工单编号"},{n:"workstation_id",t:"BIGINT",fk:"workstation",desc:"指定工位"},{n:"operator_id",t:"BIGINT",fk:"employee",desc:"指定操作员"},{n:"sop_version_id",t:"BIGINT",fk:"sop_version",desc:"下发的 SOP 版本"},{n:"plan_qty",t:"DECIMAL(18,4)",desc:"计划生产数量"},{n:"actual_qty",t:"DECIMAL(18,4)",desc:"实际完成数量"},{n:"defect_qty",t:"DECIMAL(18,4)",desc:"不良数量"},{n:"start_time",t:"DATETIME",desc:"实际开工时间"},{n:"end_time",t:"DATETIME",desc:"实际完工时间"},{n:"actual_time_min",t:"DECIMAL(10,2)",desc:"实际工时（分钟）"},{n:"status",t:"TINYINT",desc:"0待接单 1进行中 2完工 3异常"},{n:"dispatch_mode",t:"VARCHAR(10)",desc:"push/pull/hybrid"}],rels:["← production_operation.op_id","→ wip_tracking.dispatch_id","→ process_parameter_log.dispatch_id"]},
+  {name:"sop_version",label:"SOP 版本",desc:"与 PLM 联动的电子作业指导书版本",fields:[{n:"sop_version_id",t:"BIGINT",pk:true,desc:"SOP 版本 ID"},{n:"sop_no",t:"VARCHAR(50)",idx:true,desc:"SOP 编号"},{n:"route_op_id",t:"BIGINT",fk:"route_operation",desc:"关联工艺路线工序"},{n:"version_no",t:"VARCHAR(20)",desc:"版本号"},{n:"content_url",t:"VARCHAR(500)",desc:"SOP 文档路径"},{n:"key_params",t:"JSON",desc:"关键工艺参数 JSON"},{n:"effective_date",t:"DATE",desc:"生效日期"},{n:"status",t:"TINYINT",desc:"1有效 0废止"},{n:"plm_doc_id",t:"VARCHAR(50)",desc:"PLM 文档 ID"}]},
+  {name:"operator_qualification",label:"操作员资质",desc:"员工工序资质记录，开工前强制校验",fields:[{n:"qual_id",t:"BIGINT",pk:true,desc:"资质记录 ID"},{n:"operator_id",t:"BIGINT",fk:"employee",desc:"员工 ID"},{n:"route_op_id",t:"BIGINT",fk:"route_operation",desc:"有权操作的工序"},{n:"cert_no",t:"VARCHAR(50)",desc:"资质证书编号"},{n:"cert_date",t:"DATE",desc:"取证日期"},{n:"expire_date",t:"DATE",idx:true,desc:"到期日，MES 自动预警"},{n:"status",t:"TINYINT",desc:"1有效 0过期 2吊销"}]}
+],
+svgFn:function(){var P="#1D9E75",F="#E1F5EE",S="#5DCAA5",TC="#085041",SC="#0F6E56",FD="#F0FAF6",GR="#F1EFE8",GRS="#B4B2A9",GRTC="#444441";var s='';[{x:10,w:95,l:"APS 排程结果",b:"工单+工序"},{x:120,w:95,l:"工单拆分",b:"BOM展开·优先级"},{x:230,w:95,l:"资源分配",b:"设备·人员·防冲"},{x:340,w:95,l:"SOP 下发",b:"推送工位终端"},{x:450,w:110,l:"开工确认",b:"扫码·资质校验"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(105,32,120,P);s+=hl(215,32,230,P);s+=hl(325,32,340,P);s+=hl(435,32,450,P);s+=vl(505,54,80,P);s+=box(340,80,220,44,F,S,"执行中监控","进度看板·异常响应·实时工时",TC,SC);s+=vl(450,124,150,P);s+=box(340,150,220,44,F,S,"完工报工","触发下道派工·实绩回传",TC,SC);s+='<rect x="10" y="80" width="310" height="114" rx="6" fill="'+FD+'" stroke="'+S+'" stroke-width="0.5" stroke-dasharray="4 3"/>';s+=fitText("异常处置分支",11,500,TC,165,98,286);[{t:"设备故障→报修派工→维修完成→恢复",y:122},{t:"质量异常→IPQC介入→处置→继续/停线",y:144},{t:"人员缺勤→重新分配资源→推送更新",y:166}].forEach(function(l){s+=fitText(l.t,10,null,SC,165,l.y,286);});s+=db(10,210,550,30,GR,GRS,"实绩反馈：工时·产量·异常→APS 修正·标准工时校准",null,GRTC,GRTC);return'<svg width="100%" viewBox="0 0 570 252" role="img"><title>作业派工流程</title>'+AD+s+'</svg>';}
+},
+// ③ 物料
+{num:"③",title:"物料管控",tag:"批次追踪·防错校验·WIP 管理",color:"#1D9E75",bg:"#E1F5EE",border:"#5DCAA5",tc:"#085041",
+subs:[{n:"批次赋码与绑定",d:"来料入库生成唯一批次号，标签携带料号/供应商/日期/有效期/IQC 结论"},{n:"库存规则管理",d:"FIFO/FEFO 强制执行，冻结批次系统直接拦截禁止投产"},{n:"工单驱动领料",d:"按 BOM 和工单数量计算用料清单，驱动套料配送"},{n:"投料防错校验",d:"扫码校验料号/批次/有效期/数量四维，任一不通过锁定工位报警"},{n:"WIP 在制品追踪",d:"投产后实时记录工序位置/数量/时间戳，异常品即时标红"},{n:"用料核销与差异",d:"完工自动核销实际 vs 计划用量，差异预警，余料自动退库"},{n:"不合格品隔离",d:"触发 MRB：让步/返工/报废三选一，电子签核不可篡改"},{n:"正反向追溯",d:"正向：原料→工单→成品→客户；反向：问题产品→工序→原料→供应商"}],
+inputs:[{cat:"来自 ERP",tags:["物料主数据（料号·描述·单位·有效期规则）","采购入库通知单","供应商批次信息"]},{cat:"来自 PLM",tags:["BOM（工序级用料·用量·替代料规则）"]},{cat:"来自 APS/派工",tags:["领料指令（工单·工序·需求数量·需求时间）"]},{cat:"来自现场操作",tags:["扫码投料记录（料号·批次·数量·操作员·时间）","IQC 检验结果"]}],
+outputs:[{cat:"→ 过程监控",tags:["投料确认信号（原料批次与工单绑定完成）"]},{cat:"→ 质量模块",tags:["原料批次信息（供应商·批次号·IQC 结论）","物料有效期状态"]},{cat:"→ 完工/入库",tags:["WIP 在制品数量·位置·状态","用料核销数据","余料退库记录"]},{cat:"→ 追溯模块",tags:["批次绑定关系（原料→工单→成品）","物料流转轨迹"]},{cat:"→ WMS",tags:["库存变动指令（出库·退库·冻结·解冻）"]}],
+input_maps:[
+  {label:"来自 ERP",rows:[
+    {item:"物料主数据",tbl:"material_master",field:"material_id, material_no, unit, expire_rule"},
+    {item:"供应商批次信息",tbl:"material_lot",field:"lot_no, supplier_id, receipt_date, expire_date"}
+  ]},
+  {label:"来自 PLM",rows:[
+    {item:"BOM 工序用料",tbl:"bom_item",field:"material_id, qty, unit, route_op_id"}
+  ]},
+  {label:"来自现场操作",rows:[
+    {item:"扫码投料记录",tbl:"lot_consumption",field:"dispatch_id, lot_id, actual_qty, consume_time, operator_id"},
+    {item:"防错扫描结果",tbl:"lot_consumption",field:"scan_result"},
+    {item:"IQC 检验结论",tbl:"material_lot",field:"iqc_result, status"}
+  ]}
+],
+output_maps:[
+  {label:"→ 追溯模块",rows:[
+    {item:"批次谱系绑定",tbl:"lot_genealogy",field:"input_lot_id, output_lot_id, order_id, ratio"},
+    {item:"WIP 位置状态",tbl:"wip_tracking",field:"lot_id, current_op_id, workstation_id, qty_in, qty_out, status"}
+  ]},
+  {label:"→ 完工/入库",rows:[
+    {item:"用料核销数据",tbl:"lot_consumption",field:"plan_qty, actual_qty, variance_qty"},
+    {item:"库存可用数量",tbl:"material_lot",field:"qty_available（更新）"}
+  ]}
+],
+tables:[
+  {name:"material_lot",label:"物料批次",desc:"所有物料的批次主档，追溯链基础节点",fields:[{n:"lot_id",t:"BIGINT",pk:true,desc:"批次 ID"},{n:"lot_no",t:"VARCHAR(50)",idx:true,desc:"批次号"},{n:"material_id",t:"BIGINT",fk:"material_master",desc:"物料 ID"},{n:"supplier_id",t:"BIGINT",fk:"supplier",desc:"供应商 ID"},{n:"receipt_date",t:"DATE",desc:"入库日期"},{n:"expire_date",t:"DATE",desc:"有效期截止日"},{n:"qty_received",t:"DECIMAL(18,4)",desc:"入库数量"},{n:"qty_available",t:"DECIMAL(18,4)",desc:"可用数量（实时）"},{n:"iqc_result",t:"TINYINT",desc:"0待检 1合格 2不合格 3让步"},{n:"status",t:"TINYINT",desc:"1正常 2冻结 3已用尽 4报废"},{n:"location_id",t:"BIGINT",fk:"warehouse_location",desc:"当前库位"}],rels:["→ lot_consumption.lot_id","→ lot_genealogy.input_lot_id","→ lot_genealogy.output_lot_id"]},
+  {name:"lot_consumption",label:"批次消耗",desc:"投料记录，防错校验后写入",fields:[{n:"consume_id",t:"BIGINT",pk:true,desc:"消耗记录 ID"},{n:"dispatch_id",t:"BIGINT",fk:"dispatch_order",desc:"关联派工单"},{n:"lot_id",t:"BIGINT",fk:"material_lot",desc:"消耗的物料批次"},{n:"bom_item_id",t:"BIGINT",fk:"bom_item",desc:"关联 BOM 行"},{n:"plan_qty",t:"DECIMAL(18,4)",desc:"计划用量"},{n:"actual_qty",t:"DECIMAL(18,4)",desc:"实际用量"},{n:"variance_qty",t:"DECIMAL(18,4)",desc:"差异量"},{n:"consume_time",t:"DATETIME",desc:"投料时间戳"},{n:"operator_id",t:"BIGINT",fk:"employee",desc:"投料操作员"},{n:"scan_result",t:"TINYINT",desc:"防错扫描：1通过 0拦截"}]},
+  {name:"lot_genealogy",label:"批次谱系",desc:"正反向追溯的核心关联表",fields:[{n:"gene_id",t:"BIGINT",pk:true,desc:"谱系记录 ID"},{n:"input_lot_id",t:"BIGINT",fk:"material_lot",idx:true,desc:"原料批次（正向追踪起点）"},{n:"output_lot_id",t:"BIGINT",fk:"material_lot",idx:true,desc:"成品批次（反向追溯起点）"},{n:"order_id",t:"BIGINT",fk:"production_order",desc:"关联生产工单"},{n:"ratio",t:"DECIMAL(10,6)",desc:"原料在成品中占比"},{n:"created_at",t:"DATETIME",desc:"谱系记录创建时间"}],rels:["正向查询：input_lot_id → 所有 output_lot_id","反向查询：output_lot_id → 所有 input_lot_id"]},
+  {name:"wip_tracking",label:"在制品追踪",desc:"物料投产后的工位实时位置",fields:[{n:"wip_id",t:"BIGINT",pk:true,desc:"WIP 记录 ID"},{n:"dispatch_id",t:"BIGINT",fk:"dispatch_order",desc:"关联派工单"},{n:"lot_id",t:"BIGINT",fk:"material_lot",desc:"批次 ID"},{n:"current_op_id",t:"BIGINT",fk:"production_operation",desc:"当前所在工序"},{n:"workstation_id",t:"BIGINT",fk:"workstation",desc:"当前工位"},{n:"qty_in",t:"DECIMAL(18,4)",desc:"进站数量"},{n:"qty_out",t:"DECIMAL(18,4)",desc:"出站数量"},{n:"in_time",t:"DATETIME",desc:"进站时间"},{n:"out_time",t:"DATETIME",desc:"出站时间"},{n:"status",t:"TINYINT",desc:"1在制 2完工 3异常"}]}
+],
+svgFn:function(){var P="#1D9E75",F="#E1F5EE",S="#5DCAA5",TC="#085041",SC="#0F6E56",FD="#F0FAF6",GR="#F1EFE8",GRS="#B4B2A9",GRTC="#444441";var s='';[{x:10,w:85,l:"来料入库",b:"批次赋码"},{x:110,w:85,l:"IQC 检验",b:"合格/冻结"},{x:210,w:85,l:"仓储管理",b:"FIFO/FEFO"},{x:310,w:85,l:"计划领料",b:"BOM 套料"},{x:410,w:85,l:"防错投料",b:"四维校验"},{x:510,w:70,l:"WIP 追踪",b:"工序定位"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(95,32,110,P);s+=hl(195,32,210,P);s+=hl(295,32,310,P);s+=hl(395,32,410,P);s+=hl(495,32,510,P);s+=vl(545,54,80,P);s+=box(410,80,170,44,F,S,"用料核销","实际 vs 计划·余料退库",TC,SC);s+=vl(495,124,150,P);s+=box(360,150,220,44,F,S,"成品入库·批次档案封存","绑定所有工序参数与检验记录",TC,SC);s+='<rect x="10" y="80" width="380" height="104" rx="6" fill="'+FD+'" stroke="'+S+'" stroke-width="0.5" stroke-dasharray="4 3"/>';s+=fitText("追溯数据链（贯穿全程）",11,500,TC,200,98,356);[{t:"正向：原料批次→工单→成品→客户",y:120},{t:"反向：问题产品→工序参数→原料→供应商",y:140},{t:"影响范围圈定→库存冻结→召回清单",y:160}].forEach(function(l){s+=fitText(l.t,10,null,SC,200,l.y,356);});s+=db(10,210,570,30,GR,GRS,"实绩数据：WIP 可视·用料差异·追溯链→质量分析·供应商评级",null,GRTC,GRTC);return'<svg width="100%" viewBox="0 0 590 252" role="img"><title>物料管控流程</title>'+AD+s+'</svg>';}
+},
+// ④ 过程监控
+{num:"④",title:"过程监控与数据采集",tag:"设备状态·工艺参数·实时报警",color:"#D85A30",bg:"#FAECE7",border:"#F0997B",tc:"#712B13",
+subs:[{n:"多协议数据采集",d:"OPC-UA/Modbus/MQTT/机台 API/人工终端，边缘网关统一接入"},{n:"工艺参数实时判定",d:"预设上下限实时比对，超限触发声光报警、设备锁停、推送责任人"},{n:"SPC 统计过程控制",d:"X-bar/R 控制图实时绘制，自动检测八大判异规则"},{n:"设备五态监控",d:"运行/待机/换型/计划停机/故障停机实时采集，自动核算 OEE"},{n:"分级报警管理",d:"提示→警告→严重三级，按级推送，超时未响应自动升级"},{n:"过程数据批次绑定",d:"所有工序参数时序数据挂载到产品批次，支持参数曲线回放"},{n:"电子看板与大屏",d:"实时显示产量、Takt time、报警数量、OEE"},{n:"数据驱动决策",d:"故障触发 APS 重排，连续异常触发工艺评审"}],
+inputs:[{cat:"来自设备层",tags:["工艺参数实时流（温度·压力·转速·电流·位置）","设备状态信号（运行/停机/报警代码）","计数器（产量脉冲·节拍）"]},{cat:"来自 PLM",tags:["工艺参数规格（上下限·目标值）","SPC 控制图参数（UCL·LCL·子组大小）"]},{cat:"来自派工模块",tags:["工单-设备绑定关系（决定数据归属）"]},{cat:"来自人工录入",tags:["无法自动采集的工序参数","操作员开工/完工确认时间"]}],
+outputs:[{cat:"→ 质量模块",tags:["参数判定结果（合格/超限/趋势异常）","SPC 控制图数据·CPK","报警事件（类型·时间·设备·参数值）"]},{cat:"→ 设备管理",tags:["设备运行时长累计","故障停机事件·OEE 三分项"]},{cat:"→ APS",tags:["设备故障事件（触发动态重排）","实际节拍数据（修正标准工时）"]},{cat:"→ 追溯模块",tags:["过程参数时序数据（与批次强绑定归档）","设备状态历史"]}],
+input_maps:[
+  {label:"来自设备层",rows:[
+    {item:"工艺参数采集值",tbl:"process_parameter_log",field:"param_value, collect_time, device_id, source"},
+    {item:"规格上下限",tbl:"process_parameter_log",field:"usl, lsl（来自 PLM param_definition）"},
+    {item:"设备状态信号",tbl:"equipment_state_log",field:"state_code, state_start, state_end"}
+  ]},
+  {label:"来自派工模块",rows:[
+    {item:"工单-设备绑定",tbl:"process_parameter_log",field:"dispatch_id（决定数据归属工单）"},
+    {item:"产品批次绑定",tbl:"process_parameter_log",field:"lot_id（追溯关键关联）"}
+  ]}
+],
+output_maps:[
+  {label:"→ 质量模块",rows:[
+    {item:"参数判定结果",tbl:"process_parameter_log",field:"judge_result（0合格 1超规格 2超控制限）"},
+    {item:"SPC 控制点",tbl:"spc_control_point",field:"x_bar, r_value, cpk, judge_rule, is_alarm"},
+    {item:"报警事件",tbl:"alarm_event",field:"alarm_id, alarm_code, alarm_level, trigger_time, root_cause"}
+  ]},
+  {label:"→ 设备管理",rows:[
+    {item:"运行时长累计",tbl:"equipment_state_log",field:"duration_min（state_code=1 累计）"},
+    {item:"OEE 原始数据",tbl:"equipment_state_log",field:"state_code, duration_min → 触发 oee_daily 计算"}
+  ]}
+],
+tables:[
+  {name:"process_parameter_log",label:"工艺参数日志",desc:"设备采集的时序参数数据，与批次绑定归档",fields:[{n:"log_id",t:"BIGINT",pk:true,desc:"参数日志 ID"},{n:"dispatch_id",t:"BIGINT",fk:"dispatch_order",idx:true,desc:"关联派工单"},{n:"lot_id",t:"BIGINT",fk:"material_lot",idx:true,desc:"产品批次 ID"},{n:"param_def_id",t:"BIGINT",fk:"param_definition",desc:"参数定义 ID"},{n:"param_value",t:"DECIMAL(20,6)",desc:"采集值"},{n:"usl",t:"DECIMAL(20,6)",desc:"规格上限"},{n:"lsl",t:"DECIMAL(20,6)",desc:"规格下限"},{n:"ucl",t:"DECIMAL(20,6)",desc:"SPC 控制上限"},{n:"lcl",t:"DECIMAL(20,6)",desc:"SPC 控制下限"},{n:"judge_result",t:"TINYINT",desc:"0合格 1超规格 2超控制限"},{n:"collect_time",t:"DATETIME",idx:true,desc:"采集时间戳（建议时序库分区）"},{n:"device_id",t:"BIGINT",fk:"equipment",desc:"采集设备 ID"},{n:"source",t:"VARCHAR(20)",desc:"opc_ua/modbus/manual"}],rels:["← dispatch_order（决定数据归属）","→ alarm_event（超限触发）","→ spc_control_point（SPC 输入）"]},
+  {name:"alarm_event",label:"报警事件",desc:"报警的产生、响应、关闭全流程",fields:[{n:"alarm_id",t:"BIGINT",pk:true,desc:"报警 ID"},{n:"device_id",t:"BIGINT",fk:"equipment",desc:"报警设备"},{n:"alarm_code",t:"VARCHAR(50)",idx:true,desc:"报警代码"},{n:"alarm_level",t:"TINYINT",desc:"1提示 2警告 3严重"},{n:"trigger_value",t:"DECIMAL(20,6)",desc:"触发时的参数值"},{n:"trigger_time",t:"DATETIME",idx:true,desc:"触发时间"},{n:"response_time",t:"DATETIME",desc:"首次响应时间"},{n:"close_time",t:"DATETIME",desc:"报警关闭时间"},{n:"response_user_id",t:"BIGINT",fk:"employee",desc:"响应人"},{n:"root_cause",t:"TEXT",desc:"根因描述"},{n:"dispatch_id",t:"BIGINT",fk:"dispatch_order",desc:"关联工单"}]},
+  {name:"spc_control_point",label:"SPC 控制点",desc:"SPC 统计计算结果",fields:[{n:"spc_id",t:"BIGINT",pk:true,desc:"SPC 记录 ID"},{n:"param_def_id",t:"BIGINT",fk:"param_definition",desc:"参数定义"},{n:"sample_group",t:"INT",desc:"子组编号"},{n:"x_bar",t:"DECIMAL(20,6)",desc:"子组均值"},{n:"r_value",t:"DECIMAL(20,6)",desc:"子组极差"},{n:"cpk",t:"DECIMAL(8,4)",desc:"当前 CPK 值"},{n:"judge_rule",t:"VARCHAR(50)",desc:"触发的判异规则"},{n:"is_alarm",t:"BOOLEAN",desc:"是否触发判异报警"},{n:"calc_time",t:"DATETIME",desc:"计算时间戳"}]}
+],
+svgFn:function(){var P="#D85A30",F="#FAECE7",S="#F0997B",TC="#712B13",SC="#993C1D",FD="#FDF5F2",GR="#F1EFE8",GRS="#B4B2A9",GRTC="#444441";var s='';[{x:10,w:110,l:"设备层",b:"PLC·传感器·机器人"},{x:135,w:110,l:"采集层",b:"SCADA·边缘网关"},{x:260,w:110,l:"MES 处理层",b:"判定·SPC·报警"},{x:385,w:110,l:"展示层",b:"看板·大屏·终端"},{x:510,w:90,l:"决策层",b:"APS·工艺·质量"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(120,32,135,P);s+=hl(245,32,260,P);s+=hl(370,32,385,P);s+=hl(495,32,510,P);s+=db(10,80,330,50,FD,S,"报警响应闭环","超限触发→分级推送→响应→超时升级→根因记录",TC,SC);s+=db(355,80,245,50,FD,S,"数据归档","时序库·批次绑定·合规保存",TC,SC);s+=dl(315,54,80,P);s+=dl(467,54,80,P);s+=box(10,148,590,36,GR,GRS,"OEE 实时核算：可用率×性能率×质量率→看板刷新→APS 重排→设备维护触发",null,GRTC,GRTC);return'<svg width="100%" viewBox="0 0 610 196" role="img"><title>过程监控数据采集流程</title>'+AD+s+'</svg>';}
+},
+// ⑤ 质量
+{num:"⑤",title:"质量管控（IPQC/SPC）",tag:"检验计划·不合格处置·质量记录",color:"#D85A30",bg:"#FAECE7",border:"#F0997B",tc:"#712B13",
+subs:[{n:"检验计划管理",d:"针对物料/产品/工序定义检验项目、规格、AQL 抽样方案，与工艺版本联动"},{n:"首件检验（FAI）",d:"换线/换型/换料后强制触发，首件未通过系统锁定批量生产入口"},{n:"IPQC 制程巡检",d:"按频率生成巡检任务，异常自动推送停线指令"},{n:"SPC 实时控制",d:"控制图实时绘制，自动判异，定期输出 CPK 改善清单"},{n:"FQC/OQC 放行",d:"五项校验条件未满足则系统拦截禁止出货，电子签核"},{n:"不合格品 MRB 处置",d:"NCR 流转三方审批，让步/返工/报废三选一"},{n:"质量数据批次绑定",d:"所有检验结果挂载到产品批次档案，支持秒级合规审计响应"},{n:"8D / CAPA 闭环",d:"在线填写 8D 报告，CAPA 执行后系统跟踪验证有效性"}],
+inputs:[{cat:"来自 PLM",tags:["检验计划（项目·规格·AQL·频率）","检验标准版本"]},{cat:"来自过程监控",tags:["工序参数判定结果·SPC 数据","实时报警事件"]},{cat:"来自物料模块",tags:["原料批次·IQC 结论"]},{cat:"来自现场操作",tags:["检验员测量录入值","首件确认签核","不合格品描述·不良类型编码"]}],
+outputs:[{cat:"→ 派工模块",tags:["停线指令","首件合格放行信号"]},{cat:"→ 完工模块",tags:["FQC 放行结论","完工校验门五项状态"]},{cat:"→ 物料模块",tags:["不合格品隔离指令","MRB 处置结论"]},{cat:"→ 追溯模块",tags:["全套质量记录（IQC·IPQC·FQC·OQC）","NCR·8D/CAPA 记录"]},{cat:"→ ERP/供应商",tags:["来料不合格通知","让步接收审批结论"]}],
+input_maps:[
+  {label:"来自 PLM",rows:[
+    {item:"检验项目·规格·频率",tbl:"inspection_plan",field:"plan_id, aql_level, frequency_type, route_op_id"},
+    {item:"SPC 参数",tbl:"process_parameter_log",field:"ucl, lcl（来自 param_definition）"}
+  ]},
+  {label:"来自过程监控",rows:[
+    {item:"参数判定结果",tbl:"process_parameter_log",field:"judge_result, param_value, collect_time"},
+    {item:"报警事件",tbl:"alarm_event",field:"alarm_id, alarm_level, trigger_time"}
+  ]},
+  {label:"来自现场操作",rows:[
+    {item:"检验员测量录入",tbl:"inspection_result",field:"result_id, plan_id, lot_id, sample_qty, pass_qty, defect_qty"},
+    {item:"不良类型编码",tbl:"ncr_record",field:"defect_type_code, qty_affected"}
+  ]}
+],
+output_maps:[
+  {label:"→ 完工模块",rows:[
+    {item:"FQC 放行结论",tbl:"inspection_result",field:"overall_result, sign_user_id, sign_time"},
+    {item:"校验门状态",tbl:"production_report",field:"gate_check_result（JSON，由质量模块写入）"}
+  ]},
+  {label:"→ 追溯模块",rows:[
+    {item:"质量检验记录",tbl:"inspection_result",field:"result_id, lot_id, inspect_type, overall_result"},
+    {item:"NCR 不合格报告",tbl:"ncr_record",field:"ncr_id, lot_id, disposition, mrb_status"},
+    {item:"CAPA 记录",tbl:"capa_record",field:"capa_id, ncr_id, d4_root_cause, d7_verify_result, verify_status"}
+  ]}
+],
+tables:[
+  {name:"inspection_plan",label:"检验计划",desc:"定义检验项目、规格、抽样方案",fields:[{n:"plan_id",t:"BIGINT",pk:true,desc:"检验计划 ID"},{n:"plan_type",t:"VARCHAR(20)",desc:"IQC/IPQC/FQC/OQC"},{n:"material_id",t:"BIGINT",fk:"material_master",desc:"适用物料"},{n:"route_op_id",t:"BIGINT",fk:"route_operation",desc:"适用工序"},{n:"aql_level",t:"VARCHAR(10)",desc:"AQL 质量水平"},{n:"sample_size_code",t:"VARCHAR(10)",desc:"抽样字码"},{n:"frequency_type",t:"VARCHAR(20)",desc:"first_piece/hourly/batch"},{n:"sop_version_id",t:"BIGINT",fk:"sop_version",desc:"关联 SOP 版本"},{n:"effective_date",t:"DATE",desc:"生效日期"}]},
+  {name:"inspection_result",label:"检验记录",desc:"每次检验的详细测量记录",fields:[{n:"result_id",t:"BIGINT",pk:true,desc:"检验记录 ID"},{n:"plan_id",t:"BIGINT",fk:"inspection_plan",desc:"使用的检验计划"},{n:"lot_id",t:"BIGINT",fk:"material_lot",idx:true,desc:"被检批次（追溯关键）"},{n:"dispatch_id",t:"BIGINT",fk:"dispatch_order",desc:"关联派工单"},{n:"inspect_type",t:"VARCHAR(20)",desc:"IQC/FAI/IPQC/FQC/OQC"},{n:"sample_qty",t:"INT",desc:"抽样数量"},{n:"pass_qty",t:"INT",desc:"合格数量"},{n:"defect_qty",t:"INT",desc:"不合格数量"},{n:"overall_result",t:"TINYINT",desc:"1合格 2不合格 3让步"},{n:"inspector_id",t:"BIGINT",fk:"employee",desc:"检验员"},{n:"inspect_time",t:"DATETIME",idx:true,desc:"检验时间"},{n:"sign_user_id",t:"BIGINT",fk:"employee",desc:"电子签核人"},{n:"sign_time",t:"DATETIME",desc:"签核时间"}],rels:["→ ncr_record（不合格时创建）","← lot_id 连接追溯链"]},
+  {name:"ncr_record",label:"不合格品报告",desc:"NCR 及 MRB 处置全流程",fields:[{n:"ncr_id",t:"BIGINT",pk:true,desc:"NCR ID"},{n:"ncr_no",t:"VARCHAR(50)",idx:true,desc:"NCR 编号"},{n:"result_id",t:"BIGINT",fk:"inspection_result",desc:"关联检验记录"},{n:"lot_id",t:"BIGINT",fk:"material_lot",desc:"不合格品批次"},{n:"defect_type_code",t:"VARCHAR(50)",desc:"不良类型编码"},{n:"qty_affected",t:"DECIMAL(18,4)",desc:"受影响数量"},{n:"disposition",t:"VARCHAR(20)",desc:"use_as_is/rework/scrap"},{n:"mrb_status",t:"TINYINT",desc:"0待审 1审批中 2已关闭"},{n:"root_cause",t:"TEXT",desc:"根因分析"},{n:"close_time",t:"DATETIME",desc:"NCR 关闭时间"}]},
+  {name:"capa_record",label:"CAPA 记录",desc:"8D 纠正预防措施全流程",fields:[{n:"capa_id",t:"BIGINT",pk:true,desc:"CAPA ID"},{n:"ncr_id",t:"BIGINT",fk:"ncr_record",desc:"触发的 NCR"},{n:"d3_containment",t:"TEXT",desc:"D3 围堵措施"},{n:"d4_root_cause",t:"TEXT",desc:"D4 根因分析"},{n:"d5_action",t:"TEXT",desc:"D5 永久纠正措施"},{n:"d6_impl_date",t:"DATE",desc:"D6 实施日期"},{n:"d7_verify_result",t:"TEXT",desc:"D7 有效性验证"},{n:"d8_close_date",t:"DATE",desc:"D8 关闭日期"},{n:"verify_status",t:"TINYINT",desc:"0待验证 1验证中 2有效 3无效"}]}
+],
+svgFn:function(){var P="#D85A30",F="#FAECE7",S="#F0997B",TC="#712B13",SC="#993C1D",FD="#FDF5F2",GR="#F1EFE8",GRS="#B4B2A9",GRTC="#444441";var s='';[{x:10,w:90,l:"IQC 来料",b:"抽样·合格入库"},{x:115,w:90,l:"首件检验",b:"换线强制触发"},{x:220,w:90,l:"IPQC 巡检",b:"SPC 实时控制"},{x:325,w:90,l:"FQC 成品",b:"五项校验放行"},{x:430,w:90,l:"OQC 出货",b:"电子签核"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(100,32,115,P);s+=hl(205,32,220,P);s+=hl(310,32,325,P);s+=hl(415,32,430,P);s+=db(10,80,250,50,FD,S,"不合格品处置（MRB）","NCR→三方审批→让步/返工/报废",TC,SC);s+=db(275,80,250,50,FD,S,"质量闭环改善","8D→CAPA→有效性验证",TC,SC);s+=box(10,148,515,36,GR,GRS,"质量数据汇聚：批次档案·CPK·Pareto→供应商评级·工艺优化·合规审计",null,GRTC,GRTC);return'<svg width="100%" viewBox="0 0 535 196" role="img"><title>质量管控流程</title>'+AD+s+'</svg>';}
+},
+// ⑥ 设备
+{num:"⑥",title:"设备管理（TPM）",tag:"OEE·预防保养·故障管理",color:"#D85A30",bg:"#FAECE7",border:"#F0997B",tc:"#712B13",
+subs:[{n:"设备一物一档",d:"唯一编码+二维码，含技术参数/安装位置/责任人，全生命周期记录追加"},{n:"点检自主维护",d:"班前扫码逐项点检，漏检自动标记上推，异常即时上报"},{n:"预防保养计划",d:"日历周期/运行时长/生产计数三种触发模式，到期自动推送工单"},{n:"故障报修闭环",d:"扫码报修→技能匹配派单→响应/到场/修复/验收全程追踪"},{n:"备件库存追溯",d:"维修扫码出库绑定设备和故障单，消耗频次驱动采购申请"},{n:"MTBF/MTTR 核算",d:"自动计算平均无故障时间和平均修复时间，定位改善优先级"},{n:"基于状态维护（CBM）",d:"传感器实时监测阈值，预警触发预防介入"},{n:"预测维护（PdM）",d:"历史数据训练模型识别故障前特征，预测剩余使用寿命"}],
+inputs:[{cat:"来自过程监控",tags:["设备运行时长·故障停机事件·OEE 数据","振动·温度·电流传感器实时数据"]},{cat:"来自现场操作",tags:["点检表填写结果（扫码确认·异常标注）","报修单（故障描述·报修人·时间）","维修工单完成记录（工时·备件·根因）"]},{cat:"来自设备台账",tags:["保养计划规则（周期·触发条件·清单）","备件安全库存·采购周期"]}],
+outputs:[{cat:"→ APS",tags:["设备可用产能日历（维保停机时间窗口）","故障停机事件（触发实时重排）","OEE 实绩（修正产能参数）"]},{cat:"→ 派工模块",tags:["设备实时状态（可用/故障/维保）"]},{cat:"→ 追溯模块",tags:["设备维修历史档案","校准记录（量具有效期）"]},{cat:"→ ERP",tags:["备件采购申请","维修成本归集数据"]}],
+input_maps:[
+  {label:"来自过程监控",rows:[
+    {item:"设备运行时长",tbl:"equipment_state_log",field:"state_code=1, duration_min（累计运行）"},
+    {item:"故障停机事件",tbl:"equipment_state_log",field:"state_code=5, state_start, duration_min"},
+    {item:"OEE 三分项原始",tbl:"equipment_state_log",field:"state_code, duration_min → oee_daily 计算基础"}
+  ]},
+  {label:"来自现场操作",rows:[
+    {item:"报修单信息",tbl:"maintenance_order",field:"equipment_id, fault_code, report_time, fault_desc"},
+    {item:"维修完成记录",tbl:"maintenance_order",field:"start_time, end_time, mttr_min, root_cause, action_taken"},
+    {item:"备件消耗",tbl:"spare_part_usage",field:"spare_id, qty_used, maint_id, install_date"}
+  ]}
+],
+output_maps:[
+  {label:"→ APS",rows:[
+    {item:"维保停机时间窗口",tbl:"maintenance_order",field:"maint_type=preventive, start_time, end_time（同步至 APS 产能日历）"},
+    {item:"OEE 实绩",tbl:"oee_daily",field:"availability, performance, quality_rate, oee"}
+  ]},
+  {label:"→ 追溯模块",rows:[
+    {item:"设备维修档案",tbl:"maintenance_order",field:"maint_id, fault_code, root_cause, spare_cost, labor_cost"},
+    {item:"备件使用记录",tbl:"spare_part_usage",field:"usage_id, spare_id, qty_used, install_date"}
+  ]}
+],
+tables:[
+  {name:"equipment",label:"设备台账",desc:"设备主档，一物一码",fields:[{n:"equipment_id",t:"BIGINT",pk:true,desc:"设备 ID"},{n:"equipment_no",t:"VARCHAR(50)",idx:true,desc:"设备编号（唯一）"},{n:"equipment_name",t:"VARCHAR(200)",desc:"设备名称"},{n:"equipment_type",t:"VARCHAR(50)",desc:"设备类型"},{n:"workstation_id",t:"BIGINT",fk:"workstation",desc:"所在工位"},{n:"manufacturer",t:"VARCHAR(100)",desc:"制造商"},{n:"purchase_date",t:"DATE",desc:"购置日期"},{n:"warranty_expire",t:"DATE",desc:"保修到期日"},{n:"rated_capacity",t:"DECIMAL(10,2)",desc:"额定产能（件/小时）"},{n:"status",t:"TINYINT",desc:"1运行 2待机 3维保 4故障 5报废"},{n:"asset_no",t:"VARCHAR(50)",desc:"资产编号，与 ERP 固资对应"}]},
+  {name:"equipment_state_log",label:"设备状态日志",desc:"设备五态实时切换记录，OEE 计算基础",fields:[{n:"state_id",t:"BIGINT",pk:true,desc:"状态记录 ID"},{n:"equipment_id",t:"BIGINT",fk:"equipment",idx:true,desc:"设备 ID"},{n:"state_code",t:"TINYINT",desc:"1运行 2待机 3换型 4计划停机 5故障"},{n:"state_start",t:"DATETIME",idx:true,desc:"状态开始时间"},{n:"state_end",t:"DATETIME",desc:"状态结束时间（NULL=当前）"},{n:"duration_min",t:"DECIMAL(10,2)",desc:"持续时长（分钟）"},{n:"shift_id",t:"BIGINT",fk:"shift_schedule",desc:"关联班次"},{n:"related_order_id",t:"BIGINT",fk:"production_order",desc:"关联工单"}]},
+  {name:"maintenance_order",label:"维修保养工单",desc:"预防保养和故障维修的执行记录",fields:[{n:"maint_id",t:"BIGINT",pk:true,desc:"维修工单 ID"},{n:"maint_no",t:"VARCHAR(50)",idx:true,desc:"维修工单编号"},{n:"equipment_id",t:"BIGINT",fk:"equipment",desc:"维修设备"},{n:"maint_type",t:"VARCHAR(20)",desc:"preventive/breakdown/calibration"},{n:"fault_code",t:"VARCHAR(50)",desc:"故障代码（ISO 14224）"},{n:"report_time",t:"DATETIME",desc:"报修时间"},{n:"response_time",t:"DATETIME",desc:"首次响应时间"},{n:"start_time",t:"DATETIME",desc:"开始维修时间"},{n:"end_time",t:"DATETIME",desc:"维修完成时间"},{n:"mttr_min",t:"DECIMAL(10,2)",desc:"本次 MTTR（分钟）"},{n:"technician_id",t:"BIGINT",fk:"employee",desc:"维修技术员"},{n:"root_cause",t:"TEXT",desc:"故障根因"},{n:"spare_cost",t:"DECIMAL(12,2)",desc:"备件费用"},{n:"labor_cost",t:"DECIMAL(12,2)",desc:"人工费用"}]},
+  {name:"spare_part_usage",label:"备件使用记录",desc:"维修时备件消耗，驱动采购补充",fields:[{n:"usage_id",t:"BIGINT",pk:true,desc:"备件使用 ID"},{n:"maint_id",t:"BIGINT",fk:"maintenance_order",desc:"关联维修工单"},{n:"spare_id",t:"BIGINT",fk:"spare_part",desc:"备件 ID"},{n:"qty_used",t:"DECIMAL(10,2)",desc:"使用数量"},{n:"use_time",t:"DATETIME",desc:"使用时间"},{n:"equipment_id",t:"BIGINT",fk:"equipment",desc:"安装到的设备"},{n:"install_date",t:"DATE",desc:"安装日期"}]}
+],
+svgFn:function(){var P="#D85A30",F="#FAECE7",S="#F0997B",TC="#712B13",SC="#993C1D",FD="#FDF5F2",GR="#F1EFE8",GRS="#B4B2A9",GRTC="#444441";var s='';[{x:10,w:85,l:"设备台账",b:"一物一档"},{x:110,w:85,l:"点检维护",b:"扫码·漏检预警"},{x:210,w:85,l:"预防保养",b:"三种触发模式"},{x:310,w:85,l:"故障报修",b:"报修→派单→验收"},{x:410,w:85,l:"备件管理",b:"扫码追溯"},{x:510,w:70,l:"OEE 看板",b:"实时核算"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(95,32,110,P);s+=hl(195,32,210,P);s+=hl(295,32,310,P);s+=hl(395,32,410,P);s+=hl(495,32,510,P);s+=db(10,80,270,50,FD,S,"状态监测（CBM）","振动/温度/电流阈值预警→预防介入",TC,SC);s+=db(295,80,285,50,FD,S,"预测维护（PdM）","故障特征识别→RUL 预测→计划维修",TC,SC);s+=dl(252,54,80,P);s+=dl(437,54,80,P);s+=box(10,148,570,36,GR,GRS,"设备数据汇聚：MTBF·MTTR·维修成本·备件消耗→APS 产能日历·换代决策",null,GRTC,GRTC);return'<svg width="100%" viewBox="0 0 590 196" role="img"><title>设备管理 TPM 流程</title>'+AD+s+'</svg>';}
+},
+// ⑦ 完工
+{num:"⑦",title:"完工报工与入库",tag:"产量确认·成品入库·数据回传",color:"#1D9E75",bg:"#E1F5EE",border:"#5DCAA5",tc:"#085041",
+subs:[{n:"工序级报工",d:"扫码确认完工并打点实际工时，分类录入不良数量，同步触发余料退库"},{n:"计划实绩对比",d:"报工即对比产量/工时/完工时间差异，超阈值推送班组长"},{n:"完工校验门",d:"末道报工前自动核查五项条件全达才放行，任一未满足系统锁定"},{n:"工序交接触发",d:"完工自动触发下道派工，生成移交记录，责任界面清晰"},{n:"成品批次标签",d:"FQC 放行后自动生成批次标签，完成追溯链最后一环"},{n:"成品入库库位分配",d:"扫码推荐最优库位，WMS 实时同步，分区强制校验"},{n:"ERP 工单回传",d:"入库后自动向 ERP 发送完工确认，触发成本核算和工单关闭"},{n:"班次报告与 KPI",d:"自动生成产量/不良/工时效率/停线汇总，OTD 延误原因分类统计"}],
+inputs:[{cat:"来自现场操作",tags:["报工扫码（工单·工序·合格数量·不良数量·类型）","实际完工时间戳","操作员 ID"]},{cat:"来自质量模块",tags:["FQC 放行结论·完工校验门五项状态","返工工单完工确认"]},{cat:"来自物料模块",tags:["实际用料核销数据（批次·数量）","余料退库数量"]},{cat:"来自 APS",tags:["计划产量·计划完工时间（用于差异对比）"]}],
+outputs:[{cat:"→ ERP",tags:["工单完工确认（实际产量·完工时间·状态关闭）","实际用料量（触发 BOM 反冲·成本核算）","实际工时（触发工时工资核算）"]},{cat:"→ WMS",tags:["成品入库指令（编码·批次·数量·库位）","批次标签数据"]},{cat:"→ APS",tags:["实际完工时间·产量（修正排程实绩）","实际工时（校准标准工时）"]},{cat:"→ 追溯模块",tags:["完工批次档案触发封存","成品批次号 ↔ 原料批次号最终绑定"]},{cat:"→ 展示层",tags:["班次实时产量·良品率·完成率·OTD"]}],
+input_maps:[
+  {label:"来自现场操作",rows:[
+    {item:"报工合格/不良数量",tbl:"production_report",field:"good_qty, defect_qty, scrap_qty"},
+    {item:"实际完工时间戳",tbl:"production_report",field:"report_time"},
+    {item:"实际工时",tbl:"dispatch_order",field:"actual_time_min（报工后回写）"},
+    {item:"不良类型明细",tbl:"defect_record",field:"defect_code, defect_qty, op_id"}
+  ]},
+  {label:"来自质量模块",rows:[
+    {item:"FQC 放行结论",tbl:"inspection_result",field:"overall_result, sign_time"},
+    {item:"校验门五项状态",tbl:"production_report",field:"gate_check_result（JSON）"}
+  ]},
+  {label:"来自物料模块",rows:[
+    {item:"实际用料核销",tbl:"lot_consumption",field:"actual_qty, variance_qty（按 dispatch_id 汇总）"}
+  ]}
+],
+output_maps:[
+  {label:"→ ERP 回传",rows:[
+    {item:"工单完工确认",tbl:"production_report",field:"erp_posted=true, erp_post_time"},
+    {item:"实际产量",tbl:"production_order",field:"completed_qty（更新）, status=3"},
+    {item:"实际用料量",tbl:"lot_consumption",field:"actual_qty（汇总后推送 ERP）"}
+  ]},
+  {label:"→ WMS / 追溯",rows:[
+    {item:"成品批次入库",tbl:"finished_goods_lot",field:"fg_lot_id, fg_lot_no, qty, warehouse_loc_id, wms_receipt_no"},
+    {item:"批次谱系封存",tbl:"lot_genealogy",field:"output_lot_id=fg_lot_id（最终绑定）"}
+  ]}
+],
+tables:[
+  {name:"production_report",label:"报工记录",desc:"工序级完工报工主表",fields:[{n:"report_id",t:"BIGINT",pk:true,desc:"报工 ID"},{n:"dispatch_id",t:"BIGINT",fk:"dispatch_order",idx:true,desc:"关联派工单"},{n:"report_type",t:"VARCHAR(20)",desc:"process/final"},{n:"good_qty",t:"DECIMAL(18,4)",desc:"合格数量"},{n:"defect_qty",t:"DECIMAL(18,4)",desc:"不良数量"},{n:"scrap_qty",t:"DECIMAL(18,4)",desc:"报废数量"},{n:"actual_time_min",t:"DECIMAL(10,2)",desc:"实际工时（分钟）"},{n:"report_time",t:"DATETIME",idx:true,desc:"报工时间"},{n:"operator_id",t:"BIGINT",fk:"employee",desc:"报工操作员"},{n:"gate_check_result",t:"JSON",desc:"完工校验门五项结果"},{n:"erp_posted",t:"BOOLEAN",desc:"是否已回传 ERP"},{n:"erp_post_time",t:"DATETIME",desc:"ERP 回传时间"}]},
+  {name:"defect_record",label:"不良记录",desc:"报工时的不良明细，Pareto 分析数据源",fields:[{n:"defect_id",t:"BIGINT",pk:true,desc:"不良记录 ID"},{n:"report_id",t:"BIGINT",fk:"production_report",desc:"关联报工单"},{n:"defect_code",t:"VARCHAR(50)",idx:true,desc:"不良代码（标准化）"},{n:"defect_qty",t:"DECIMAL(18,4)",desc:"不良数量"},{n:"op_id",t:"BIGINT",fk:"production_operation",desc:"发生工序"},{n:"lot_id",t:"BIGINT",fk:"material_lot",desc:"关联批次"}]},
+  {name:"finished_goods_lot",label:"成品批次",desc:"成品入库的批次主档，追溯链终点",fields:[{n:"fg_lot_id",t:"BIGINT",pk:true,desc:"成品批次 ID"},{n:"fg_lot_no",t:"VARCHAR(50)",idx:true,desc:"成品批次号"},{n:"order_id",t:"BIGINT",fk:"production_order",desc:"关联生产工单"},{n:"product_id",t:"BIGINT",fk:"product_master",desc:"产品 ID"},{n:"qty",t:"DECIMAL(18,4)",desc:"入库数量"},{n:"produce_date",t:"DATE",desc:"生产日期"},{n:"fqc_result_id",t:"BIGINT",fk:"inspection_result",desc:"FQC 检验记录"},{n:"warehouse_loc_id",t:"BIGINT",fk:"warehouse_location",desc:"入库库位"},{n:"wms_receipt_no",t:"VARCHAR(50)",desc:"WMS 收货单号"},{n:"erp_stock_no",t:"VARCHAR(50)",desc:"ERP 库存凭证号"},{n:"is_rework",t:"BOOLEAN",desc:"是否为返工品"},{n:"created_at",t:"DATETIME",desc:"入库时间"}],rels:["→ lot_genealogy.output_lot_id（追溯链终点）"]}
+],
+svgFn:function(){var P="#1D9E75",F="#E1F5EE",S="#5DCAA5",TC="#085041",SC="#0F6E56",FD="#F0FAF6",GR="#F1EFE8",GRS="#B4B2A9",GRTC="#444441";var s='';[{x:10,w:85,l:"工序报工",b:"扫码·产量·不良"},{x:110,w:90,l:"完工校验门",b:"五项条件全达"},{x:215,w:85,l:"FQC 放行",b:"电子签核"},{x:315,w:90,l:"批次标签",b:"追溯链封口"},{x:420,w:85,l:"成品入库",b:"库位·WMS"},{x:520,w:60,l:"ERP 回传",b:"工单关闭"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(95,32,110,P);s+=hl(200,32,215,P);s+=hl(300,32,315,P);s+=hl(405,32,420,P);s+=hl(505,32,520,P);s+=db(10,80,265,50,FD,S,"校验门五项条件","检验完成·SPC无失控·NCR关闭·参数完整·首件合格",TC,SC);s+=db(290,80,290,50,FD,S,"返工独立追踪","返工工单独立计数→再检验放行→挂返工标记",TC,SC);s+=box(10,148,570,36,GR,GRS,"实绩回传：产量·工时·用料→APS 修正·ERP 成本核算·质量档案归档封存",null,GRTC,GRTC);return'<svg width="100%" viewBox="0 0 590 196" role="img"><title>完工报工与入库流程</title>'+AD+s+'</svg>';}
+},
+// ⑧ 追溯
+{num:"⑧",title:"追溯与报表分析",tag:"正反向追溯·KPI·持续改善",color:"#888780",bg:"#F1EFE8",border:"#B4B2A9",tc:"#444441",
+subs:[{n:"正向追踪",d:"原料批次→工单→产品批次→库位→客户，分钟级圈定受影响成品"},{n:"反向追溯",d:"问题产品序列号→工序参数曲线→原料批次→供应商"},{n:"影响范围圈定",d:"一键输出受影响批次，同步触发库存冻结/召回清单/在制暂停"},{n:"OEE 多维分析",d:"按产线/设备/班次下钻，拆解三分项定位改善方向"},{n:"不良 Pareto 分析",d:"多维交叉自动绘制 Pareto，识别 20% 原因造成 80% 损失"},{n:"供应商质量评级",d:"来料合格率/不良损失自动生成评分卡，低分触发改善要求"},{n:"成本损耗归集",d:"报废/返工/停机损失自动归集，按产品分摊为改善投资提供 ROI"},{n:"参数相关性分析",d:"过程参数与质量结果相关性计算，识别 KPV，科学提升 CPK"}],
+inputs:[{cat:"汇聚全模块数据",tags:["物料：批次绑定链（原料→工单→成品）","过程监控：工序参数时序数据","质量：IQC·IPQC·FQC 检验记录·NCR·CAPA","设备：维修历史·OEE·校准记录","完工：产量实绩·工时·用料核销","派工：操作员记录·SOP 版本"]},{cat:"来自外部触发",tags:["客户投诉（触发反向追溯）","供应商批次问题（触发正向追踪）","审计员查询（按序列号/批次号）"]}],
+outputs:[{cat:"追溯类",tags:["正向追踪报告（原料→所有受影响成品+客户）","反向追溯报告（产品SN→完整工艺参数+原料）","影响范围清单（冻结库存+召回批次）","批次质量档案（合规年限存档）"]},{cat:"KPI 分析",tags:["OEE 多维拆解","良品率趋势·Pareto·OTD·MTBF·MTTR"]},{cat:"改善驱动",tags:["供应商质量评分卡","工艺参数相关性·CPK 改善清单","8D/CAPA 有效性验证报告"]},{cat:"→ 上游系统",tags:["→ ERP：质量损失成本","→ PLM：工艺优化建议","→ BI：全量生产数据","→ 客户：追溯报告·质量证书"]}],
+input_maps:[
+  {label:"追溯核心路径",rows:[
+    {item:"正向追踪起点",tbl:"lot_genealogy",field:"input_lot_id（按原料批次查 output）"},
+    {item:"反向追溯起点",tbl:"lot_genealogy",field:"output_lot_id（按成品批次查 input）"},
+    {item:"工序参数回放",tbl:"process_parameter_log",field:"lot_id, param_value, collect_time（时序回放）"},
+    {item:"质量检验档案",tbl:"inspection_result",field:"lot_id, inspect_type, overall_result"},
+    {item:"不良明细",tbl:"defect_record",field:"defect_code, defect_qty, op_id（Pareto 数据源）"}
+  ]},
+  {label:"KPI 统计数据源",rows:[
+    {item:"OEE 统计",tbl:"oee_daily",field:"equipment_id, stat_date, availability, performance, quality_rate, oee"},
+    {item:"交付绩效",tbl:"delivery_performance",field:"order_id, due_date, actual_complete_date, delay_days, delay_reason_code"},
+    {item:"质量汇总",tbl:"quality_summary",field:"stat_date, product_id, yield_rate, top_defect_code"}
+  ]}
+],
+output_maps:[
+  {label:"追溯报告输出",rows:[
+    {item:"查询日志归档",tbl:"traceability_query_log",field:"query_id, query_type, query_key, result_snapshot"},
+    {item:"影响范围冻结",tbl:"material_lot",field:"status=2（冻结）← 追溯触发更新"},
+    {item:"批次质量档案",tbl:"inspection_result + lot_genealogy",field:"（组合查询，按 lot_id 串联全链）"}
+  ]},
+  {label:"KPI 聚合写入",rows:[
+    {item:"OEE 日报生成",tbl:"oee_daily",field:"oee_id, equipment_id, shift_id, availability, oee"},
+    {item:"质量统计生成",tbl:"quality_summary",field:"summary_id, stat_date, yield_rate, top_defect_code"},
+    {item:"交付绩效记录",tbl:"delivery_performance",field:"perf_id, order_id, delay_days, on_time, delay_reason_code"}
+  ]}
+],
+tables:[
+  {name:"traceability_query_log",label:"追溯查询日志",desc:"记录每次追溯查询的请求和结果",fields:[{n:"query_id",t:"BIGINT",pk:true,desc:"查询 ID"},{n:"query_type",t:"VARCHAR(20)",desc:"forward/backward/impact_scope"},{n:"query_key",t:"VARCHAR(100)",idx:true,desc:"查询关键字"},{n:"query_user",t:"BIGINT",fk:"employee",desc:"查询操作员"},{n:"query_time",t:"DATETIME",desc:"查询时间"},{n:"result_count",t:"INT",desc:"结果条数"},{n:"result_snapshot",t:"JSON",desc:"结果快照（审计保存）"},{n:"trigger_reason",t:"VARCHAR(100)",desc:"触发原因"}]},
+  {name:"oee_daily",label:"OEE 日报",desc:"每台设备每班次 OEE 聚合数据",fields:[{n:"oee_id",t:"BIGINT",pk:true,desc:"OEE 日报 ID"},{n:"equipment_id",t:"BIGINT",fk:"equipment",idx:true,desc:"设备 ID"},{n:"shift_id",t:"BIGINT",fk:"shift_schedule",idx:true,desc:"班次 ID"},{n:"stat_date",t:"DATE",idx:true,desc:"统计日期"},{n:"plan_time_min",t:"DECIMAL(10,2)",desc:"计划生产时间"},{n:"downtime_min",t:"DECIMAL(10,2)",desc:"总停机时长"},{n:"availability",t:"DECIMAL(8,4)",desc:"可用率"},{n:"actual_output",t:"DECIMAL(18,4)",desc:"实际产量"},{n:"theoretical_output",t:"DECIMAL(18,4)",desc:"理论产量"},{n:"performance",t:"DECIMAL(8,4)",desc:"性能率"},{n:"good_output",t:"DECIMAL(18,4)",desc:"合格产量"},{n:"quality_rate",t:"DECIMAL(8,4)",desc:"质量率"},{n:"oee",t:"DECIMAL(8,4)",desc:"OEE = 可用率×性能率×质量率"}]},
+  {name:"quality_summary",label:"质量统计",desc:"按产品/产线/班次的质量 KPI 聚合",fields:[{n:"summary_id",t:"BIGINT",pk:true,desc:"统计记录 ID"},{n:"stat_date",t:"DATE",idx:true,desc:"统计日期"},{n:"product_id",t:"BIGINT",fk:"product_master",desc:"产品 ID"},{n:"workstation_id",t:"BIGINT",fk:"workstation",desc:"工位/产线"},{n:"shift_id",t:"BIGINT",fk:"shift_schedule",desc:"班次"},{n:"total_qty",t:"DECIMAL(18,4)",desc:"总生产数量"},{n:"defect_qty",t:"DECIMAL(18,4)",desc:"不良数量"},{n:"yield_rate",t:"DECIMAL(8,4)",desc:"良品率"},{n:"top_defect_code",t:"VARCHAR(50)",desc:"最多不良类型代码"}]},
+  {name:"delivery_performance",label:"交付绩效",desc:"工单交付达成率分析",fields:[{n:"perf_id",t:"BIGINT",pk:true,desc:"绩效记录 ID"},{n:"order_id",t:"BIGINT",fk:"production_order",idx:true,desc:"生产工单"},{n:"due_date",t:"DATE",desc:"承诺交期"},{n:"actual_complete_date",t:"DATE",desc:"实际完工日期"},{n:"delay_days",t:"INT",desc:"延误天数（负=提前）"},{n:"on_time",t:"BOOLEAN",desc:"是否准时"},{n:"delay_reason_code",t:"VARCHAR(50)",desc:"延误原因"},{n:"loss_revenue",t:"DECIMAL(12,2)",desc:"延误损失金额"}]}
+],
+svgFn:function(){var P="#888780",F="#F1EFE8",S="#B4B2A9",TC="#444441",SC="#5F5E5A",FP="#EEEDFE",SP="#AFA9EC",TCP="#3C3489",SCP="#534AB7",FG="#E1F5EE",SG="#5DCAA5",TCG="#085041";var s='';[{x:10,w:80,l:"供应商",b:"原料批次",cp:false},{x:105,w:75,l:"IQC",b:"来料检验",cp:false},{x:195,w:110,l:"批次档案核心",b:"原料·参数·检验·人员",cp:true},{x:320,w:75,l:"FQC",b:"成品检验",cp:false},{x:410,w:75,l:"客户",b:"出货批次",cp:false}].forEach(function(b){var cf=b.cp?FP:F,cs=b.cp?SP:S,ctc=b.cp?TCP:TC;s+=box(b.x,10,b.w,44,cf,cs,b.l,b.b,ctc,b.cp?SCP:SC);});s+=hl(90,32,105,P);s+=hl(180,32,195,P);s+=hl(305,32,320,P);s+=hl(395,32,410,P);s+=vl(250,54,80,P);[{x:10,w:115,l:"正向追踪",b:"原料→工单→成品"},{x:140,w:110,l:"反向追溯",b:"问题→参数→原料"},{x:265,w:120,l:"影响范围圈定",b:"冻结·召回·暂停"},{x:400,w:85,l:"合规档案",b:"法定年限保存"}].forEach(function(b){s+=box(b.x,80,b.w,44,F,S,b.l,b.b,TC,SC);});[{x:10,w:118,l:"OEE 拆分",b:"产线/设备/班次"},{x:143,w:118,l:"不良 Pareto",b:"多维交叉"},{x:276,w:118,l:"供应商评级",b:"合格率·改善"},{x:409,w:76,l:"参数相关性",b:"KPV·CPK"}].forEach(function(b){s+=box(b.x,148,b.w,44,FG,SG,b.l,b.b,TCG,TCG);});s+=vl(250,124,148,P);return'<svg width="100%" viewBox="0 0 500 204" role="img"><title>追溯与分析流程</title>'+AD+s+'</svg>';}
+},
+// ⑨ 主数据
+{num:"⑨",title:"主数据与编码中心",tag:"统一主数据·版本治理·编码规则",color:"#2D7DD2",bg:"#EAF3FC",border:"#8ABCEB",tc:"#154A7D",
+subs:[{n:"产品与物料主数据",d:"统一维护产品、物料、单位、规格、有效期、替代料和供应商映射"},{n:"BOM 与工艺路线版本",d:"管理 BOM、工艺路线、工序、资源能力、标准工时和版本生效范围"},{n:"工厂资源模型",d:"定义工厂、车间、产线、工位、设备、工装、模具、班组和班次日历"},{n:"基础代码体系",d:"统一不良代码、停机代码、报警代码、原因代码和处置代码"},{n:"编码规则管理",d:"按组织、物料、日期、流水号配置工单、批次、SN、标签编码规则"},{n:"主数据发布审批",d:"变更经过审批后发布，保留版本、差异、影响范围和回滚记录"},{n:"数据质量校验",d:"缺字段、重复编码、失效版本、未绑定资源自动拦截上线"},{n:"多系统同步",d:"接收 ERP/PLM 主数据并向 MES 执行模块发布稳定快照"}],
+inputs:[{cat:"来自 ERP/PLM",tags:["产品主数据","物料主数据","BOM 版本","工艺路线版本","供应商与客户档案"]},{cat:"来自现场建模",tags:["组织架构","车间产线工位","设备工装模具","班次日历"]}],
+outputs:[{cat:"→ 全 MES 模块",tags:["稳定主数据快照","工艺版本引用","资源能力模型","代码字典"]},{cat:"→ 集成平台",tags:["主数据同步状态","版本发布事件","变更影响范围"]}],
+input_maps:[{label:"主数据来源",rows:[{item:"物料主数据",tbl:"material_master",field:"material_id, material_no, material_name, unit, expire_rule"},{item:"产品主数据",tbl:"product_master",field:"product_id, product_no, product_name, spec, status"},{item:"工艺路线",tbl:"route_operation",field:"route_id, seq_no, resource_type, std_time_min"},{item:"资源模型",tbl:"workstation",field:"workstation_id, line_id, capability_code, status"}]}],
+output_maps:[{label:"主数据发布",rows:[{item:"BOM 发布快照",tbl:"bom_item",field:"bom_id, material_id, qty, version_no, effective_date"},{item:"编码规则",tbl:"code_rule",field:"rule_id, rule_type, pattern, current_seq"},{item:"代码字典",tbl:"reason_code",field:"code_type, code, name, enabled"}]}],
+tables:[
+  {name:"product_master",label:"产品主数据",desc:"产品和成品基础档案",fields:[{n:"product_id",t:"BIGINT",pk:true,desc:"产品 ID"},{n:"product_no",t:"VARCHAR(50)",idx:true,desc:"产品编码"},{n:"product_name",t:"VARCHAR(200)",desc:"产品名称"},{n:"spec",t:"VARCHAR(200)",desc:"规格型号"},{n:"unit",t:"VARCHAR(20)",desc:"主单位"},{n:"status",t:"TINYINT",desc:"1有效 0停用"},{n:"version_no",t:"VARCHAR(20)",desc:"主数据版本"}]},
+  {name:"material_master",label:"物料主数据",desc:"原料、半成品、成品和备件统一档案",fields:[{n:"material_id",t:"BIGINT",pk:true,desc:"物料 ID"},{n:"material_no",t:"VARCHAR(50)",idx:true,desc:"物料编码"},{n:"material_name",t:"VARCHAR(200)",desc:"物料名称"},{n:"material_type",t:"VARCHAR(30)",desc:"raw/wip/fg/spare"},{n:"unit",t:"VARCHAR(20)",desc:"库存单位"},{n:"expire_rule",t:"VARCHAR(50)",desc:"有效期规则"},{n:"lot_control",t:"BOOLEAN",desc:"是否批次管控"},{n:"status",t:"TINYINT",desc:"1有效 0停用"}]},
+  {name:"bom_item",label:"BOM 明细",desc:"产品或工序级用料清单",fields:[{n:"bom_item_id",t:"BIGINT",pk:true,desc:"BOM 行 ID"},{n:"bom_id",t:"BIGINT",idx:true,desc:"BOM 版本 ID"},{n:"product_id",t:"BIGINT",fk:"product_master",desc:"产品 ID"},{n:"material_id",t:"BIGINT",fk:"material_master",desc:"组件物料"},{n:"route_op_id",t:"BIGINT",fk:"route_operation",desc:"投料工序"},{n:"qty",t:"DECIMAL(18,6)",desc:"标准用量"},{n:"unit",t:"VARCHAR(20)",desc:"用量单位"},{n:"substitute_group",t:"VARCHAR(50)",desc:"替代料组"}]},
+  {name:"route_operation",label:"工艺路线工序",desc:"工艺路线中的工序能力定义",fields:[{n:"route_op_id",t:"BIGINT",pk:true,desc:"工序 ID"},{n:"route_id",t:"BIGINT",idx:true,desc:"路线 ID"},{n:"seq_no",t:"INT",desc:"工序顺序"},{n:"op_code",t:"VARCHAR(50)",desc:"工序编码"},{n:"resource_id",t:"BIGINT",desc:"默认资源"},{n:"std_time_min",t:"DECIMAL(10,2)",desc:"标准工时"},{n:"version_no",t:"VARCHAR(20)",desc:"工艺版本"}]},
+  {name:"workstation",label:"工位产线",desc:"车间资源层级和能力模型",fields:[{n:"workstation_id",t:"BIGINT",pk:true,desc:"工位 ID"},{n:"line_id",t:"BIGINT",idx:true,desc:"产线 ID"},{n:"workstation_no",t:"VARCHAR(50)",desc:"工位编号"},{n:"capability_code",t:"VARCHAR(100)",desc:"能力代码"},{n:"status",t:"TINYINT",desc:"1启用 0停用"}]},
+  {name:"code_rule",label:"编码规则",desc:"批次、SN、工单、标签编码规则",fields:[{n:"rule_id",t:"BIGINT",pk:true,desc:"规则 ID"},{n:"rule_type",t:"VARCHAR(30)",idx:true,desc:"lot/sn/order/label"},{n:"pattern",t:"VARCHAR(200)",desc:"编码模板"},{n:"current_seq",t:"BIGINT",desc:"当前流水号"},{n:"reset_cycle",t:"VARCHAR(20)",desc:"daily/monthly/yearly/none"},{n:"enabled",t:"BOOLEAN",desc:"是否启用"}]},
+  {name:"reason_code",label:"原因代码",desc:"不良、停机、报警、报废等标准代码",fields:[{n:"code_id",t:"BIGINT",pk:true,desc:"代码 ID"},{n:"code_type",t:"VARCHAR(30)",idx:true,desc:"defect/downtime/alarm/scrap"},{n:"code",t:"VARCHAR(50)",desc:"代码"},{n:"name",t:"VARCHAR(100)",desc:"名称"},{n:"parent_code",t:"VARCHAR(50)",desc:"父级代码"},{n:"enabled",t:"BOOLEAN",desc:"是否启用"}]}
+],
+svgFn:function(){var P="#2D7DD2",F="#EAF3FC",S="#8ABCEB",TC="#154A7D",SC="#1F5F9C",G="#F1EFE8",GS="#B4B2A9";var s='';[{x:10,w:90,l:"ERP/PLM",b:"主数据来源"},{x:115,w:90,l:"数据校验",b:"完整性·重复"},{x:220,w:100,l:"版本审批",b:"发布·回滚"},{x:335,w:95,l:"编码规则",b:"批次·SN·标签"},{x:445,w:105,l:"主数据快照",b:"供执行引用"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(100,32,115,P);s+=hl(205,32,220,P);s+=hl(320,32,335,P);s+=hl(430,32,445,P);s+=db(10,82,540,48,"#F7FBFF",S,"工厂资源模型","工厂·车间·产线·工位·设备·工装·班次日历",TC,SC);s+=box(10,150,540,36,G,GS,"统一主数据是 APS、派工、质量、追溯和接口一致性的前置条件",null,"#444441","#444441");return'<svg width="100%" viewBox="0 0 560 198" role="img"><title>主数据与编码中心流程</title>'+AD+s+'</svg>';}
+},
+// ⑩ 权限审计
+{num:"⑩",title:"权限、审计与电子签名",tag:"RBAC·数据权限·合规留痕",color:"#6A4C93",bg:"#F0EAF7",border:"#B9A4D8",tc:"#3E2860",
+subs:[{n:"角色权限模型",d:"按组织、岗位、角色、菜单、按钮、接口定义访问边界"},{n:"数据权限",d:"按工厂、车间、产线、班组、客户和产品族隔离业务数据"},{n:"电子签名",d:"质量放行、让步接收、返工报废、关键参数修改需二次认证"},{n:"操作审计",d:"记录登录、查询、导出、新增、修改、删除、审批和接口补偿操作"},{n:"关键字段留痕",d:"对数量、状态、工艺版本、检验结论等敏感字段保留变更前后值"},{n:"审批流",d:"支持主数据发布、NCR/MRB、CAPA、工单关闭、库存冻结解冻审批"},{n:"会话安全",d:"终端绑定、超时退出、密码策略、失败锁定和令牌吊销"},{n:"合规报表",d:"按审计对象快速导出证据链，支撑客户稽核和体系审核"}],
+inputs:[{cat:"来自用户操作",tags:["登录认证","页面操作","审批动作","电子签名请求"]},{cat:"来自业务模块",tags:["主数据变更","质量放行","MRB 处置","库存冻结","接口补偿"]}],
+outputs:[{cat:"→ 全模块控制",tags:["菜单按钮权限","数据范围过滤","审批结果","签名验证结果"]},{cat:"→ 审计归档",tags:["操作日志","字段变更记录","电子签名记录","审批历史"]}],
+input_maps:[{label:"权限输入",rows:[{item:"用户身份",tbl:"sys_user",field:"user_id, login_name, status"},{item:"角色授权",tbl:"sys_role_permission",field:"role_id, permission_code"},{item:"签名请求",tbl:"electronic_signature",field:"biz_type, biz_id, sign_reason"}]}],
+output_maps:[{label:"审计输出",rows:[{item:"操作日志",tbl:"audit_log",field:"action_type, biz_type, biz_id, client_ip"},{item:"字段变更",tbl:"field_change_log",field:"field_name, old_value, new_value"},{item:"审批流转",tbl:"approval_task",field:"task_status, approver_id, approve_time"}]}],
+tables:[
+  {name:"sys_user",label:"系统用户",desc:"用户账号与身份状态",fields:[{n:"user_id",t:"BIGINT",pk:true,desc:"用户 ID"},{n:"login_name",t:"VARCHAR(80)",idx:true,desc:"登录名"},{n:"employee_id",t:"BIGINT",fk:"employee",desc:"员工 ID"},{n:"org_id",t:"BIGINT",desc:"所属组织"},{n:"status",t:"TINYINT",desc:"1启用 0停用 2锁定"},{n:"last_login_time",t:"DATETIME",desc:"最后登录"}]},
+  {name:"sys_role_permission",label:"角色权限",desc:"角色到权限点的授权关系",fields:[{n:"id",t:"BIGINT",pk:true,desc:"记录 ID"},{n:"role_id",t:"BIGINT",idx:true,desc:"角色 ID"},{n:"permission_code",t:"VARCHAR(100)",idx:true,desc:"权限编码"},{n:"scope_rule",t:"JSON",desc:"数据权限规则"},{n:"granted_by",t:"BIGINT",desc:"授权人"}]},
+  {name:"audit_log",label:"审计日志",desc:"用户和系统关键操作留痕",fields:[{n:"audit_id",t:"BIGINT",pk:true,desc:"审计 ID"},{n:"user_id",t:"BIGINT",fk:"sys_user",idx:true,desc:"操作用户"},{n:"action_type",t:"VARCHAR(30)",desc:"create/update/delete/export/approve"},{n:"biz_type",t:"VARCHAR(50)",idx:true,desc:"业务对象"},{n:"biz_id",t:"VARCHAR(80)",desc:"业务 ID"},{n:"action_time",t:"DATETIME",idx:true,desc:"操作时间"},{n:"client_ip",t:"VARCHAR(50)",desc:"客户端 IP"},{n:"result",t:"TINYINT",desc:"1成功 0失败"}]},
+  {name:"field_change_log",label:"字段变更日志",desc:"关键字段修改前后值",fields:[{n:"change_id",t:"BIGINT",pk:true,desc:"变更 ID"},{n:"biz_type",t:"VARCHAR(50)",idx:true,desc:"业务对象"},{n:"biz_id",t:"VARCHAR(80)",idx:true,desc:"业务 ID"},{n:"field_name",t:"VARCHAR(100)",desc:"字段名"},{n:"old_value",t:"TEXT",desc:"修改前"},{n:"new_value",t:"TEXT",desc:"修改后"},{n:"change_user",t:"BIGINT",desc:"修改人"},{n:"change_time",t:"DATETIME",desc:"修改时间"}]},
+  {name:"electronic_signature",label:"电子签名",desc:"关键业务签名和二次认证记录",fields:[{n:"sign_id",t:"BIGINT",pk:true,desc:"签名 ID"},{n:"biz_type",t:"VARCHAR(50)",idx:true,desc:"业务类型"},{n:"biz_id",t:"VARCHAR(80)",idx:true,desc:"业务 ID"},{n:"sign_user_id",t:"BIGINT",fk:"sys_user",desc:"签名人"},{n:"sign_reason",t:"VARCHAR(200)",desc:"签名原因"},{n:"auth_method",t:"VARCHAR(30)",desc:"password/otp/cert"},{n:"sign_time",t:"DATETIME",desc:"签名时间"}]},
+  {name:"approval_task",label:"审批任务",desc:"业务审批流任务",fields:[{n:"task_id",t:"BIGINT",pk:true,desc:"任务 ID"},{n:"flow_type",t:"VARCHAR(50)",idx:true,desc:"流程类型"},{n:"biz_id",t:"VARCHAR(80)",idx:true,desc:"业务 ID"},{n:"node_name",t:"VARCHAR(100)",desc:"节点名称"},{n:"approver_id",t:"BIGINT",desc:"审批人"},{n:"task_status",t:"TINYINT",desc:"0待办 1通过 2驳回"},{n:"approve_time",t:"DATETIME",desc:"审批时间"}]}
+],
+svgFn:function(){var P="#6A4C93",F="#F0EAF7",S="#B9A4D8",TC="#3E2860",SC="#5A3A80",G="#F1EFE8",GS="#B4B2A9";var s='';[{x:10,w:95,l:"身份认证",b:"用户·终端"},{x:120,w:95,l:"RBAC 授权",b:"菜单·按钮"},{x:230,w:95,l:"数据权限",b:"工厂·产线"},{x:340,w:95,l:"电子签名",b:"二次认证"},{x:450,w:95,l:"审计归档",b:"不可抵赖"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(105,32,120,P);s+=hl(215,32,230,P);s+=hl(325,32,340,P);s+=hl(435,32,450,P);s+=db(10,82,535,48,"#F9F6FC",S,"关键业务控制点","主数据发布·质量放行·库存冻结·返工报废·接口补偿",TC,SC);s+=box(10,150,535,36,G,GS,"权限与审计覆盖所有模块，避免生产现场绕流程和关键数据无痕修改",null,"#444441","#444441");return'<svg width="100%" viewBox="0 0 555 198" role="img"><title>权限审计电子签名流程</title>'+AD+s+'</svg>';}
+},
+// ⑪ 集成
+{num:"⑪",title:"集成平台与接口可靠性",tag:"幂等·重试·补偿·监控",color:"#008C8C",bg:"#E6F7F7",border:"#72CACA",tc:"#075A5A",
+subs:[{n:"统一接口目录",d:"集中管理 ERP、PLM、WMS、SCADA、QMS、BI 的接口定义和责任边界"},{n:"消息驱动集成",d:"工单下达、完工回传、库存变动、质量放行等事件通过队列异步处理"},{n:"幂等与去重",d:"每笔接口使用业务键和请求 ID，重复推送不重复入账"},{n:"失败重试",d:"网络、超时、对方系统不可用时按策略重试并记录错误上下文"},{n:"死信与补偿",d:"多次失败进入死信，支持人工修复数据后重新投递"},{n:"接口状态监控",d:"监控成功率、延迟、积压、失败分类和最近错误"},{n:"主数据同步治理",d:"区分全量、增量、版本发布和失效通知，保证执行模块引用稳定快照"},{n:"接口对账",d:"对工单、入库、库存、报工、用料等关键单据进行日终对账"}],
+inputs:[{cat:"来自外部系统",tags:["ERP 工单/库存/成本接口","PLM BOM/工艺/SOP 接口","WMS 出入库接口","SCADA 设备事件","BI 数据订阅"]},{cat:"来自 MES 业务事件",tags:["工单完工","用料核销","质量放行","库存冻结","设备故障"]}],
+outputs:[{cat:"→ 业务模块",tags:["可靠入站消息","同步结果状态","补偿结果","接口告警"]},{cat:"→ 外部系统",tags:["完工确认","实际用料","库存事务","质量结论","追溯报告"]}],
+input_maps:[{label:"接口入站",rows:[{item:"接口请求",tbl:"integration_message",field:"message_id, source_system, target_system, payload"},{item:"幂等键",tbl:"integration_message",field:"idempotent_key, biz_type, biz_id"},{item:"接口定义",tbl:"interface_endpoint",field:"endpoint_code, protocol, retry_policy"}]}],
+output_maps:[{label:"接口出站",rows:[{item:"重试状态",tbl:"integration_message",field:"retry_count, next_retry_time, status"},{item:"死信记录",tbl:"dead_letter_message",field:"message_id, error_message, fix_status"},{item:"对账结果",tbl:"interface_reconcile",field:"reconcile_date, diff_count, resolve_status"}]}],
+tables:[
+  {name:"interface_endpoint",label:"接口目录",desc:"外部接口定义和调用策略",fields:[{n:"endpoint_id",t:"BIGINT",pk:true,desc:"接口 ID"},{n:"endpoint_code",t:"VARCHAR(80)",idx:true,desc:"接口编码"},{n:"source_system",t:"VARCHAR(30)",desc:"来源系统"},{n:"target_system",t:"VARCHAR(30)",desc:"目标系统"},{n:"protocol",t:"VARCHAR(20)",desc:"REST/MQ/FILE/DB/OPC"},{n:"retry_policy",t:"JSON",desc:"重试策略"},{n:"enabled",t:"BOOLEAN",desc:"是否启用"}]},
+  {name:"integration_message",label:"集成消息",desc:"接口消息收发状态表",fields:[{n:"message_id",t:"BIGINT",pk:true,desc:"消息 ID"},{n:"endpoint_code",t:"VARCHAR(80)",idx:true,desc:"接口编码"},{n:"biz_type",t:"VARCHAR(50)",idx:true,desc:"业务类型"},{n:"biz_id",t:"VARCHAR(80)",idx:true,desc:"业务 ID"},{n:"idempotent_key",t:"VARCHAR(120)",idx:true,desc:"幂等键"},{n:"payload",t:"JSON",desc:"消息内容"},{n:"status",t:"TINYINT",desc:"0待发 1成功 2失败 3死信"},{n:"retry_count",t:"INT",desc:"重试次数"},{n:"next_retry_time",t:"DATETIME",desc:"下次重试时间"}]},
+  {name:"dead_letter_message",label:"死信消息",desc:"多次失败后等待人工补偿的接口消息",fields:[{n:"dead_id",t:"BIGINT",pk:true,desc:"死信 ID"},{n:"message_id",t:"BIGINT",fk:"integration_message",desc:"原消息"},{n:"error_code",t:"VARCHAR(80)",desc:"错误码"},{n:"error_message",t:"TEXT",desc:"错误信息"},{n:"fix_status",t:"TINYINT",desc:"0待处理 1已修复 2忽略"},{n:"fixed_by",t:"BIGINT",desc:"处理人"},{n:"fixed_time",t:"DATETIME",desc:"处理时间"}]},
+  {name:"interface_reconcile",label:"接口对账",desc:"关键业务单据跨系统对账记录",fields:[{n:"reconcile_id",t:"BIGINT",pk:true,desc:"对账 ID"},{n:"reconcile_date",t:"DATE",idx:true,desc:"对账日期"},{n:"biz_type",t:"VARCHAR(50)",desc:"业务类型"},{n:"source_count",t:"INT",desc:"来源数量"},{n:"target_count",t:"INT",desc:"目标数量"},{n:"diff_count",t:"INT",desc:"差异数量"},{n:"resolve_status",t:"TINYINT",desc:"0未处理 1处理中 2已关闭"}]}
+],
+svgFn:function(){var P="#008C8C",F="#E6F7F7",S="#72CACA",TC="#075A5A",SC="#0B7373",G="#F1EFE8",GS="#B4B2A9";var s='';[{x:10,w:90,l:"外部系统",b:"ERP/PLM/WMS"},{x:115,w:90,l:"接口目录",b:"协议·契约"},{x:220,w:90,l:"消息队列",b:"异步解耦"},{x:325,w:90,l:"幂等重试",b:"去重·补偿"},{x:430,w:100,l:"业务落账",b:"状态一致"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(100,32,115,P);s+=hl(205,32,220,P);s+=hl(310,32,325,P);s+=hl(415,32,430,P);s+=db(10,82,520,48,"#F3FCFC",S,"监控与对账","成功率·延迟·积压·死信·日终差异",TC,SC);s+=box(10,150,520,36,G,GS,"接口可靠性决定 MES 与 ERP/WMS/PLM 的业务状态是否长期一致",null,"#444441","#444441");return'<svg width="100%" viewBox="0 0 540 198" role="img"><title>集成平台接口可靠性流程</title>'+AD+s+'</svg>';}
+},
+// ⑫ 异常事件
+{num:"⑫",title:"异常事件中心",tag:"统一事件·升级派单·闭环复盘",color:"#C44536",bg:"#FCECEB",border:"#E49A91",tc:"#72231B",
+subs:[{n:"统一异常模型",d:"将设备、质量、缺料、人员、工艺、接口、订单延误统一成事件对象"},{n:"事件分级",d:"按影响范围、停线风险、客户风险和超时风险定义等级"},{n:"自动派单",d:"基于事件类型、产线、班次和技能矩阵自动派给责任人"},{n:"升级机制",d:"超过响应时限自动升级到班组长、主管、经理"},{n:"临时措施",d:"记录围堵、隔离、换料、换机、返工、改派等现场措施"},{n:"根因分析",d:"关联 5Why、鱼骨图、故障代码和不良代码，形成可复用知识库"},{n:"恢复验证",d:"事件关闭前校验质量、设备、物料、排程和接口状态已恢复"},{n:"复盘改善",d:"统计重复异常、TOP 损失和改善收益，驱动 CAPA/TPM/工艺优化"}],
+inputs:[{cat:"来自业务模块",tags:["设备故障","质量异常","缺料报警","SPC 失控","接口死信","工单逾期","人员资质异常"]},{cat:"来自现场",tags:["人工上报","扫码报修","Andon 呼叫","班组长升级"]}],
+outputs:[{cat:"→ 责任处理",tags:["异常工单","响应 SLA","升级通知","临时处置要求"]},{cat:"→ 业务联动",tags:["停线锁定","库存冻结","APS 重排","NCR/CAPA 触发","维修工单触发"]}],
+input_maps:[{label:"事件来源",rows:[{item:"设备报警",tbl:"alarm_event",field:"alarm_id, alarm_level, trigger_time"},{item:"质量 NCR",tbl:"ncr_record",field:"ncr_id, defect_type_code, qty_affected"},{item:"接口死信",tbl:"dead_letter_message",field:"dead_id, error_code, fix_status"}]}],
+output_maps:[{label:"事件闭环",rows:[{item:"异常事件",tbl:"exception_event",field:"event_id, event_type, severity, status"},{item:"处置任务",tbl:"exception_task",field:"owner_id, due_time, complete_time"},{item:"根因复盘",tbl:"exception_rca",field:"root_cause, corrective_action, verify_result"}]}],
+tables:[
+  {name:"exception_event",label:"异常事件",desc:"跨模块异常统一入口",fields:[{n:"event_id",t:"BIGINT",pk:true,desc:"事件 ID"},{n:"event_no",t:"VARCHAR(50)",idx:true,desc:"事件编号"},{n:"event_type",t:"VARCHAR(30)",idx:true,desc:"equipment/quality/material/interface/order"},{n:"severity",t:"TINYINT",desc:"1低 2中 3高 4停线"},{n:"source_biz_type",t:"VARCHAR(50)",desc:"来源对象类型"},{n:"source_biz_id",t:"VARCHAR(80)",desc:"来源对象 ID"},{n:"workstation_id",t:"BIGINT",desc:"发生工位"},{n:"status",t:"TINYINT",desc:"0新建 1处理中 2验证 3关闭"},{n:"created_at",t:"DATETIME",idx:true,desc:"创建时间"}]},
+  {name:"exception_task",label:"异常处置任务",desc:"异常响应和升级任务",fields:[{n:"task_id",t:"BIGINT",pk:true,desc:"任务 ID"},{n:"event_id",t:"BIGINT",fk:"exception_event",idx:true,desc:"事件 ID"},{n:"owner_id",t:"BIGINT",desc:"责任人"},{n:"task_type",t:"VARCHAR(30)",desc:"response/containment/repair/verify"},{n:"due_time",t:"DATETIME",desc:"要求完成时间"},{n:"complete_time",t:"DATETIME",desc:"实际完成时间"},{n:"task_status",t:"TINYINT",desc:"0待办 1完成 2超时"}]},
+  {name:"exception_rca",label:"异常根因",desc:"根因、纠正措施和验证结果",fields:[{n:"rca_id",t:"BIGINT",pk:true,desc:"RCA ID"},{n:"event_id",t:"BIGINT",fk:"exception_event",idx:true,desc:"事件 ID"},{n:"root_cause",t:"TEXT",desc:"根因"},{n:"corrective_action",t:"TEXT",desc:"纠正措施"},{n:"preventive_action",t:"TEXT",desc:"预防措施"},{n:"verify_result",t:"TEXT",desc:"验证结果"},{n:"closed_by",t:"BIGINT",desc:"关闭人"}]}
+],
+svgFn:function(){var P="#C44536",F="#FCECEB",S="#E49A91",TC="#72231B",SC="#983126",G="#F1EFE8",GS="#B4B2A9";var s='';[{x:10,w:90,l:"异常触发",b:"设备·质量·接口"},{x:115,w:90,l:"事件分级",b:"影响·SLA"},{x:220,w:90,l:"自动派单",b:"责任人"},{x:325,w:90,l:"处置验证",b:"恢复条件"},{x:430,w:90,l:"复盘改善",b:"RCA·CAPA"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(100,32,115,P);s+=hl(205,32,220,P);s+=hl(310,32,325,P);s+=hl(415,32,430,P);s+=db(10,82,510,48,"#FFF6F5",S,"业务联动","停线锁定·库存冻结·APS 重排·NCR/CAPA·维修工单",TC,SC);s+=box(10,150,510,36,G,GS,"异常中心把现场问题从口头处理升级为可追踪、可度量、可复盘的闭环",null,"#444441","#444441");return'<svg width="100%" viewBox="0 0 530 198" role="img"><title>异常事件中心流程</title>'+AD+s+'</svg>';}
+},
+// ⑬ 条码标签
+{num:"⑬",title:"条码、标签与防错中心",tag:"扫码驱动·SN/批次·打印追溯",color:"#4B8F29",bg:"#EDF7E9",border:"#9BCB85",tc:"#285718",
+subs:[{n:"条码规则配置",d:"按产品、物料、供应商、工序配置一维码、二维码、DataMatrix 和 RFID 规则"},{n:"SN 与批次生成",d:"支持工单、批次、单件序列号、箱码、托盘码的层级绑定"},{n:"标签模板管理",d:"按客户、产品、工序、包装级别维护标签模板和打印变量"},{n:"打印防重",d:"控制首打、补打、作废、重打权限和原因记录"},{n:"扫码防错",d:"在领料、投料、开工、首检、报工、入库、出货节点强制校验"},{n:"包装层级",d:"建立单件、内箱、外箱、托盘与出货批次的层级关系"},{n:"离线扫码",d:"网络异常时终端本地缓存扫码记录，恢复后按序补传"},{n:"客户标签合规",d:"支持客户指定格式、供应商标签转换和质量证书关联"}],
+inputs:[{cat:"来自主数据/工单",tags:["编码规则","标签模板","工单产品数量","客户标签要求","包装规则"]},{cat:"来自现场终端",tags:["扫码记录","打印请求","补打原因","装箱绑定"]}],
+outputs:[{cat:"→ 生产执行",tags:["开工校验结果","投料防错结果","报工批次绑定","包装层级关系"]},{cat:"→ 追溯/WMS",tags:["SN 履历","箱码托盘码","入库标签","出货标签"]}],
+input_maps:[{label:"条码输入",rows:[{item:"编码规则",tbl:"code_rule",field:"rule_type, pattern, current_seq"},{item:"标签模板",tbl:"label_template",field:"template_code, template_body, variables"},{item:"扫码请求",tbl:"scan_record",field:"scan_code, scan_scene, workstation_id"}]}],
+output_maps:[{label:"防错输出",rows:[{item:"扫码记录",tbl:"scan_record",field:"scan_result, error_reason, operator_id"},{item:"序列号档案",tbl:"serial_number",field:"sn_code, lot_id, order_id, status"},{item:"包装层级",tbl:"packing_relation",field:"parent_code, child_code, pack_level"}]}],
+tables:[
+  {name:"label_template",label:"标签模板",desc:"标签格式和打印变量定义",fields:[{n:"template_id",t:"BIGINT",pk:true,desc:"模板 ID"},{n:"template_code",t:"VARCHAR(80)",idx:true,desc:"模板编码"},{n:"template_type",t:"VARCHAR(30)",desc:"material/fg/box/pallet/customer"},{n:"template_body",t:"TEXT",desc:"模板内容"},{n:"variables",t:"JSON",desc:"变量定义"},{n:"version_no",t:"VARCHAR(20)",desc:"版本号"},{n:"status",t:"TINYINT",desc:"1有效 0停用"}]},
+  {name:"serial_number",label:"序列号档案",desc:"单件或批次序列号主档",fields:[{n:"sn_id",t:"BIGINT",pk:true,desc:"SN ID"},{n:"sn_code",t:"VARCHAR(100)",idx:true,desc:"序列号"},{n:"lot_id",t:"BIGINT",fk:"material_lot",idx:true,desc:"批次 ID"},{n:"order_id",t:"BIGINT",fk:"production_order",desc:"工单 ID"},{n:"product_id",t:"BIGINT",fk:"product_master",desc:"产品 ID"},{n:"status",t:"TINYINT",desc:"1生成 2在制 3入库 4出货 5作废"},{n:"created_at",t:"DATETIME",desc:"生成时间"}]},
+  {name:"scan_record",label:"扫码记录",desc:"现场扫码校验记录",fields:[{n:"scan_id",t:"BIGINT",pk:true,desc:"扫码 ID"},{n:"scan_code",t:"VARCHAR(120)",idx:true,desc:"扫码内容"},{n:"scan_scene",t:"VARCHAR(50)",idx:true,desc:"receive/feed/start/report/pack/ship"},{n:"dispatch_id",t:"BIGINT",fk:"dispatch_order",desc:"派工单"},{n:"workstation_id",t:"BIGINT",desc:"工位"},{n:"scan_result",t:"TINYINT",desc:"1通过 0失败"},{n:"error_reason",t:"VARCHAR(200)",desc:"失败原因"},{n:"operator_id",t:"BIGINT",desc:"操作员"},{n:"scan_time",t:"DATETIME",idx:true,desc:"扫码时间"}]},
+  {name:"packing_relation",label:"包装关系",desc:"SN、箱码、托盘码层级关系",fields:[{n:"pack_id",t:"BIGINT",pk:true,desc:"包装关系 ID"},{n:"parent_code",t:"VARCHAR(120)",idx:true,desc:"父级码"},{n:"child_code",t:"VARCHAR(120)",idx:true,desc:"子级码"},{n:"pack_level",t:"VARCHAR(20)",desc:"unit/box/carton/pallet"},{n:"bind_time",t:"DATETIME",desc:"绑定时间"},{n:"operator_id",t:"BIGINT",desc:"操作员"}]},
+  {name:"print_job",label:"打印任务",desc:"标签打印与补打记录",fields:[{n:"print_id",t:"BIGINT",pk:true,desc:"打印 ID"},{n:"template_id",t:"BIGINT",fk:"label_template",desc:"模板 ID"},{n:"biz_type",t:"VARCHAR(50)",desc:"业务类型"},{n:"biz_id",t:"VARCHAR(80)",desc:"业务 ID"},{n:"print_count",t:"INT",desc:"打印次数"},{n:"reprint_reason",t:"VARCHAR(200)",desc:"补打原因"},{n:"printed_by",t:"BIGINT",desc:"打印人"},{n:"print_time",t:"DATETIME",desc:"打印时间"}]}
+],
+svgFn:function(){var P="#4B8F29",F="#EDF7E9",S="#9BCB85",TC="#285718",SC="#3A711F",G="#F1EFE8",GS="#B4B2A9";var s='';[{x:10,w:90,l:"编码规则",b:"批次·SN"},{x:115,w:90,l:"标签模板",b:"变量·版本"},{x:220,w:90,l:"打印控制",b:"首打·补打"},{x:325,w:90,l:"扫码防错",b:"节点校验"},{x:430,w:90,l:"包装绑定",b:"箱·托盘"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(100,32,115,P);s+=hl(205,32,220,P);s+=hl(310,32,325,P);s+=hl(415,32,430,P);s+=db(10,82,510,48,"#F7FCF5",S,"扫码驱动业务节点","领料·投料·开工·首检·报工·入库·出货",TC,SC);s+=box(10,150,510,36,G,GS,"条码中心把现场动作变成可验证的数据采集和防错控制点",null,"#444441","#444441");return'<svg width="100%" viewBox="0 0 530 198" role="img"><title>条码标签防错中心流程</title>'+AD+s+'</svg>';}
+},
+// ⑭ 规则配置
+{num:"⑭",title:"规则配置与状态机中心",tag:"可配置流程·校验门·业务状态",color:"#A66321",bg:"#FBF0E4",border:"#D7A66E",tc:"#61360F",
+subs:[{n:"业务状态机",d:"定义工单、派工、批次、检验、NCR、维修、接口消息的状态和可执行动作"},{n:"校验门配置",d:"配置开工、首检、投料、报工、入库、出货前必须满足的条件"},{n:"防错规则",d:"按产品、工序、物料、设备、客户配置扫码和参数校验规则"},{n:"异常升级规则",d:"按事件类型、等级、产线、时段配置响应 SLA 和升级路径"},{n:"报工规则",d:"配置超产、少报、拆批、合批、返工、报废、补录是否允许"},{n:"质量判定规则",d:"配置 AQL、SPC 判异、FQC 放行、OQC 出货和让步接收条件"},{n:"通知规则",d:"按事件、角色、班次、严重程度推送站内信、短信、邮件或企业微信"},{n:"版本化发布",d:"规则草稿、试运行、发布、生效、回滚全程留痕"}],
+inputs:[{cat:"来自业务配置",tags:["状态定义","动作权限","校验表达式","SLA 时限","通知模板"]},{cat:"来自执行模块",tags:["当前业务对象","操作动作","上下文数据","用户权限"]}],
+outputs:[{cat:"→ 业务执行",tags:["动作是否允许","校验门结果","下一状态","通知任务"]},{cat:"→ 审计/异常",tags:["规则命中记录","拦截原因","规则版本快照"]}],
+input_maps:[{label:"规则输入",rows:[{item:"状态定义",tbl:"state_machine_def",field:"biz_type, state_code, action_code, next_state"},{item:"业务规则",tbl:"business_rule",field:"rule_type, condition_expr, action_expr"},{item:"通知模板",tbl:"notification_rule",field:"event_type, receiver_role, channel"}]}],
+output_maps:[{label:"规则执行",rows:[{item:"规则命中",tbl:"rule_execution_log",field:"rule_id, biz_type, biz_id, pass_flag"},{item:"状态迁移",tbl:"state_transition_log",field:"from_state, action_code, to_state"},{item:"通知任务",tbl:"notification_task",field:"receiver_id, channel, send_status"}]}],
+tables:[
+  {name:"state_machine_def",label:"状态机定义",desc:"业务对象状态和动作配置",fields:[{n:"state_def_id",t:"BIGINT",pk:true,desc:"定义 ID"},{n:"biz_type",t:"VARCHAR(50)",idx:true,desc:"业务类型"},{n:"state_code",t:"VARCHAR(50)",desc:"当前状态"},{n:"action_code",t:"VARCHAR(50)",desc:"动作编码"},{n:"next_state",t:"VARCHAR(50)",desc:"下一状态"},{n:"guard_rule_id",t:"BIGINT",fk:"business_rule",desc:"前置校验规则"},{n:"enabled",t:"BOOLEAN",desc:"是否启用"}]},
+  {name:"business_rule",label:"业务规则",desc:"可配置校验、判定和动作规则",fields:[{n:"rule_id",t:"BIGINT",pk:true,desc:"规则 ID"},{n:"rule_code",t:"VARCHAR(80)",idx:true,desc:"规则编码"},{n:"rule_type",t:"VARCHAR(50)",desc:"gate/poka_yoke/report/quality/escalation"},{n:"condition_expr",t:"TEXT",desc:"条件表达式"},{n:"action_expr",t:"TEXT",desc:"动作表达式"},{n:"version_no",t:"VARCHAR(20)",desc:"版本号"},{n:"status",t:"TINYINT",desc:"0草稿 1发布 2停用"}]},
+  {name:"rule_execution_log",label:"规则执行日志",desc:"规则命中和拦截记录",fields:[{n:"exec_id",t:"BIGINT",pk:true,desc:"执行 ID"},{n:"rule_id",t:"BIGINT",fk:"business_rule",idx:true,desc:"规则 ID"},{n:"biz_type",t:"VARCHAR(50)",idx:true,desc:"业务类型"},{n:"biz_id",t:"VARCHAR(80)",idx:true,desc:"业务 ID"},{n:"pass_flag",t:"BOOLEAN",desc:"是否通过"},{n:"fail_reason",t:"VARCHAR(300)",desc:"失败原因"},{n:"exec_time",t:"DATETIME",idx:true,desc:"执行时间"}]},
+  {name:"state_transition_log",label:"状态迁移日志",desc:"业务状态变化记录",fields:[{n:"trans_id",t:"BIGINT",pk:true,desc:"迁移 ID"},{n:"biz_type",t:"VARCHAR(50)",idx:true,desc:"业务类型"},{n:"biz_id",t:"VARCHAR(80)",idx:true,desc:"业务 ID"},{n:"from_state",t:"VARCHAR(50)",desc:"原状态"},{n:"action_code",t:"VARCHAR(50)",desc:"动作"},{n:"to_state",t:"VARCHAR(50)",desc:"目标状态"},{n:"operator_id",t:"BIGINT",desc:"操作人"},{n:"trans_time",t:"DATETIME",desc:"迁移时间"}]},
+  {name:"notification_rule",label:"通知规则",desc:"事件通知和升级配置",fields:[{n:"notify_rule_id",t:"BIGINT",pk:true,desc:"通知规则 ID"},{n:"event_type",t:"VARCHAR(50)",idx:true,desc:"事件类型"},{n:"severity",t:"TINYINT",desc:"严重等级"},{n:"receiver_role",t:"VARCHAR(80)",desc:"接收角色"},{n:"channel",t:"VARCHAR(30)",desc:"站内信/短信/邮件/企微"},{n:"delay_min",t:"INT",desc:"延迟或升级分钟"}]}
+],
+svgFn:function(){var P="#A66321",F="#FBF0E4",S="#D7A66E",TC="#61360F",SC="#875018",G="#F1EFE8",GS="#B4B2A9";var s='';[{x:10,w:90,l:"状态机",b:"状态·动作"},{x:115,w:90,l:"业务规则",b:"条件·动作"},{x:220,w:90,l:"校验门",b:"开工·入库"},{x:325,w:90,l:"规则执行",b:"通过·拦截"},{x:430,w:90,l:"状态迁移",b:"留痕"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(100,32,115,P);s+=hl(205,32,220,P);s+=hl(310,32,325,P);s+=hl(415,32,430,P);s+=db(10,82,510,48,"#FFF8F0",S,"配置化控制","报工规则·质量判定·异常升级·通知规则·版本发布",TC,SC);s+=box(10,150,510,36,G,GS,"规则中心减少定制开发，使不同工厂和产线可以按配置落地",null,"#444441","#444441");return'<svg width="100%" viewBox="0 0 530 198" role="img"><title>规则配置状态机中心流程</title>'+AD+s+'</svg>';}
+},
+// ⑮ 数据治理
+{num:"⑮",title:"数据归档、性能与运维监控",tag:"冷热分层·时序治理·可观测性",color:"#5F6C7B",bg:"#EEF1F4",border:"#AEB8C2",tc:"#2E3945",
+subs:[{n:"冷热数据分层",d:"按业务热度拆分在线库、历史库、归档库和对象存储"},{n:"时序数据治理",d:"设备参数、状态、报警按采集频率分区、降采样、聚合和归档"},{n:"数据保留策略",d:"按行业法规、客户要求和数据价值配置保留年限"},{n:"性能分区索引",d:"对工单、批次、时间、设备、工位建立分区和复合索引"},{n:"作业调度",d:"统一调度 KPI 聚合、OEE 计算、接口重试、归档清理和报表生成"},{n:"系统监控",d:"监控服务健康、接口延迟、队列积压、数据库慢 SQL 和采集断线"},{n:"备份恢复",d:"配置全量、增量、日志备份和恢复演练，保证 RPO/RTO"},{n:"数据血缘",d:"记录关键指标从采集、清洗、聚合到报表的来源链路"}],
+inputs:[{cat:"来自全系统",tags:["时序参数","设备状态","报警日志","接口消息","审计日志","追溯查询","KPI 聚合"]},{cat:"来自运维配置",tags:["保留年限","分区策略","备份策略","监控阈值"]}],
+outputs:[{cat:"→ 查询与报表",tags:["热数据查询","历史追溯查询","聚合指标","归档检索"]},{cat:"→ 运维告警",tags:["服务异常","慢查询","队列积压","采集断线","备份失败"]}],
+input_maps:[{label:"数据来源",rows:[{item:"过程参数",tbl:"process_parameter_log",field:"collect_time, device_id, lot_id"},{item:"接口消息",tbl:"integration_message",field:"status, retry_count, next_retry_time"},{item:"审计日志",tbl:"audit_log",field:"action_time, biz_type, user_id"}]}],
+output_maps:[{label:"治理输出",rows:[{item:"归档任务",tbl:"archive_job",field:"source_table, archive_until, job_status"},{item:"监控指标",tbl:"system_metric",field:"metric_code, metric_value, collect_time"},{item:"调度任务",tbl:"scheduler_job",field:"job_code, cron_expr, last_status"}]}],
+tables:[
+  {name:"archive_policy",label:"归档策略",desc:"业务表保留和归档规则",fields:[{n:"policy_id",t:"BIGINT",pk:true,desc:"策略 ID"},{n:"source_table",t:"VARCHAR(80)",idx:true,desc:"来源表"},{n:"retention_days",t:"INT",desc:"在线保留天数"},{n:"archive_target",t:"VARCHAR(80)",desc:"归档目标"},{n:"partition_key",t:"VARCHAR(50)",desc:"分区字段"},{n:"enabled",t:"BOOLEAN",desc:"是否启用"}]},
+  {name:"archive_job",label:"归档任务",desc:"归档执行记录",fields:[{n:"job_id",t:"BIGINT",pk:true,desc:"任务 ID"},{n:"policy_id",t:"BIGINT",fk:"archive_policy",desc:"策略 ID"},{n:"source_table",t:"VARCHAR(80)",idx:true,desc:"来源表"},{n:"archive_until",t:"DATETIME",desc:"归档截止时间"},{n:"rows_moved",t:"BIGINT",desc:"迁移行数"},{n:"job_status",t:"TINYINT",desc:"0待执行 1成功 2失败"},{n:"start_time",t:"DATETIME",desc:"开始时间"},{n:"end_time",t:"DATETIME",desc:"结束时间"}]},
+  {name:"system_metric",label:"系统指标",desc:"服务、数据库、队列和采集链路监控指标",fields:[{n:"metric_id",t:"BIGINT",pk:true,desc:"指标 ID"},{n:"metric_code",t:"VARCHAR(100)",idx:true,desc:"指标编码"},{n:"metric_value",t:"DECIMAL(20,6)",desc:"指标值"},{n:"metric_tags",t:"JSON",desc:"标签"},{n:"collect_time",t:"DATETIME",idx:true,desc:"采集时间"},{n:"alarm_flag",t:"BOOLEAN",desc:"是否告警"}]},
+  {name:"scheduler_job",label:"调度任务",desc:"后台任务和批处理配置",fields:[{n:"scheduler_id",t:"BIGINT",pk:true,desc:"调度 ID"},{n:"job_code",t:"VARCHAR(80)",idx:true,desc:"任务编码"},{n:"job_type",t:"VARCHAR(50)",desc:"archive/kpi/retry/report"},{n:"cron_expr",t:"VARCHAR(80)",desc:"Cron 表达式"},{n:"last_run_time",t:"DATETIME",desc:"上次运行"},{n:"last_status",t:"TINYINT",desc:"1成功 0失败"},{n:"enabled",t:"BOOLEAN",desc:"是否启用"}]},
+  {name:"data_lineage",label:"数据血缘",desc:"指标和报表的数据来源链路",fields:[{n:"lineage_id",t:"BIGINT",pk:true,desc:"血缘 ID"},{n:"target_object",t:"VARCHAR(100)",idx:true,desc:"目标指标或报表"},{n:"source_object",t:"VARCHAR(100)",desc:"来源表或接口"},{n:"transform_rule",t:"TEXT",desc:"加工规则"},{n:"owner",t:"VARCHAR(80)",desc:"责任人"},{n:"updated_at",t:"DATETIME",desc:"更新时间"}]}
+],
+svgFn:function(){var P="#5F6C7B",F="#EEF1F4",S="#AEB8C2",TC="#2E3945",SC="#4A5663",G="#F1EFE8",GS="#B4B2A9";var s='';[{x:10,w:90,l:"在线热库",b:"高频业务"},{x:115,w:90,l:"历史库",b:"追溯查询"},{x:220,w:90,l:"归档库",b:"长期保存"},{x:325,w:90,l:"监控指标",b:"服务·接口"},{x:430,w:90,l:"告警运维",b:"RPO/RTO"}].forEach(function(b){s+=box(b.x,10,b.w,44,F,S,b.l,b.b,TC,SC);});s+=hl(100,32,115,P);s+=hl(205,32,220,P);s+=hl(310,32,325,P);s+=hl(415,32,430,P);s+=db(10,82,510,48,"#F8FAFC",S,"高频数据治理","时序分区·降采样·聚合·慢查询·队列积压·采集断线",TC,SC);s+=box(10,150,510,36,G,GS,"数据治理保证 MES 在多年运行、高频采集和大量追溯查询下仍可维护",null,"#444441","#444441");return'<svg width="100%" viewBox="0 0 530 198" role="img"><title>数据归档性能运维流程</title>'+AD+s+'</svg>';}
+}
+];
+
+var moduleOrder=[
+  "主数据与编码中心",
+  "集成平台与接口可靠性",
+  "权限、审计与电子签名",
+  "规则配置与状态机中心",
+  "计划排程（APS）",
+  "作业派工",
+  "条码、标签与防错中心",
+  "物料管控",
+  "过程监控与数据采集",
+  "质量管控（IPQC/SPC）",
+  "设备管理（TPM）",
+  "异常事件中心",
+  "完工报工与入库",
+  "追溯与报表分析",
+  "数据归档、性能与运维监控"
+];
+var moduleNums=["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮"];
+M.sort(function(a,b){return moduleOrder.indexOf(a.title)-moduleOrder.indexOf(b.title);});
+M.forEach(function(m,i){m.num=moduleNums[i]||String(i+1);m._idx=i;});
+
+var html='';
+M.forEach(function(m,i){
+  var subHtml='';
+  m.subs.forEach(function(s){subHtml+='<div class="sub-card" style="background:'+m.bg+';border-color:'+m.border+'"><p class="sub-name" style="color:'+m.tc+'">'+s.n+'</p><p class="sub-desc" style="color:'+m.tc+';opacity:.8;">'+s.d+'</p></div>';});
+  var dfHtml=buildDF(m);
+  var dbHtml=buildDB(m);
+  var svgContent=m.svgFn();
+  var connector=i<M.length-1?'<div class="flow-sep">↓</div>':'';
+  html+='<div class="module" style="border-color:'+m.border+';background:'+m.bg+';">'
+    +'<div class="mod-hdr" onclick="toggle('+i+')">'
+    +'<span class="mod-num" style="background:'+m.color+';">'+m.num+'</span>'
+    +'<span class="mod-title" style="color:'+m.tc+'">'+m.title+'</span>'
+    +'<span class="mod-tag" style="color:'+m.tc+'">'+m.tag+'</span>'
+    +'<span class="mod-arr" id="arr-'+i+'" style="color:'+m.tc+'">▾</span>'
+    +'</div>'
+    +'<div class="mod-body open" id="body-'+i+'">'
+    +'<div class="tab-row">'
+    +'<span class="tab active" id="tab-'+i+'-flow" onclick="switchTab('+i+',\'flow\')">流程图</span>'
+    +'<span class="tab" id="tab-'+i+'-subs" onclick="switchTab('+i+',\'subs\')">子功能（'+m.subs.length+'项）</span>'
+    +'<span class="tab" id="tab-'+i+'-data" onclick="switchTab('+i+',\'data\')">数据流+字段映射</span>'
+    +'<span class="tab" id="tab-'+i+'-dbtab" onclick="switchTab('+i+',\'dbtab\')">数据库表（'+m.tables.length+'张）</span>'
+    +'</div>'
+    +'<div class="panel active" id="panel-'+i+'-flow"><div class="flow-wrap">'+svgContent+'</div></div>'
+    +'<div class="panel" id="panel-'+i+'-subs"><div class="sub-grid">'+subHtml+'</div></div>'
+    +'<div class="panel" id="panel-'+i+'-data">'+dfHtml+'</div>'
+    +'<div class="panel" id="panel-'+i+'-dbtab">'+dbHtml+'</div>'
+    +'</div></div>'+connector;
+});
+document.getElementById('mods').innerHTML=html;
+</script>
