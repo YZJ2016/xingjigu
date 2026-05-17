@@ -8,6 +8,10 @@
 - 面向工厂日常工作的菜单入口
 - 业务子菜单
 - 多订单首页工作台
+- 订单与计划 / 生产订单独立管理页面
+- 订单与计划 / 订单评审独立工作台
+- 生产订单新增、编辑、删除、分页、搜索、筛选与联动影响管理
+- 订单评审准入校验、会签标记、评审通过、退回补资料与转排程联动
 - 生产订单池
 - 产线负荷
 - 当前选中订单闭环进度
@@ -30,6 +34,13 @@ UI_Design/
   styles.css
   app.js
   README.md
+  orders/
+    order-reviews.html
+    order-reviews.css
+    order-reviews.js
+    production-orders.html
+    production-orders.css
+    production-orders.js
 ```
 
 ## 打开方式
@@ -38,6 +49,18 @@ UI_Design/
 
 ```text
 UI_Design/index.html
+```
+
+生产订单管理页面：
+
+```text
+UI_Design/orders/production-orders.html
+```
+
+订单评审工作台：
+
+```text
+UI_Design/orders/order-reviews.html
 ```
 
 也可以在 `UI_Design` 目录启动任意静态服务后访问首页。

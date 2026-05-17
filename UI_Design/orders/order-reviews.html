@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 订单评审</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./production-orders.css" />
+    <link rel="stylesheet" href="./order-reviews.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="orderModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main order-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">订单与计划 / 订单评审</div>
+            <h1>订单评审工作台</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="batchPassBtn" class="primary-action" type="button">批量通过低风险</button>
+            <button id="resetReviewPageBtn" class="secondary-action" type="button">重置评审演示</button>
+            <a class="secondary-link" href="./production-orders.html">生产订单</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">陈</span>
+              <span>计划主管</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="order-metrics" aria-label="订单评审统计">
+          <article>
+            <span>待评审</span>
+            <strong id="metricPending">0</strong>
+            <em>未完成准入校验</em>
+          </article>
+          <article>
+            <span>资料问题</span>
+            <strong id="metricDataRisk">0</strong>
+            <em>BOM / 工艺 / 检验要求待确认</em>
+          </article>
+          <article>
+            <span>需会签</span>
+            <strong id="metricCountersign">0</strong>
+            <em>物料、质量或设备约束</em>
+          </article>
+          <article>
+            <span>可转排程</span>
+            <strong id="metricReady">0</strong>
+            <em>评审通过且未排程</em>
+          </article>
+        </section>
+
+        <section class="review-layout">
+          <div class="order-list-panel">
+            <div class="toolbar review-toolbar">
+              <div class="search-box">
+                <label for="reviewSearch">搜索</label>
+                <input id="reviewSearch" type="search" placeholder="工单号、产品、客户、计划员" />
+              </div>
+              <label>
+                评审状态
+                <select id="reviewFilter">
+                  <option value="all">全部评审</option>
+                  <option value="待评审">待评审</option>
+                  <option value="已通过">已通过</option>
+                </select>
+              </label>
+              <label>
+                风险类型
+                <select id="riskFilter">
+                  <option value="all">全部风险</option>
+                  <option value="正常">正常</option>
+                  <option value="资料">资料</option>
+                  <option value="缺料">缺料</option>
+                  <option value="质量">质量</option>
+                  <option value="设备">设备</option>
+                  <option value="交期">交期</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="table-wrap">
+              <table class="order-table review-table">
+                <colgroup>
+                  <col class="col-order" />
+                  <col class="col-product" />
+                  <col class="col-customer" />
+                  <col class="col-status" />
+                  <col class="col-risk" />
+                  <col class="col-review-owner" />
+                  <col class="col-review-gate" />
+                  <col class="col-actions" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>工单号</th>
+                    <th>产品</th>
+                    <th>客户</th>
+                    <th>评审</th>
+                    <th>风险</th>
+                    <th>责任人</th>
+                    <th>准入结论</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="reviewTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="order-detail-panel review-detail-panel">
+            <div class="detail-head">
+              <span id="detailReviewStatus">待评审</span>
+              <h2 id="detailOrderId">MO-202606-0006</h2>
+              <p id="detailProduct">显示控制面板 HMI-70</p>
+            </div>
+
+            <div class="detail-grid" id="detailGrid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>评审资料</h3>
+                <button id="confirmMaterialsBtn" type="button">确认全部资料</button>
+              </div>
+              <div id="reviewMaterialList" class="review-material-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>准入校验</h3>
+                <button id="passActiveBtn" type="button">评审通过</button>
+              </div>
+              <div id="gateChecklist" class="gate-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>会签意见</h3>
+                <button id="returnActiveBtn" type="button">退回补资料</button>
+              </div>
+              <div id="countersignList" class="countersign-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>评审动作</h3>
+              </div>
+              <div class="action-grid review-actions">
+                <button id="markDataBtn" type="button">标记资料问题</button>
+                <button id="markMaterialBtn" type="button">标记缺料会签</button>
+                <button id="markQualityBtn" type="button">标记质量会签</button>
+                <button id="moveScheduleBtn" type="button">转入待排程</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>最近记录</h3>
+              </div>
+              <div id="reviewLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./order-reviews.js"></script>
+  </body>
+</html>

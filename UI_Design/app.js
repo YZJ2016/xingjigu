@@ -147,7 +147,6 @@ function getVisibleOrders() {
   if (state.orderView === "risk") list = list.filter((order) => risks.some((risk) => !risk.done && risk.orderId === order.id));
   return list;
 }
-
 function renderMenu() {
   menu.innerHTML = modules
     .map((module, index) => {
@@ -193,6 +192,14 @@ function renderMenu() {
 
 function applyMenuEntry(moduleId, entry) {
   const order = getActiveOrder();
+  if (moduleId === "orders" && entry === "生产订单") {
+    window.location.href = "./orders/production-orders.html";
+    return;
+  }
+  if (moduleId === "orders" && entry === "订单评审") {
+    window.location.href = "./orders/order-reviews.html";
+    return;
+  }
   const actions = {
     生产总览: () => {
       state.line = "全部产线";
@@ -588,7 +595,6 @@ function renderAllProduction() {
   renderRisks();
   renderKpis();
 }
-
 function bindKpis() {
   document.querySelectorAll(".kpi-card").forEach((card) => {
     card.addEventListener("click", () => {

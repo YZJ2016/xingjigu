@@ -1,0 +1,119 @@
+.review-layout {
+  display: grid;
+  grid-template-columns: minmax(720px, 1fr) 430px;
+  gap: 14px;
+  align-items: start;
+}
+
+.review-toolbar {
+  grid-template-columns: minmax(260px, 1fr) 150px 150px;
+}
+
+.review-table {
+  min-width: 1060px;
+}
+
+.col-review-owner {
+  width: 98px;
+}
+
+.col-review-gate {
+  width: 230px;
+}
+
+.gate-list,
+.countersign-list,
+.review-material-list {
+  display: grid;
+  gap: 8px;
+}
+
+.gate-list div,
+.countersign-list div {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.review-material-list div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 64px 74px;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.gate-list span,
+.countersign-list span,
+.review-material-list span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.gate-list strong,
+.countersign-list strong,
+.review-material-list strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.38;
+}
+
+.gate-list em,
+.countersign-list em,
+.review-material-list em {
+  color: var(--blue);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.review-material-list button {
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 8px;
+  background: var(--surface-strong);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.review-material-list button[data-material-action="flag"] {
+  color: var(--orange);
+}
+
+.review-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.review-actions button:last-child {
+  grid-column: span 2;
+}
+
+.review-detail-panel {
+  top: 18px;
+}
+
+@media (max-width: 1320px) {
+  .review-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .review-detail-panel {
+    position: static;
+  }
+}
