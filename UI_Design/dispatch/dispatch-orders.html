@@ -75,7 +75,7 @@
           </article>
         </section>
 
-        <section class="dispatch-layout">
+        <section class="dispatch-layout dispatch-resource-layout">
           <div class="dispatch-left">
             <div class="toolbar dispatch-toolbar">
               <div class="search-box">
@@ -114,31 +114,26 @@
               </label>
             </div>
 
-            <section class="dispatch-board">
-              <div class="dispatch-lane">
-                <div class="section-title">
-                  <h3>今日派工队列</h3>
+            <section class="dispatch-flow-panel dispatch-flow-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>当前工单工序链</h3>
+                  <p>确认当前派工在整条工艺路线中的位置和上下道衔接</p>
                 </div>
-                <div id="dispatchList" class="dispatch-list"></div>
+                <span id="flowOrderText">MO-202606-0001</span>
               </div>
+              <div id="operationFlow" class="operation-flow"></div>
+            </section>
 
-              <div class="dispatch-focus">
-                <section class="dispatch-flow-panel">
-                  <div class="section-title">
-                    <h3>当前工单工序链</h3>
-                    <span id="flowOrderText">MO-202606-0001</span>
-                  </div>
-                  <div id="operationFlow" class="operation-flow"></div>
-                </section>
-
-                <section class="resource-panel">
-                  <div class="section-title">
-                    <h3>资源占用</h3>
-                    <span>设备 · 工位 · 班组</span>
-                  </div>
-                  <div id="resourceBoard" class="resource-board"></div>
-                </section>
+            <section class="resource-panel resource-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>资源占用</h3>
+                  <p>绑定设备、工位、班组与计划窗口，作为下达和开工准入依据</p>
+                </div>
+                <span>设备 · 工位 · 班组</span>
               </div>
+              <div id="resourceBoard" class="resource-board"></div>
             </section>
 
             <section class="dispatch-table-panel">
@@ -169,52 +164,64 @@
             </section>
           </div>
 
-          <aside id="dispatchDetailPanel" class="order-detail-panel dispatch-detail-panel">
-            <div class="detail-head">
-              <div>
-                <span id="detailStatus">待下达</span>
-                <h2 id="detailDispatchNo">D-001</h2>
-                <p id="detailTitle">SMT 贴片 · 智能温控控制器 TCU-100</p>
-              </div>
-              <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
-            </div>
-
-            <div class="detail-grid" id="detailGrid"></div>
-
-            <section class="detail-section">
+          <aside class="dispatch-side-rail">
+            <section class="dispatch-lane">
               <div class="section-title">
-                <h3>开工校验门</h3>
-                <button id="runGateBtn" type="button">重新校验</button>
+                <div>
+                  <h3>今日派工队列</h3>
+                  <p>选择派工单后在左侧核对工序链和资源绑定</p>
+                </div>
               </div>
-              <div id="gateList" class="gate-list"></div>
+              <div id="dispatchList" class="dispatch-list"></div>
             </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>执行准备</h3>
+            <section id="dispatchDetailPanel" class="order-detail-panel dispatch-detail-panel">
+              <div class="detail-head">
+                <div>
+                  <span id="detailStatus">待下达</span>
+                  <h2 id="detailDispatchNo">D-001</h2>
+                  <p id="detailTitle">SMT 贴片 · 智能温控控制器 TCU-100</p>
+                </div>
+                <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
               </div>
-              <div id="readinessList" class="readiness-list"></div>
-            </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>联动动作</h3>
-              </div>
-              <div class="action-grid dispatch-actions">
-                <button id="releaseBtn" type="button">下达派工</button>
-                <button id="acceptBtn" type="button">班组接单</button>
-                <button id="startBtn" type="button">扫码开工</button>
-                <button id="completeBtn" type="button">工序完工</button>
-                <button id="blockBtn" class="danger-action" type="button">异常锁定</button>
-                <button id="reassignBtn" type="button">资源重分配</button>
-              </div>
-            </section>
+              <div class="detail-grid" id="detailGrid"></div>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>最近记录</h3>
-              </div>
-              <div id="dispatchLogList" class="integration-list"></div>
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>开工校验门</h3>
+                  <button id="runGateBtn" type="button">重新校验</button>
+                </div>
+                <div id="gateList" class="gate-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>执行准备</h3>
+                </div>
+                <div id="readinessList" class="readiness-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>联动动作</h3>
+                </div>
+                <div class="action-grid dispatch-actions">
+                  <button id="releaseBtn" type="button">下达派工</button>
+                  <button id="acceptBtn" type="button">班组接单</button>
+                  <button id="startBtn" type="button">扫码开工</button>
+                  <button id="completeBtn" type="button">工序完工</button>
+                  <button id="blockBtn" class="danger-action" type="button">异常锁定</button>
+                  <button id="reassignBtn" type="button">资源重分配</button>
+                </div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>最近记录</h3>
+                </div>
+                <div id="dispatchLogList" class="integration-list"></div>
+              </section>
             </section>
           </aside>
         </section>

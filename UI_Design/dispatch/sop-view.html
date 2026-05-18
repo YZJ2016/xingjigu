@@ -81,7 +81,7 @@
           </article>
         </section>
 
-        <section class="sop-layout">
+        <section class="sop-layout sop-version-layout">
           <div class="sop-left">
             <div class="toolbar sop-toolbar">
               <div class="search-box">
@@ -120,31 +120,26 @@
               </label>
             </div>
 
-            <section class="sop-board">
-              <div class="task-lane">
-                <div class="section-title">
-                  <h3>SOP 清单</h3>
+            <section class="sop-preview-panel sop-preview-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>终端预览</h3>
+                  <p>确认现场终端可见的 SOP 版本、工步提示、参数和签收状态</p>
                 </div>
-                <div id="sopList" class="task-list"></div>
+                <span id="activeSopText">SOP-ASM-016</span>
               </div>
+              <div id="terminalPreview" class="terminal-preview"></div>
+            </section>
 
-              <div class="sop-focus">
-                <section class="sop-preview-panel">
-                  <div class="section-title">
-                    <h3>终端预览</h3>
-                    <span id="activeSopText">SOP-ASM-016</span>
-                  </div>
-                  <div id="terminalPreview" class="terminal-preview"></div>
-                </section>
-
-                <section class="sop-param-panel">
-                  <div class="section-title">
-                    <h3>关键参数</h3>
-                    <span>设备 · 质量 · 安全</span>
-                  </div>
-                  <div id="paramBoard" class="param-board"></div>
-                </section>
+            <section class="sop-param-panel sop-param-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>关键参数</h3>
+                  <p>设备程序、质量控制点和安全要求需要与工位终端版本一致</p>
+                </div>
+                <span>设备 · 质量 · 安全</span>
               </div>
+              <div id="paramBoard" class="param-board"></div>
             </section>
 
             <section class="dispatch-table-panel">
@@ -175,52 +170,64 @@
             </section>
           </div>
 
-          <aside id="sopDetailPanel" class="order-detail-panel sop-detail-panel">
-            <div class="detail-head">
-              <div>
-                <span id="detailStatus">已发布</span>
-                <h2 id="detailSopNo">SOP-ASM-016</h2>
-                <p id="detailTitle">整机装配 · TCU-100 控制器</p>
-              </div>
-              <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
-            </div>
-
-            <div class="detail-grid" id="detailGrid"></div>
-
-            <section class="detail-section">
+          <aside class="sop-side-rail">
+            <section class="task-lane">
               <div class="section-title">
-                <h3>版本校验</h3>
-                <button id="verifyBtn" type="button">重新校验</button>
+                <div>
+                  <h3>SOP 清单</h3>
+                  <p>选择 SOP 后在左侧核对终端预览、参数和附件点检</p>
+                </div>
               </div>
-              <div id="gateList" class="gate-list"></div>
+              <div id="sopList" class="task-list"></div>
             </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>附件与点检</h3>
+            <section id="sopDetailPanel" class="order-detail-panel sop-detail-panel">
+              <div class="detail-head">
+                <div>
+                  <span id="detailStatus">已发布</span>
+                  <h2 id="detailSopNo">SOP-ASM-016</h2>
+                  <p id="detailTitle">整机装配 · TCU-100 控制器</p>
+                </div>
+                <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
               </div>
-              <div id="attachmentList" class="readiness-list"></div>
-            </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>联动动作</h3>
-              </div>
-              <div class="action-grid dispatch-actions">
-                <button id="signBtn" type="button">班组签收</button>
-                <button id="releaseBtn" type="button">发布版本</button>
-                <button id="changeBtn" type="button">发起变更</button>
-                <button id="terminalBtn" type="button">同步终端</button>
-                <button id="printBtn" type="button">打印工位卡</button>
-                <button id="archiveBtn" class="danger-action" type="button">标记过期</button>
-              </div>
-            </section>
+              <div class="detail-grid" id="detailGrid"></div>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>查看记录</h3>
-              </div>
-              <div id="sopLogList" class="integration-list"></div>
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>版本校验</h3>
+                  <button id="verifyBtn" type="button">重新校验</button>
+                </div>
+                <div id="gateList" class="gate-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>附件与点检</h3>
+                </div>
+                <div id="attachmentList" class="readiness-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>联动动作</h3>
+                </div>
+                <div class="action-grid dispatch-actions">
+                  <button id="signBtn" type="button">班组签收</button>
+                  <button id="releaseBtn" type="button">发布版本</button>
+                  <button id="changeBtn" type="button">发起变更</button>
+                  <button id="terminalBtn" type="button">同步终端</button>
+                  <button id="printBtn" type="button">打印工位卡</button>
+                  <button id="archiveBtn" class="danger-action" type="button">标记过期</button>
+                </div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>查看记录</h3>
+                </div>
+                <div id="sopLogList" class="integration-list"></div>
+              </section>
             </section>
           </aside>
         </section>

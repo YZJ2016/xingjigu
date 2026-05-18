@@ -80,7 +80,7 @@
           </article>
         </section>
 
-        <section class="change-layout">
+        <section class="change-layout change-impact-layout">
           <div class="change-left">
             <div class="toolbar change-toolbar">
               <div class="search-box">
@@ -120,31 +120,26 @@
               </label>
             </div>
 
-            <section class="change-board">
-              <div class="task-lane">
-                <div class="section-title">
-                  <h3>变更申请池</h3>
+            <section class="compare-panel compare-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>变更前后对比</h3>
+                  <p>确认人员、工位、数量、时间变化对当前派工单的直接影响</p>
                 </div>
-                <div id="changeList" class="task-list"></div>
+                <span id="activeChangeText">CHG-001</span>
               </div>
+              <div id="compareBoard" class="compare-board"></div>
+            </section>
 
-              <div class="change-focus">
-                <section class="compare-panel">
-                  <div class="section-title">
-                    <h3>变更前后对比</h3>
-                    <span id="activeChangeText">CHG-001</span>
-                  </div>
-                  <div id="compareBoard" class="compare-board"></div>
-                </section>
-
-                <section class="impact-panel">
-                  <div class="section-title">
-                    <h3>影响范围</h3>
-                    <span>派工 · 物料 · 质量 · 排程</span>
-                  </div>
-                  <div id="impactBoard" class="impact-board"></div>
-                </section>
+            <section class="impact-panel impact-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>影响范围</h3>
+                  <p>评估派工、物料配送、质量计划、排程窗口和终端任务是否需要同步</p>
+                </div>
+                <span>派工 · 物料 · 质量 · 排程</span>
               </div>
+              <div id="impactBoard" class="impact-board"></div>
             </section>
 
             <section class="dispatch-table-panel">
@@ -175,52 +170,64 @@
             </section>
           </div>
 
-          <aside id="changeDetailPanel" class="order-detail-panel change-detail-panel">
-            <div class="detail-head">
-              <div>
-                <span id="detailStatus">待评估</span>
-                <h2 id="detailChangeNo">CHG-001</h2>
-                <p id="detailTitle">改派人员 · D-002</p>
-              </div>
-              <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
-            </div>
-
-            <div class="detail-grid" id="detailGrid"></div>
-
-            <section class="detail-section">
+          <aside class="change-side-rail">
+            <section class="task-lane">
               <div class="section-title">
-                <h3>变更校验</h3>
-                <button id="evaluateBtn" type="button">重新评估</button>
+                <div>
+                  <h3>变更申请池</h3>
+                  <p>选择变更单后在左侧完成影响评估和同步确认</p>
+                </div>
               </div>
-              <div id="gateList" class="gate-list"></div>
+              <div id="changeList" class="task-list"></div>
             </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>同步计划</h3>
+            <section id="changeDetailPanel" class="order-detail-panel change-detail-panel">
+              <div class="detail-head">
+                <div>
+                  <span id="detailStatus">待评估</span>
+                  <h2 id="detailChangeNo">CHG-001</h2>
+                  <p id="detailTitle">改派人员 · D-002</p>
+                </div>
+                <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
               </div>
-              <div id="syncList" class="readiness-list"></div>
-            </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>联动动作</h3>
-              </div>
-              <div class="action-grid dispatch-actions">
-                <button id="submitBtn" type="button">提交审批</button>
-                <button id="approveBtn" type="button">批准变更</button>
-                <button id="effectiveBtn" type="button">执行生效</button>
-                <button id="syncBtn" type="button">同步下发</button>
-                <button id="rejectBtn" class="danger-action" type="button">驳回变更</button>
-                <button id="rollbackBtn" type="button">回退方案</button>
-              </div>
-            </section>
+              <div class="detail-grid" id="detailGrid"></div>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>最近记录</h3>
-              </div>
-              <div id="changeLogList" class="integration-list"></div>
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>变更校验</h3>
+                  <button id="evaluateBtn" type="button">重新评估</button>
+                </div>
+                <div id="gateList" class="gate-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>同步计划</h3>
+                </div>
+                <div id="syncList" class="readiness-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>联动动作</h3>
+                </div>
+                <div class="action-grid dispatch-actions">
+                  <button id="submitBtn" type="button">提交审批</button>
+                  <button id="approveBtn" type="button">批准变更</button>
+                  <button id="effectiveBtn" type="button">执行生效</button>
+                  <button id="syncBtn" type="button">同步下发</button>
+                  <button id="rejectBtn" class="danger-action" type="button">驳回变更</button>
+                  <button id="rollbackBtn" type="button">回退方案</button>
+                </div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>最近记录</h3>
+                </div>
+                <div id="changeLogList" class="integration-list"></div>
+              </section>
             </section>
           </aside>
         </section>

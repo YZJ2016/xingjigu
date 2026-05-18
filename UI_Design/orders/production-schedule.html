@@ -76,7 +76,7 @@
           </article>
         </section>
 
-        <section class="schedule-layout">
+        <section class="schedule-layout schedule-planner-layout">
           <div class="schedule-left-panel">
             <div class="toolbar schedule-toolbar">
               <div class="search-box">
@@ -102,72 +102,85 @@
               </label>
             </div>
 
-            <div class="schedule-board">
-              <section class="candidate-panel">
-                <div class="section-title">
-                  <h3>待排订单</h3>
+            <section class="timeline-panel timeline-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>产线排程甘特图</h3>
+                  <p>按资源、计划窗口和约束状态确认可下发批次</p>
                 </div>
-                <div id="candidateList" class="candidate-list"></div>
+                <div class="timeline-legend">
+                  <span><i class="legend-plan"></i>建议</span>
+                  <span><i class="legend-risk"></i>待调整</span>
+                  <span><i class="legend-done"></i>已确认</span>
+                </div>
+              </div>
+              <div id="timelineGrid" class="timeline-grid"></div>
+            </section>
+
+            <div class="schedule-decision-grid">
+              <section class="operation-panel">
+                <div class="section-title">
+                  <div>
+                    <h3>工序级计划</h3>
+                    <p>当前工单从首工序到包装入库的资源占用</p>
+                  </div>
+                  <button id="confirmPlanBtn" type="button">确认当前排程</button>
+                </div>
+                <div class="operation-table-wrap">
+                  <table class="operation-table">
+                    <thead>
+                      <tr>
+                        <th>工序</th>
+                        <th>计划开始</th>
+                        <th>计划结束</th>
+                        <th>资源</th>
+                        <th>数量</th>
+                        <th>状态</th>
+                      </tr>
+                    </thead>
+                    <tbody id="operationTableBody"></tbody>
+                  </table>
+                </div>
               </section>
 
-              <section class="timeline-panel">
+              <section class="confirmed-panel">
                 <div class="section-title">
-                  <h3>产线排程甘特图</h3>
-                  <div class="timeline-legend">
-                    <span><i class="legend-plan"></i>建议</span>
-                    <span><i class="legend-risk"></i>待调整</span>
-                    <span><i class="legend-done"></i>已确认</span>
+                  <div>
+                    <h3>已确认计划</h3>
+                    <p>已锁定并可联动派工、备料和首件计划</p>
                   </div>
                 </div>
-                <div id="timelineGrid" class="timeline-grid"></div>
+                <div class="operation-table-wrap">
+                  <table class="confirmed-table">
+                    <thead>
+                      <tr>
+                        <th>工单号</th>
+                        <th>产品</th>
+                        <th>产线</th>
+                        <th>批次</th>
+                        <th>计划窗口</th>
+                        <th>联动状态</th>
+                      </tr>
+                    </thead>
+                    <tbody id="confirmedTableBody"></tbody>
+                  </table>
+                </div>
               </section>
             </div>
-
-            <section class="confirmed-panel">
-              <div class="section-title">
-                <h3>已确认计划</h3>
-              </div>
-              <div class="operation-table-wrap">
-                <table class="confirmed-table">
-                  <thead>
-                    <tr>
-                      <th>工单号</th>
-                      <th>产品</th>
-                      <th>产线</th>
-                      <th>批次</th>
-                      <th>计划窗口</th>
-                      <th>联动状态</th>
-                    </tr>
-                  </thead>
-                  <tbody id="confirmedTableBody"></tbody>
-                </table>
-              </div>
-            </section>
-
-            <section class="operation-panel">
-              <div class="section-title">
-                <h3>工序级计划</h3>
-                <button id="confirmPlanBtn" type="button">确认当前排程</button>
-              </div>
-              <div class="operation-table-wrap">
-                <table class="operation-table">
-                  <thead>
-                    <tr>
-                      <th>工序</th>
-                      <th>计划开始</th>
-                      <th>计划结束</th>
-                      <th>资源</th>
-                      <th>数量</th>
-                      <th>状态</th>
-                    </tr>
-                  </thead>
-                  <tbody id="operationTableBody"></tbody>
-                </table>
-              </div>
-            </section>
           </div>
 
-          <aside class="order-detail-panel schedule-detail-panel">
+          <aside class="schedule-control-rail">
+            <section class="candidate-panel">
+              <div class="section-title">
+                <div>
+                  <h3>待排订单池</h3>
+                  <p>优先处理交期、缺料和瓶颈资源冲突</p>
+                </div>
+              </div>
+              <div id="candidateList" class="candidate-list"></div>
+            </section>
+
+            <section class="order-detail-panel schedule-detail-panel">
             <div class="detail-head">
               <span id="detailScheduleStatus">未排程</span>
               <h2 id="detailOrderId">MO-202606-0001</h2>
@@ -209,6 +222,7 @@
                 <h3>最近记录</h3>
               </div>
               <div id="scheduleLogList" class="integration-list"></div>
+            </section>
             </section>
           </aside>
         </section>

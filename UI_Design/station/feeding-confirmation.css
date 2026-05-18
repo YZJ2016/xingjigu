@@ -1,45 +1,45 @@
-.scan-main {
+.feeding-main {
   min-width: 0;
 }
 
-.scan-layout {
+.feeding-layout {
   display: grid;
   grid-template-columns: minmax(860px, 1fr) 410px;
   gap: 14px;
   align-items: start;
 }
 
-.scan-terminal-layout {
+.feeding-terminal-layout {
   grid-template-columns: minmax(760px, 1fr) 380px;
 }
 
-.scan-layout.is-detail-closed {
+.feeding-layout.is-detail-closed {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.scan-terminal-layout.is-detail-closed {
+.feeding-terminal-layout.is-detail-closed {
   grid-template-columns: minmax(760px, 1fr) 380px;
 }
 
-.scan-left,
-.scan-focus {
+.feeding-left,
+.feeding-focus {
   display: grid;
   gap: 14px;
 }
 
-.scan-toolbar {
+.feeding-toolbar {
   grid-template-columns: minmax(300px, 1fr) repeat(3, 142px);
   margin-bottom: 0;
 }
 
-.scan-board {
+.feeding-board {
   display: grid;
   grid-template-columns: 390px minmax(0, 1fr);
   gap: 14px;
   align-items: stretch;
 }
 
-.scan-side-rail {
+.feeding-side-rail {
   position: sticky;
   top: 18px;
   display: grid;
@@ -47,28 +47,29 @@
   min-width: 0;
 }
 
-.station-terminal-panel--primary {
-  min-height: 260px;
+.feeding-side-rail .feeding-task-list {
+  max-height: 360px;
 }
 
-.station-terminal-panel--primary .section-title,
-.gate-flow-panel--primary .section-title {
+.feeding-terminal-panel--primary .section-title,
+.feeding-flow-panel--primary .section-title,
+.feeding-side-rail .section-title {
   align-items: flex-start;
 }
 
-.station-terminal-panel--primary .section-title p,
-.gate-flow-panel--primary .section-title p,
-.scan-side-rail .section-title p {
+.feeding-terminal-panel--primary .section-title p,
+.feeding-flow-panel--primary .section-title p,
+.feeding-side-rail .section-title p {
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 12px;
   font-weight: 720;
 }
 
-.scan-lane,
-.station-terminal-panel,
-.gate-flow-panel,
-.scan-detail-panel {
+.feeding-lane,
+.feeding-terminal-panel,
+.feeding-flow-panel,
+.feeding-detail-panel {
   border: 1px solid rgba(255, 255, 255, 0.76);
   border-radius: 20px;
   padding: 14px;
@@ -77,15 +78,15 @@
   backdrop-filter: blur(24px) saturate(180%);
 }
 
-.scan-task-list {
+.feeding-task-list {
   display: grid;
   gap: 9px;
-  max-height: 360px;
+  max-height: 620px;
   overflow: auto;
   padding-right: 2px;
 }
 
-.scan-task-card {
+.feeding-task-card {
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 12px;
@@ -94,42 +95,47 @@
   cursor: pointer;
 }
 
-.scan-task-card:hover,
-.scan-task-card.is-active {
+.feeding-task-card:hover,
+.feeding-task-card.is-active {
   border-color: rgba(0, 166, 166, 0.4);
   background: rgba(0, 166, 166, 0.08);
 }
 
-.scan-task-card.is-started {
+.feeding-task-card.is-confirmed {
   border-color: rgba(52, 199, 89, 0.28);
   background: rgba(52, 199, 89, 0.08);
 }
 
-.scan-task-card.is-blocked {
+.feeding-task-card.is-risk {
+  border-color: rgba(255, 159, 10, 0.32);
+  background: rgba(255, 159, 10, 0.08);
+}
+
+.feeding-task-card.is-blocked {
   border-color: rgba(255, 59, 48, 0.28);
   background: rgba(255, 59, 48, 0.08);
 }
 
-.scan-task-card__top,
-.scan-task-card__foot,
-.gate-flow-item {
+.feeding-task-card__top,
+.feeding-task-card__foot,
+.feeding-gate-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
 
-.scan-task-card__top strong,
-.scan-task-card__role,
-.scan-task-card__meta span,
-.scan-task-card__foot span,
-.gate-flow-item strong {
+.feeding-task-card__top strong,
+.feeding-task-card__role,
+.feeding-task-card__meta span,
+.feeding-task-card__foot span,
+.feeding-gate-item strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.scan-task-card__role {
+.feeding-task-card__role {
   display: block;
   margin-top: 7px;
   color: var(--text);
@@ -137,16 +143,16 @@
   font-weight: 850;
 }
 
-.scan-task-card__meta,
-.scan-task-card__foot {
+.feeding-task-card__meta,
+.feeding-task-card__foot {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 9px;
 }
 
-.scan-task-card__meta span,
-.scan-task-card__foot span {
+.feeding-task-card__meta span,
+.feeding-task-card__foot span {
   max-width: 100%;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -157,19 +163,19 @@
   font-weight: 820;
 }
 
-.scan-terminal {
+.feeding-terminal {
   display: grid;
   grid-template-columns: minmax(180px, 0.72fr) minmax(190px, 0.78fr) minmax(360px, 1.25fr);
   gap: 12px;
   align-items: stretch;
 }
 
-.scan-terminal-actions {
+.feeding-terminal-actions {
   grid-column: 1 / -1;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.scan-terminal > div {
+.feeding-terminal > div {
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -177,55 +183,50 @@
   background: rgba(255, 255, 255, 0.62);
 }
 
-.scan-terminal span,
-.scan-terminal em,
-.gate-flow-item span,
-.gate-flow-item em,
-.trace-card span,
-.trace-card em {
+.feeding-terminal span,
+.feeding-terminal em,
+.feeding-gate-item span,
+.feeding-gate-item em,
+.material-card span,
+.material-card em {
   color: var(--muted);
   font-size: 11px;
   font-style: normal;
   font-weight: 820;
 }
 
-.scan-terminal strong {
+.feeding-terminal strong {
   display: block;
   overflow: hidden;
   margin-top: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 22px;
+  font-size: 20px;
 }
 
-.scan-terminal em {
+.feeding-terminal em {
   display: block;
   margin-top: 8px;
 }
 
-.scan-input-panel input {
+.feeding-input-panel input {
   width: 100%;
-  height: 52px;
+  height: 42px;
   margin-top: 10px;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 0 12px;
   background: rgba(255, 255, 255, 0.82);
   color: var(--text);
-  font-size: 15px;
-  font-weight: 760;
 }
 
-.scan-mode-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 10px;
+.feeding-terminal-actions {
+  display: grid;
+  gap: 8px;
 }
 
-.scan-mode-tabs button,
-.scan-terminal-actions button,
-.scan-detail-panel .section-title button {
+.feeding-terminal-actions button,
+.feeding-detail-panel .section-title button {
   min-height: 32px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -237,31 +238,13 @@
   cursor: pointer;
 }
 
-.scan-mode-tabs button {
-  min-height: 28px;
-  border-radius: 999px;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.scan-mode-tabs button.is-active {
-  border-color: rgba(0, 166, 166, 0.36);
-  background: rgba(0, 166, 166, 0.1);
-  color: var(--teal);
-}
-
-.scan-terminal-actions {
+.feeding-gate-flow {
   display: grid;
-  gap: 8px;
-}
-
-.gate-flow {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
 }
 
-.gate-flow-item {
+.feeding-gate-item {
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -269,126 +252,143 @@
   background: rgba(255, 255, 255, 0.58);
 }
 
-.gate-flow-item strong {
+.feeding-gate-item strong {
   flex: 1;
   font-size: 13px;
 }
 
-.gate-flow-item.is-ready {
+.feeding-gate-item.is-ready,
+.material-card.is-ready {
   border-color: rgba(52, 199, 89, 0.32);
   background: rgba(52, 199, 89, 0.08);
 }
 
-.gate-flow-item.is-risk {
+.feeding-gate-item.is-risk,
+.material-card.is-risk {
   border-color: rgba(255, 159, 10, 0.32);
   background: rgba(255, 159, 10, 0.08);
 }
 
-.gate-flow-item.is-blocked {
+.feeding-gate-item.is-blocked,
+.material-card.is-blocked {
   border-color: rgba(255, 59, 48, 0.3);
   background: rgba(255, 59, 48, 0.08);
 }
 
-.scan-table {
-  min-width: 1180px;
-  table-layout: fixed;
-}
-
-.scan-table th,
-.scan-table td {
-  white-space: nowrap;
-}
-
-.scan-table td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.scan-table tr.is-active {
-  background: rgba(0, 166, 166, 0.08);
-}
-
-.trace-panel {
+.feeding-support-grid {
   display: grid;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
-.trace-cards {
+.material-cards {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.trace-card {
+.material-card {
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.58);
+  color: var(--text);
 }
 
-.trace-card strong {
+.material-card strong,
+.material-card b {
   display: block;
   overflow: hidden;
-  margin-top: 7px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 15px;
 }
 
-.trace-card em {
-  display: block;
+.material-card strong {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.material-card b {
   margin-top: 7px;
+  font-size: 12px;
 }
 
-.scan-detail-panel {
-  min-width: 0;
+.material-card p {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
-.scan-detail-panel .detail-head {
+.feeding-table {
+  min-width: 1180px;
+  table-layout: fixed;
+}
+
+.feeding-table th,
+.feeding-table td {
+  white-space: nowrap;
+}
+
+.feeding-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feeding-table tr.is-active {
+  background: rgba(0, 166, 166, 0.08);
+}
+
+.feeding-detail-panel .detail-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
 
-.scan-detail-panel .detail-head > div {
+.feeding-detail-panel .detail-head > div {
   min-width: 0;
 }
 
-.scan-detail-panel .detail-head h2,
-.scan-detail-panel .detail-head p {
+.feeding-detail-panel .detail-head h2,
+.feeding-detail-panel .detail-head p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.feeding-detail-panel {
+  min-width: 0;
+}
+
 @media (max-width: 1380px) {
-  .scan-layout,
-  .scan-terminal-layout,
-  .scan-terminal-layout.is-detail-closed,
-  .scan-board,
-  .scan-terminal {
+  .feeding-layout,
+  .feeding-terminal-layout,
+  .feeding-terminal-layout.is-detail-closed,
+  .feeding-board,
+  .feeding-terminal {
     grid-template-columns: 1fr;
   }
 
-  .scan-side-rail {
+  .feeding-side-rail {
     position: static;
   }
 
-  .scan-detail-panel {
-    position: static;
-  }
-
-  .scan-task-list {
+  .feeding-side-rail .feeding-task-list {
     max-height: none;
+  }
+
+  .feeding-detail-panel {
+    position: static;
   }
 }
 
 @media (max-width: 980px) {
-  .scan-toolbar,
-  .scan-terminal-actions,
-  .gate-flow,
-  .trace-cards {
+  .feeding-toolbar,
+  .feeding-terminal-actions,
+  .feeding-gate-flow,
+  .feeding-support-grid,
+  .material-cards {
     grid-template-columns: 1fr;
   }
 }

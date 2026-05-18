@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 工序报工</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../orders/production-orders.css" />
+    <link rel="stylesheet" href="../dispatch/dispatch-orders.css" />
+    <link rel="stylesheet" href="./employee-login.css" />
+    <link rel="stylesheet" href="./scan-start.css" />
+    <link rel="stylesheet" href="./operation-report.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="reportModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A / Line-B / Line-C</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main report-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">工位作业 / 工序报工</div>
+            <h1>工序报工校验与实绩回传</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="batchSubmitBtn" class="primary-action" type="button">批量提交待报工</button>
+            <button id="resetReportBtn" class="secondary-action" type="button">重置报工演示</button>
+            <a class="secondary-link" href="./process-record.html">过程记录</a>
+            <a class="secondary-link" href="./feeding-confirmation.html">投料确认</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">报</span>
+              <span>班组长</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="dispatch-metrics" aria-label="工序报工统计">
+          <article>
+            <span>已报工</span>
+            <strong id="metricSubmitted">0</strong>
+            <em>实绩已生成并等待同步</em>
+          </article>
+          <article>
+            <span>待报工</span>
+            <strong id="metricWaiting">0</strong>
+            <em>现场完成后待提交</em>
+          </article>
+          <article>
+            <span>校验拦截</span>
+            <strong id="metricBlocked">0</strong>
+            <em>数量、质量或追溯不完整</em>
+          </article>
+          <article>
+            <span>ERP 待回传</span>
+            <strong id="metricErpPending">0</strong>
+            <em>完工、工时、用料待同步</em>
+          </article>
+        </section>
+
+        <section class="report-layout">
+          <div class="report-left">
+            <div class="toolbar report-toolbar">
+              <div class="search-box">
+                <label for="reportSearch">搜索</label>
+                <input id="reportSearch" type="search" placeholder="派工单、工单、SN/批次、工位、操作员、状态" />
+              </div>
+              <label>
+                状态
+                <select id="reportStatusFilter">
+                  <option value="all">全部状态</option>
+                  <option value="待报工">待报工</option>
+                  <option value="已报工">已报工</option>
+                  <option value="校验拦截">校验拦截</option>
+                  <option value="ERP 待回传">ERP 待回传</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="reportLineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+              <label>
+                工序
+                <select id="reportOperationFilter">
+                  <option value="all">全部工序</option>
+                  <option value="DIP 插件">DIP 插件</option>
+                  <option value="整机装配">整机装配</option>
+                  <option value="功能测试">功能测试</option>
+                  <option value="包装入库">包装入库</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="report-board">
+              <div class="report-lane">
+                <div class="section-title">
+                  <h3>报工任务</h3>
+                </div>
+                <div id="reportTaskList" class="report-task-list"></div>
+              </div>
+
+              <div class="report-focus">
+                <section class="report-terminal-panel">
+                  <div class="section-title">
+                    <h3>现场报工回执监控</h3>
+                    <span id="terminalTitle">ASM-WS-03</span>
+                  </div>
+                  <div class="report-terminal">
+                    <div class="terminal-status">
+                      <span>当前工位</span>
+                      <strong id="terminalStation">ASM-WS-03</strong>
+                      <em id="terminalTask">D-004 · 整机装配</em>
+                    </div>
+                    <div class="terminal-status">
+                      <span>报工实绩</span>
+                      <strong id="terminalQty">780 / 18 / 2</strong>
+                      <em id="terminalQtyHint">合格 / 不良 / 报废</em>
+                    </div>
+                    <div class="report-input-panel" aria-label="模拟现场报工回传输入">
+                      <span>模拟现场报工回传</span>
+                      <div class="report-input-grid">
+                        <input id="goodQtyInput" type="number" min="0" placeholder="模拟合格数" />
+                        <input id="defectQtyInput" type="number" min="0" placeholder="模拟不良数" />
+                        <input id="scrapQtyInput" type="number" min="0" placeholder="模拟报废数" />
+                        <input id="laborHourInput" type="number" min="0" step="0.1" placeholder="模拟工时 h" />
+                      </div>
+                    </div>
+                    <div class="report-terminal-actions">
+                      <button id="syncReportBtn" type="button">同步报工回执</button>
+                      <button id="simulateErpBtn" type="button">同步 ERP 回传</button>
+                      <button id="simulateBlockBtn" type="button">登记报工拦截</button>
+                      <button id="nextReportBtn" type="button">切换报工任务</button>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="report-flow-panel">
+                  <div class="section-title">
+                    <h3>完工报工校验门</h3>
+                    <span>开工 · 投料 · 过程 · 质量 · 数量 · ERP</span>
+                  </div>
+                  <div id="reportGateFlow" class="report-gate-flow"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="report-support-grid">
+              <section class="dispatch-table-panel">
+                <div class="section-title">
+                  <h3>时序履历与实绩对比</h3>
+                  <button id="showReportDetailBtn" type="button" hidden>显示详情</button>
+                </div>
+                <div id="timelineCards" class="timeline-cards"></div>
+              </section>
+
+              <section class="dispatch-table-panel">
+                <div class="section-title">
+                  <h3>报工后联动</h3>
+                  <span>实绩反写 WIP、质量、用料、排程、ERP 和追溯</span>
+                </div>
+                <div id="traceCards" class="trace-cards"></div>
+              </section>
+            </section>
+
+            <section class="dispatch-table-panel">
+              <div class="section-title">
+                <h3>报工提交、拦截与接口履历</h3>
+                <button id="refreshReportBtn" type="button">刷新监控</button>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="report-table">
+                  <thead>
+                    <tr>
+                      <th>时间</th>
+                      <th>动作</th>
+                      <th>派工 / 工序</th>
+                      <th>工位 / 人员</th>
+                      <th>数量</th>
+                      <th>工时</th>
+                      <th>结果</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reportHistoryBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside id="reportDetailPanel" class="order-detail-panel report-detail-panel">
+            <div class="detail-head">
+              <div>
+                <span id="detailStatus">待报工</span>
+                <h2 id="detailDispatch">D-004</h2>
+                <p id="detailSubtitle">整机装配 · ASM-WS-03</p>
+              </div>
+              <button id="closeReportDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
+            </div>
+
+            <div id="detailGrid" class="detail-grid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>报工校验</h3>
+                <button id="recheckReportBtn" type="button">重新校验</button>
+              </div>
+              <div id="gateList" class="login-gate-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>后台处置</h3>
+              </div>
+              <div class="reason-grid">
+                <label>
+                  拦截或补录原因
+                  <select id="reportReasonSelect">
+                    <option value="报工数量大于可报 WIP">报工数量大于可报 WIP</option>
+                    <option value="过程参数存在未处置拦截">过程参数存在未处置拦截</option>
+                    <option value="质量检验未放行">质量检验未放行</option>
+                    <option value="用料核销未完成">用料核销未完成</option>
+                    <option value="ERP 回传失败待重试">ERP 回传失败待重试</option>
+                  </select>
+                </label>
+                <label>
+                  异常责任人
+                  <select id="ownerSelect">
+                    <option value="班组长">班组长</option>
+                    <option value="计划员">计划员</option>
+                    <option value="质量员">质量员</option>
+                    <option value="物料员">物料员</option>
+                    <option value="系统管理员">系统管理员</option>
+                  </select>
+                </label>
+              </div>
+              <div class="action-grid dispatch-actions">
+                <button id="detailSubmitBtn" type="button">同步报工回执</button>
+                <button id="erpRetryBtn" type="button">重试 ERP 回传</button>
+                <button id="detailBlockBtn" class="danger-action" type="button">登记报工拦截</button>
+                <button id="releaseBlockBtn" type="button">处置后放行</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>终端消息</h3>
+              </div>
+              <div id="reportLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./operation-report.js"></script>
+  </body>
+</html>

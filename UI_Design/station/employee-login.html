@@ -76,7 +76,7 @@
           </article>
         </section>
 
-        <section class="login-layout">
+        <section class="login-layout login-identity-layout">
           <div class="login-left">
             <div class="toolbar login-toolbar">
               <div class="search-box">
@@ -113,68 +113,63 @@
               </label>
             </div>
 
-            <section class="login-board">
-              <div class="login-lane">
-                <div class="section-title">
-                  <h3>人员到岗与工位绑定</h3>
+            <section class="terminal-panel terminal-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>现场身份回执监控</h3>
+                  <p>后台只接收模拟工位终端、工牌、NFC 或设备账号身份回传</p>
                 </div>
-                <div id="loginList" class="login-list"></div>
+                <span id="terminalStationText">ASM-WS-03</span>
               </div>
-
-              <div class="login-focus">
-                <section class="terminal-panel">
-                  <div class="section-title">
-                    <h3>现场身份回执监控</h3>
-                    <span id="terminalStationText">ASM-WS-03</span>
+              <div class="terminal-card">
+                <div>
+                  <span>当前工位</span>
+                  <strong id="terminalStation">ASM-WS-03</strong>
+                  <em id="terminalTask">D-004 · 整机装配</em>
+                </div>
+                <div class="binding-box">
+                  <span>当前绑定</span>
+                  <strong id="terminalBindingStatus">等待人员确认</strong>
+                  <em>现场回执通过后允许开工、投料、过程记录和报工</em>
+                </div>
+                <div class="scan-box" aria-label="模拟扫码输入">
+                  <span>模拟现场身份回传</span>
+                  <input id="scanInput" type="text" placeholder="模拟工位终端回传员工码，例如 E1003" />
+                  <div class="auth-methods" aria-label="模拟现场身份确认方式">
+                    <button type="button" data-auth-method="模拟员工码">模拟员工码</button>
+                    <button type="button" data-auth-method="模拟工牌刷卡">模拟工牌刷卡</button>
+                    <button type="button" data-auth-method="模拟NFC">模拟NFC</button>
+                    <button type="button" data-auth-method="模拟设备账号">模拟设备账号</button>
                   </div>
-                  <div class="terminal-card">
-                    <div>
-                      <span>当前工位</span>
-                      <strong id="terminalStation">ASM-WS-03</strong>
-                      <em id="terminalTask">D-004 · 整机装配</em>
-                    </div>
-                    <div class="binding-box">
-                      <span>当前绑定</span>
-                      <strong id="terminalBindingStatus">等待人员确认</strong>
-                      <em>现场回执通过后允许开工、投料、过程记录和报工</em>
-                    </div>
-                    <div class="scan-box" aria-label="模拟扫码输入">
-                      <span>模拟现场身份回传</span>
-                      <input id="scanInput" type="text" placeholder="模拟工位终端回传员工码，例如 E1003" />
-                      <div class="auth-methods" aria-label="模拟现场身份确认方式">
-                        <button type="button" data-auth-method="模拟员工码">模拟员工码</button>
-                        <button type="button" data-auth-method="模拟工牌刷卡">模拟工牌刷卡</button>
-                        <button type="button" data-auth-method="模拟NFC">模拟NFC</button>
-                        <button type="button" data-auth-method="模拟设备账号">模拟设备账号</button>
-                      </div>
-                    </div>
-                    <div class="terminal-actions terminal-actions--grouped">
-                      <div>
-                        <span>现场回执</span>
-                        <button id="scanLoginBtn" type="button">同步身份绑定回执</button>
-                        <button id="logoutActiveBtn" type="button">登记退出回执</button>
-                      </div>
-                      <div>
-                        <span>工位视角</span>
-                        <button id="switchStationBtn" type="button">切换查看工位</button>
-                      </div>
-                      <div>
-                        <span>异常补偿</span>
-                        <button id="faultExitBtn" type="button">登记设备故障代退出</button>
-                        <button id="makeupRecordBtn" type="button">补录上下工位</button>
-                      </div>
-                    </div>
+                </div>
+                <div class="terminal-actions terminal-actions--grouped">
+                  <div>
+                    <span>现场回执</span>
+                    <button id="scanLoginBtn" type="button">同步身份绑定回执</button>
+                    <button id="logoutActiveBtn" type="button">登记退出回执</button>
                   </div>
-                </section>
-
-                <section class="coverage-panel">
-                  <div class="section-title">
-                    <h3>工位绑定视角</h3>
-                    <span>按工位反查人员、履历和准入状态</span>
+                  <div>
+                    <span>工位视角</span>
+                    <button id="switchStationBtn" type="button">切换查看工位</button>
                   </div>
-                  <div id="coverageBoard" class="coverage-board"></div>
-                </section>
+                  <div>
+                    <span>异常补偿</span>
+                    <button id="faultExitBtn" type="button">登记设备故障代退出</button>
+                    <button id="makeupRecordBtn" type="button">补录上下工位</button>
+                  </div>
+                </div>
               </div>
+            </section>
+
+            <section class="coverage-panel coverage-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>工位绑定视角</h3>
+                  <p>按工位反查人员、履历和准入状态，避免未绑定人员进入开工链路</p>
+                </div>
+                <span>人员 · 工位 · 准入</span>
+              </div>
+              <div id="coverageBoard" class="coverage-board"></div>
             </section>
 
             <section class="dispatch-table-panel">
@@ -239,62 +234,74 @@
             </section>
           </div>
 
-          <aside id="loginDetailPanel" class="order-detail-panel login-detail-panel">
-            <div class="detail-head">
-              <div>
-                <span id="detailStatus">待确认</span>
-                <h2 id="detailName">赵杰</h2>
-                <p id="detailTitle">E1003 · ASM-WS-03</p>
-              </div>
-              <button id="closeLoginDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
-            </div>
-
-            <div id="detailGrid" class="detail-grid"></div>
-
-            <section class="detail-section">
+          <aside class="login-side-rail">
+            <section class="login-lane">
               <div class="section-title">
-                <h3>身份校验</h3>
-                <button id="recheckLoginBtn" type="button">重新校验</button>
+                <div>
+                  <h3>人员到岗与工位绑定</h3>
+                  <p>选择人员后在左侧查看现场身份回执和工位覆盖</p>
+                </div>
               </div>
-              <div id="loginGateList" class="login-gate-list"></div>
+              <div id="loginList" class="login-list"></div>
             </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>后台处置</h3>
+            <section id="loginDetailPanel" class="order-detail-panel login-detail-panel">
+              <div class="detail-head">
+                <div>
+                  <span id="detailStatus">待确认</span>
+                  <h2 id="detailName">赵杰</h2>
+                  <p id="detailTitle">E1003 · ASM-WS-03</p>
+                </div>
+                <button id="closeLoginDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
               </div>
-              <div class="reason-grid">
-                <label>
-                  退出原因
-                  <select id="exitReasonSelect">
-                    <option value="换班交接">换班交接</option>
-                    <option value="任务完成">任务完成</option>
-                    <option value="临时离岗">临时离岗</option>
-                    <option value="换人支援">换人支援</option>
-                    <option value="设备停机">设备停机</option>
-                    <option value="异常锁定">异常锁定</option>
-                  </select>
-                </label>
-                <label>
-                  交接对象
-                  <select id="handoverToSelect"></select>
-                </label>
-              </div>
-              <div class="action-grid dispatch-actions">
-                <button id="loginBtn" type="button">同步绑定回执</button>
-                <button id="logoutBtn" type="button">登记退出回执</button>
-                <button id="qualifyBtn" type="button">发起资质复核通过</button>
-                <button id="replaceBtn" type="button">登记换人到岗</button>
-                <button id="handoverBtn" type="button">记录交接</button>
-                <button id="lockBtn" class="danger-action" type="button">锁定开工准入</button>
-              </div>
-            </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>身份确认记录</h3>
-              </div>
-              <div id="loginLogList" class="integration-list"></div>
+              <div id="detailGrid" class="detail-grid"></div>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>身份校验</h3>
+                  <button id="recheckLoginBtn" type="button">重新校验</button>
+                </div>
+                <div id="loginGateList" class="login-gate-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>后台处置</h3>
+                </div>
+                <div class="reason-grid">
+                  <label>
+                    退出原因
+                    <select id="exitReasonSelect">
+                      <option value="换班交接">换班交接</option>
+                      <option value="任务完成">任务完成</option>
+                      <option value="临时离岗">临时离岗</option>
+                      <option value="换人支援">换人支援</option>
+                      <option value="设备停机">设备停机</option>
+                      <option value="异常锁定">异常锁定</option>
+                    </select>
+                  </label>
+                  <label>
+                    交接对象
+                    <select id="handoverToSelect"></select>
+                  </label>
+                </div>
+                <div class="action-grid dispatch-actions">
+                  <button id="loginBtn" type="button">同步绑定回执</button>
+                  <button id="logoutBtn" type="button">登记退出回执</button>
+                  <button id="qualifyBtn" type="button">发起资质复核通过</button>
+                  <button id="replaceBtn" type="button">登记换人到岗</button>
+                  <button id="handoverBtn" type="button">记录交接</button>
+                  <button id="lockBtn" class="danger-action" type="button">锁定开工准入</button>
+                </div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>身份确认记录</h3>
+                </div>
+                <div id="loginLogList" class="integration-list"></div>
+              </section>
             </section>
           </aside>
         </section>

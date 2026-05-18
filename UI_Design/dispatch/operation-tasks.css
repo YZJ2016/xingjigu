@@ -9,8 +9,16 @@
   align-items: start;
 }
 
+.operation-wip-layout {
+  grid-template-columns: minmax(760px, 1fr) 380px;
+}
+
 .operation-layout.is-detail-closed {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.operation-wip-layout.is-detail-closed {
+  grid-template-columns: minmax(760px, 1fr) 380px;
 }
 
 .operation-left {
@@ -28,6 +36,33 @@
   grid-template-columns: 390px minmax(0, 1fr);
   gap: 14px;
   align-items: stretch;
+}
+
+.operation-side-rail {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.operation-side-rail .task-list {
+  max-height: 360px;
+}
+
+.wip-panel--primary .section-title,
+.process-panel--primary .section-title,
+.operation-side-rail .section-title {
+  align-items: flex-start;
+}
+
+.wip-panel--primary .section-title p,
+.process-panel--primary .section-title p,
+.operation-side-rail .section-title p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 720;
 }
 
 .task-lane,
@@ -219,8 +254,7 @@
 }
 
 .operation-detail-panel {
-  position: sticky;
-  top: 18px;
+  min-width: 0;
 }
 
 .operation-detail-panel .detail-head {
@@ -243,8 +277,18 @@
 
 @media (max-width: 1380px) {
   .operation-layout,
+  .operation-wip-layout,
+  .operation-wip-layout.is-detail-closed,
   .operation-board {
     grid-template-columns: 1fr;
+  }
+
+  .operation-side-rail {
+    position: static;
+  }
+
+  .operation-side-rail .task-list {
+    max-height: none;
   }
 
   .operation-detail-panel {

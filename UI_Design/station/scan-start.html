@@ -78,7 +78,7 @@
           </article>
         </section>
 
-        <section class="scan-layout">
+        <section class="scan-layout scan-terminal-layout">
           <div class="scan-left">
             <div class="toolbar scan-toolbar">
               <div class="search-box">
@@ -116,58 +116,53 @@
               </label>
             </div>
 
-            <section class="scan-board">
-              <div class="scan-lane">
-                <div class="section-title">
-                  <h3>开工回执任务</h3>
+            <section class="station-terminal-panel station-terminal-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>现场扫码回执监控</h3>
+                  <p>后台只接收模拟工位终端、扫码枪和设备信号回传</p>
                 </div>
-                <div id="scanTaskList" class="scan-task-list"></div>
+                <span id="terminalTitle">ASM-WS-03</span>
               </div>
-
-              <div class="scan-focus">
-                <section class="station-terminal-panel">
-                  <div class="section-title">
-                    <h3>现场扫码回执监控</h3>
-                    <span id="terminalTitle">ASM-WS-03</span>
+              <div class="scan-terminal">
+                <div class="terminal-status">
+                  <span>当前工位</span>
+                  <strong id="terminalStation">ASM-WS-03</strong>
+                  <em id="terminalTask">D-004 · 整机装配</em>
+                </div>
+                <div class="terminal-status">
+                  <span>当前操作员</span>
+                  <strong id="terminalOperator">赵杰 · E1003</strong>
+                  <em id="terminalShift">A1 班 · 白班</em>
+                </div>
+                <div class="scan-input-panel" aria-label="模拟现场扫码回传输入">
+                  <span>模拟现场扫码回传</span>
+                  <input id="scanCodeInput" type="text" placeholder="模拟工位终端回传派工单/批次/产品码，例如 D-004" />
+                  <div class="scan-mode-tabs" aria-label="模拟扫码对象">
+                    <button type="button" data-scan-mode="模拟派工单码">模拟派工单码</button>
+                    <button type="button" data-scan-mode="模拟工单码">模拟工单码</button>
+                    <button type="button" data-scan-mode="模拟产品序列号">模拟产品序列号</button>
+                    <button type="button" data-scan-mode="模拟批次条码">模拟批次条码</button>
                   </div>
-                  <div class="scan-terminal">
-                    <div class="terminal-status">
-                      <span>当前工位</span>
-                      <strong id="terminalStation">ASM-WS-03</strong>
-                      <em id="terminalTask">D-004 · 整机装配</em>
-                    </div>
-                    <div class="terminal-status">
-                      <span>当前操作员</span>
-                      <strong id="terminalOperator">赵杰 · E1003</strong>
-                      <em id="terminalShift">A1 班 · 白班</em>
-                    </div>
-                    <div class="scan-input-panel" aria-label="模拟现场扫码回传输入">
-                      <span>模拟现场扫码回传</span>
-                      <input id="scanCodeInput" type="text" placeholder="模拟工位终端回传派工单/批次/产品码，例如 D-004" />
-                      <div class="scan-mode-tabs" aria-label="模拟扫码对象">
-                        <button type="button" data-scan-mode="模拟派工单码">模拟派工单码</button>
-                        <button type="button" data-scan-mode="模拟工单码">模拟工单码</button>
-                        <button type="button" data-scan-mode="模拟产品序列号">模拟产品序列号</button>
-                        <button type="button" data-scan-mode="模拟批次条码">模拟批次条码</button>
-                      </div>
-                    </div>
-                    <div class="scan-terminal-actions">
-                      <button id="scanStartBtn" type="button">同步开工回执</button>
-                      <button id="simulateDeviceBtn" type="button">同步设备启动信号</button>
-                      <button id="simulateBlockBtn" type="button">登记条码不匹配拦截</button>
-                      <button id="switchTaskBtn" type="button">切换工位任务</button>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="gate-flow-panel">
-                  <div class="section-title">
-                    <h3>开工准入链路</h3>
-                    <span>身份 · 派工 · 物料 · 设备 · 质量</span>
-                  </div>
-                  <div id="gateFlow" class="gate-flow"></div>
-                </section>
+                </div>
+                <div class="scan-terminal-actions">
+                  <button id="scanStartBtn" type="button">同步开工回执</button>
+                  <button id="simulateDeviceBtn" type="button">同步设备启动信号</button>
+                  <button id="simulateBlockBtn" type="button">登记条码不匹配拦截</button>
+                  <button id="switchTaskBtn" type="button">切换工位任务</button>
+                </div>
               </div>
+            </section>
+
+            <section class="gate-flow-panel gate-flow-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>开工准入链路</h3>
+                  <p>身份、派工、物料、设备、质量全部通过后才允许现场开工</p>
+                </div>
+                <span>身份 · 派工 · 物料 · 设备 · 质量</span>
+              </div>
+              <div id="gateFlow" class="gate-flow"></div>
             </section>
 
             <section class="dispatch-table-panel">
@@ -205,7 +200,18 @@
             </section>
           </div>
 
-          <aside id="scanDetailPanel" class="order-detail-panel scan-detail-panel">
+          <aside class="scan-side-rail">
+            <section class="scan-lane">
+              <div class="section-title">
+                <div>
+                  <h3>开工回执任务</h3>
+                  <p>按工位查看待扫码、生产中和拦截状态</p>
+                </div>
+              </div>
+              <div id="scanTaskList" class="scan-task-list"></div>
+            </section>
+
+            <section id="scanDetailPanel" class="order-detail-panel scan-detail-panel">
             <div class="detail-head">
               <div>
                 <span id="detailStatus">待扫码</span>
@@ -264,6 +270,7 @@
                 <h3>终端消息</h3>
               </div>
               <div id="scanLogList" class="integration-list"></div>
+            </section>
             </section>
           </aside>
         </section>

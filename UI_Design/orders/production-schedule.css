@@ -5,6 +5,10 @@
   align-items: start;
 }
 
+.schedule-planner-layout {
+  grid-template-columns: minmax(900px, 1fr) 360px;
+}
+
 .candidate-panel,
 .timeline-panel,
 .confirmed-panel,
@@ -33,6 +37,42 @@
   align-items: stretch;
 }
 
+.timeline-panel--primary {
+  min-height: 420px;
+}
+
+.timeline-panel--primary .section-title {
+  align-items: flex-start;
+}
+
+.timeline-panel--primary .section-title p,
+.schedule-control-rail .section-title p,
+.schedule-decision-grid .section-title p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.schedule-control-rail {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.schedule-control-rail .candidate-panel,
+.schedule-control-rail .schedule-detail-panel {
+  min-width: 0;
+}
+
+.schedule-decision-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
+  gap: 14px;
+  align-items: start;
+}
+
 .candidate-panel,
 .timeline-panel,
 .confirmed-panel,
@@ -44,7 +84,7 @@
 .candidate-list {
   display: grid;
   gap: 9px;
-  max-height: 590px;
+  max-height: 360px;
   overflow: auto;
   padding-right: 2px;
 }
@@ -231,11 +271,11 @@
 }
 
 .operation-table {
-  min-width: 820px;
+  min-width: 720px;
 }
 
 .confirmed-table {
-  min-width: 920px;
+  min-width: 780px;
   table-layout: fixed;
 }
 
@@ -301,11 +341,21 @@
 
 @media (max-width: 1380px) {
   .schedule-layout,
-  .schedule-board {
+  .schedule-planner-layout,
+  .schedule-board,
+  .schedule-decision-grid {
     grid-template-columns: 1fr;
   }
 
   .schedule-detail-panel {
     position: static;
+  }
+
+  .schedule-control-rail {
+    position: static;
+  }
+
+  .candidate-list {
+    max-height: none;
   }
 }

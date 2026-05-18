@@ -5,6 +5,10 @@
   align-items: start;
 }
 
+.capacity-heatmap-layout {
+  grid-template-columns: minmax(900px, 1fr) 360px;
+}
+
 .capacity-left-panel {
   display: grid;
   gap: 14px;
@@ -22,6 +26,25 @@
   background: var(--surface);
   box-shadow: 0 14px 42px rgba(0, 0, 0, 0.06);
   backdrop-filter: blur(24px) saturate(180%);
+}
+
+.capacity-panel .section-title {
+  align-items: flex-start;
+}
+
+.capacity-panel .section-title p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.capacity-insight-rail {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
 }
 
 .load-matrix {
@@ -79,7 +102,7 @@
 }
 
 .load-cell {
-  min-height: 74px;
+  min-height: 86px;
   display: grid;
   align-content: space-between;
   gap: 8px;
@@ -184,12 +207,17 @@
 }
 
 .capacity-detail-panel {
-  top: 18px;
+  min-width: 0;
 }
 
 @media (max-width: 1380px) {
-  .capacity-layout {
+  .capacity-layout,
+  .capacity-heatmap-layout {
     grid-template-columns: 1fr;
+  }
+
+  .capacity-insight-rail {
+    position: static;
   }
 
   .capacity-detail-panel {

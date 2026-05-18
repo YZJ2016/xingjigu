@@ -82,7 +82,7 @@
           </article>
         </section>
 
-        <section class="check-layout">
+        <section class="check-layout check-gate-layout">
           <div class="check-left">
             <div class="toolbar check-toolbar">
               <div class="search-box">
@@ -119,31 +119,26 @@
               </label>
             </div>
 
-            <section class="check-board">
-              <div class="task-lane">
-                <div class="section-title">
-                  <h3>待开工任务</h3>
+            <section class="gate-summary-panel gate-summary-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>准入门概览</h3>
+                  <p>开工前集中确认人员、设备、物料、SOP、首件和工位状态</p>
                 </div>
-                <div id="checkList" class="task-list"></div>
+                <span id="activeCheckText">D-004</span>
               </div>
+              <div id="gateSummary" class="gate-summary"></div>
+            </section>
 
-              <div class="check-focus">
-                <section class="gate-summary-panel">
-                  <div class="section-title">
-                    <h3>准入门概览</h3>
-                    <span id="activeCheckText">D-004</span>
-                  </div>
-                  <div id="gateSummary" class="gate-summary"></div>
-                </section>
-
-                <section class="resource-panel">
-                  <div class="section-title">
-                    <h3>资源状态</h3>
-                    <span>人员 · 设备 · 物料 · 质量</span>
-                  </div>
-                  <div id="resourceBoard" class="resource-board"></div>
-                </section>
+            <section class="resource-panel resource-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>资源状态</h3>
+                  <p>所有资源状态通过后，现场扫码开工才允许建立生产履历</p>
+                </div>
+                <span>人员 · 设备 · 物料 · 质量</span>
               </div>
+              <div id="resourceBoard" class="resource-board"></div>
             </section>
 
             <section class="dispatch-table-panel">
@@ -174,52 +169,64 @@
             </section>
           </div>
 
-          <aside id="checkDetailPanel" class="order-detail-panel check-detail-panel">
-            <div class="detail-head">
-              <div>
-                <span id="detailStatus">待处理</span>
-                <h2 id="detailDispatchNo">D-004</h2>
-                <p id="detailTitle">整机装配 · ASM-WS-03</p>
-              </div>
-              <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
-            </div>
-
-            <div class="detail-grid" id="detailGrid"></div>
-
-            <section class="detail-section">
+          <aside class="check-side-rail">
+            <section class="task-lane">
               <div class="section-title">
-                <h3>开工准入</h3>
-                <button id="recheckBtn" type="button">重新检查</button>
+                <div>
+                  <h3>待开工任务</h3>
+                  <p>选择任务后在左侧核对准入门和资源状态</p>
+                </div>
               </div>
-              <div id="gateList" class="gate-list"></div>
+              <div id="checkList" class="task-list"></div>
             </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>处理建议</h3>
+            <section id="checkDetailPanel" class="order-detail-panel check-detail-panel">
+              <div class="detail-head">
+                <div>
+                  <span id="detailStatus">待处理</span>
+                  <h2 id="detailDispatchNo">D-004</h2>
+                  <p id="detailTitle">整机装配 · ASM-WS-03</p>
+                </div>
+                <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
               </div>
-              <div id="actionSuggestionList" class="readiness-list"></div>
-            </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>联动动作</h3>
-              </div>
-              <div class="action-grid dispatch-actions">
-                <button id="confirmBtn" type="button">确认检查</button>
-                <button id="releaseBtn" type="button">开工放行</button>
-                <button id="materialBtn" type="button">催料处理</button>
-                <button id="qualityBtn" type="button">首件确认</button>
-                <button id="equipmentBtn" type="button">设备复位</button>
-                <button id="blockBtn" class="danger-action" type="button">拦截开工</button>
-              </div>
-            </section>
+              <div class="detail-grid" id="detailGrid"></div>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>检查记录</h3>
-              </div>
-              <div id="checkLogList" class="integration-list"></div>
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>开工准入</h3>
+                  <button id="recheckBtn" type="button">重新检查</button>
+                </div>
+                <div id="gateList" class="gate-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>处理建议</h3>
+                </div>
+                <div id="actionSuggestionList" class="readiness-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>联动动作</h3>
+                </div>
+                <div class="action-grid dispatch-actions">
+                  <button id="confirmBtn" type="button">确认检查</button>
+                  <button id="releaseBtn" type="button">开工放行</button>
+                  <button id="materialBtn" type="button">催料处理</button>
+                  <button id="qualityBtn" type="button">首件确认</button>
+                  <button id="equipmentBtn" type="button">设备复位</button>
+                  <button id="blockBtn" class="danger-action" type="button">拦截开工</button>
+                </div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>检查记录</h3>
+                </div>
+                <div id="checkLogList" class="integration-list"></div>
+              </section>
             </section>
           </aside>
         </section>

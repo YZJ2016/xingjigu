@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 投料确认</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../orders/production-orders.css" />
+    <link rel="stylesheet" href="../dispatch/dispatch-orders.css" />
+    <link rel="stylesheet" href="./employee-login.css" />
+    <link rel="stylesheet" href="./scan-start.css" />
+    <link rel="stylesheet" href="./feeding-confirmation.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="feedingModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A / Line-B / Line-C</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main feeding-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">工位作业 / 投料确认</div>
+            <h1>投料防错确认与批次追溯</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="batchReleaseBtn" class="primary-action" type="button">批量解除物料拦截</button>
+            <button id="resetFeedingBtn" class="secondary-action" type="button">重置投料演示</button>
+            <a class="secondary-link" href="./work-instruction.html">工艺指导</a>
+            <a class="secondary-link" href="../orders/kit-check.html">齐套检查</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">料</span>
+              <span>物料员</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="dispatch-metrics" aria-label="投料确认统计">
+          <article>
+            <span>已确认</span>
+            <strong id="metricConfirmed">0</strong>
+            <em>现场扫码回执已绑定批次</em>
+          </article>
+          <article>
+            <span>待投料回执</span>
+            <strong id="metricWaiting">0</strong>
+            <em>等待工位终端或 PDA 回传</em>
+          </article>
+          <article>
+            <span>拦截待处置</span>
+            <strong id="metricBlocked">0</strong>
+            <em>错料、错批、冻结或未检</em>
+          </article>
+          <article>
+            <span>用料差异</span>
+            <strong id="metricVariance">0</strong>
+            <em>需核销、退料或补料确认</em>
+          </article>
+        </section>
+
+        <section class="feeding-layout feeding-terminal-layout">
+          <div class="feeding-left">
+            <div class="toolbar feeding-toolbar">
+              <div class="search-box">
+                <label for="feedingSearch">搜索</label>
+                <input id="feedingSearch" type="search" placeholder="派工单、工单、物料、批次、工位、操作员" />
+              </div>
+              <label>
+                状态
+                <select id="feedingStatusFilter">
+                  <option value="all">全部状态</option>
+                  <option value="待投料">待投料</option>
+                  <option value="已确认">已确认</option>
+                  <option value="已拦截">已拦截</option>
+                  <option value="差异待核销">差异待核销</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="feedingLineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+              <label>
+                工序
+                <select id="feedingOperationFilter">
+                  <option value="all">全部工序</option>
+                  <option value="DIP 插件">DIP 插件</option>
+                  <option value="整机装配">整机装配</option>
+                  <option value="SMT 贴片">SMT 贴片</option>
+                  <option value="包装入库">包装入库</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="feeding-terminal-panel feeding-terminal-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>现场投料扫码回执监控</h3>
+                  <p>后台只接收模拟扫码枪、PDA、料盒标签和称重设备投料回传</p>
+                </div>
+                <span id="terminalTitle">ASM-WS-03</span>
+              </div>
+              <div class="feeding-terminal">
+                <div class="terminal-status">
+                  <span>当前工位</span>
+                  <strong id="terminalStation">ASM-WS-03</strong>
+                  <em id="terminalTask">D-004 · 整机装配</em>
+                </div>
+                <div class="terminal-status">
+                  <span>当前物料</span>
+                  <strong id="terminalMaterial">外壳上盖</strong>
+                  <em id="terminalDemand">BOM 需求 800 PCS</em>
+                </div>
+                <div class="feeding-input-panel" aria-label="模拟现场投料扫码回传输入">
+                  <span>模拟现场投料扫码回传</span>
+                  <input id="feedCodeInput" type="text" placeholder="模拟扫码枪/PDA 回传料号、批次或料盒码，例如 CASE-A-L20260610" />
+                  <div class="scan-mode-tabs" aria-label="模拟投料扫码对象">
+                    <button type="button" data-feed-mode="模拟物料标签">模拟物料标签</button>
+                    <button type="button" data-feed-mode="模拟批次标签">模拟批次标签</button>
+                    <button type="button" data-feed-mode="模拟料盒标签">模拟料盒标签</button>
+                    <button type="button" data-feed-mode="模拟余料标签">模拟余料标签</button>
+                  </div>
+                </div>
+                <div class="feeding-terminal-actions">
+                  <button id="syncFeedBtn" type="button">同步投料回执</button>
+                  <button id="simulateScaleBtn" type="button">同步模拟称重回传</button>
+                  <button id="simulateBlockBtn" type="button">登记错料拦截</button>
+                  <button id="nextFeedBtn" type="button">切换投料任务</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="feeding-flow-panel feeding-flow-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>投料校验链路</h3>
+                  <p>料号、批次、IQC、线边库位和用量全部通过后进入批次谱系</p>
+                </div>
+                <span>派工 · BOM · 批次 · 质量 · 库位 · 用量</span>
+              </div>
+              <div id="feedingGateFlow" class="feeding-gate-flow"></div>
+            </section>
+
+            <section class="feeding-support-grid">
+              <section class="dispatch-table-panel">
+                <div class="section-title">
+                  <h3>BOM 需求与线边批次</h3>
+                  <button id="showFeedingDetailBtn" type="button" hidden>显示详情</button>
+                </div>
+                <div id="materialCards" class="material-cards"></div>
+              </section>
+
+              <section class="dispatch-table-panel">
+                <div class="section-title">
+                  <h3>追溯与核销占位</h3>
+                  <span>投料结果进入批次谱系、过程记录、报工和余料退回</span>
+                </div>
+                <div id="traceCards" class="trace-cards"></div>
+              </section>
+            </section>
+
+            <section class="dispatch-table-panel">
+              <div class="section-title">
+                <h3>投料回执、拦截与核销履历</h3>
+                <button id="refreshFeedingBtn" type="button">刷新监控</button>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="feeding-table">
+                  <thead>
+                    <tr>
+                      <th>时间</th>
+                      <th>动作</th>
+                      <th>扫码对象</th>
+                      <th>物料 / 批次</th>
+                      <th>工位 / 派工</th>
+                      <th>数量</th>
+                      <th>结果</th>
+                    </tr>
+                  </thead>
+                  <tbody id="feedingHistoryBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside class="feeding-side-rail">
+            <section class="feeding-lane">
+              <div class="section-title">
+                <div>
+                  <h3>投料确认任务</h3>
+                  <p>选择任务后在左侧执行投料防错和批次核验</p>
+                </div>
+              </div>
+              <div id="feedingTaskList" class="feeding-task-list"></div>
+            </section>
+
+            <section id="feedingDetailPanel" class="order-detail-panel feeding-detail-panel">
+              <div class="detail-head">
+                <div>
+                  <span id="detailStatus">待投料</span>
+                  <h2 id="detailDispatch">D-004</h2>
+                  <p id="detailSubtitle">整机装配 · ASM-WS-03</p>
+                </div>
+                <button id="closeFeedingDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
+              </div>
+
+              <div id="detailGrid" class="detail-grid"></div>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>投料校验</h3>
+                  <button id="recheckFeedingBtn" type="button">重新校验</button>
+                </div>
+                <div id="gateList" class="login-gate-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>后台处置</h3>
+                </div>
+                <div class="reason-grid">
+                  <label>
+                    拦截或差异原因
+                    <select id="blockReasonSelect">
+                      <option value="料号不属于当前工序 BOM">料号不属于当前工序 BOM</option>
+                      <option value="物料批次与派工锁定批次不一致">物料批次与派工锁定批次不一致</option>
+                      <option value="IQC 结论未放行或批次冻结">IQC 结论未放行或批次冻结</option>
+                      <option value="超过工序标准用量">超过工序标准用量</option>
+                      <option value="线边库位未签收">线边库位未签收</option>
+                    </select>
+                  </label>
+                  <label>
+                    异常责任人
+                    <select id="ownerSelect">
+                      <option value="物料员">物料员</option>
+                      <option value="班组长">班组长</option>
+                      <option value="质量员">质量员</option>
+                      <option value="工艺员">工艺员</option>
+                      <option value="仓储员">仓储员</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="action-grid dispatch-actions">
+                  <button id="detailConfirmBtn" type="button">同步确认回执</button>
+                  <button id="varianceBtn" type="button">登记用料差异</button>
+                  <button id="detailBlockBtn" class="danger-action" type="button">登记投料拦截</button>
+                  <button id="releaseBlockBtn" type="button">处置后放行</button>
+                </div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>终端消息</h3>
+                </div>
+                <div id="feedingLogList" class="integration-list"></div>
+              </section>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./feeding-confirmation.js"></script>
+  </body>
+</html>

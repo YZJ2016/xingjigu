@@ -77,7 +77,7 @@
           </article>
         </section>
 
-        <section class="capacity-layout">
+        <section class="capacity-layout capacity-heatmap-layout">
           <div class="capacity-left-panel">
             <div class="toolbar capacity-toolbar">
               <div class="search-box">
@@ -106,14 +106,20 @@
 
             <section class="capacity-panel">
               <div class="section-title">
-                <h3>7 天资源负荷矩阵</h3>
+                <div>
+                  <h3>7 天资源负荷矩阵</h3>
+                  <p>按产线、瓶颈工位和日期识别超载、偏紧、富余资源</p>
+                </div>
               </div>
               <div id="loadMatrix" class="load-matrix"></div>
             </section>
 
             <section class="capacity-panel">
               <div class="section-title">
-                <h3>订单占用明细</h3>
+                <div>
+                  <h3>订单占用明细</h3>
+                  <p>查看选中资源被哪些工单、工序和计划窗口占用</p>
+                </div>
               </div>
               <div class="operation-table-wrap">
                 <table class="capacity-table">
@@ -133,7 +139,8 @@
             </section>
           </div>
 
-          <aside class="order-detail-panel capacity-detail-panel">
+          <aside class="capacity-insight-rail">
+            <section class="order-detail-panel capacity-detail-panel">
             <div class="detail-head">
               <span id="detailResourceType">产线</span>
               <h2 id="detailResourceName">Line-A</h2>
@@ -162,6 +169,7 @@
                 <h3>均衡建议</h3>
               </div>
               <div id="suggestionList" class="suggestion-list"></div>
+            </section>
             </section>
           </aside>
         </section>

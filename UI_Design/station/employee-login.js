@@ -117,6 +117,9 @@ function renderFrameMenu() {
       else if (moduleId === "station" && entry === "员工登录") window.location.href = "./employee-login.html";
       else if (moduleId === "station" && entry === "扫码开工") window.location.href = "./scan-start.html";
       else if (moduleId === "station" && entry === "工艺指导") window.location.href = "./work-instruction.html";
+      else if (moduleId === "station" && entry === "投料确认") window.location.href = "./feeding-confirmation.html";
+      else if (moduleId === "station" && entry === "过程记录") window.location.href = "./process-record.html";
+      else if (moduleId === "station" && entry === "工序报工") window.location.href = "./operation-report.html";
       else showToast(`${entry} 页面待建设`);
     });
   });

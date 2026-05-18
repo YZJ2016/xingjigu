@@ -79,7 +79,7 @@
           </article>
         </section>
 
-        <section class="release-layout">
+        <section class="release-layout release-console-layout">
           <div class="release-left">
             <div class="toolbar release-toolbar">
               <div class="search-box">
@@ -118,31 +118,26 @@
               </label>
             </div>
 
-            <section class="release-board">
-              <div class="task-lane">
-                <div class="section-title">
-                  <h3>下达队列</h3>
+            <section class="release-flow-panel release-flow-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>下达链路</h3>
+                  <p>确认排程锁定、资源准入、终端接收和协同推送状态</p>
                 </div>
-                <div id="releaseList" class="task-list"></div>
+                <span id="activeReleaseText">REL-001</span>
               </div>
+              <div id="releaseFlow" class="release-flow"></div>
+            </section>
 
-              <div class="release-focus">
-                <section class="release-flow-panel">
-                  <div class="section-title">
-                    <h3>下达链路</h3>
-                    <span id="activeReleaseText">REL-001</span>
-                  </div>
-                  <div id="releaseFlow" class="release-flow"></div>
-                </section>
-
-                <section class="channel-panel">
-                  <div class="section-title">
-                    <h3>协同推送</h3>
-                    <span>终端 · 班组 · 物料 · 质量</span>
-                  </div>
-                  <div id="channelBoard" class="channel-board"></div>
-                </section>
+            <section class="channel-panel channel-panel--primary">
+              <div class="section-title">
+                <div>
+                  <h3>协同推送</h3>
+                  <p>下达后同步工位终端、班组任务、物料配送和质量检验准备</p>
+                </div>
+                <span>终端 · 班组 · 物料 · 质量</span>
               </div>
+              <div id="channelBoard" class="channel-board"></div>
             </section>
 
             <section class="dispatch-table-panel">
@@ -173,52 +168,64 @@
             </section>
           </div>
 
-          <aside id="releaseDetailPanel" class="order-detail-panel release-detail-panel">
-            <div class="detail-head">
-              <div>
-                <span id="detailStatus">待下达</span>
-                <h2 id="detailReleaseNo">REL-001</h2>
-                <p id="detailTitle">D-001 · SMT 贴片</p>
-              </div>
-              <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
-            </div>
-
-            <div class="detail-grid" id="detailGrid"></div>
-
-            <section class="detail-section">
+          <aside class="release-side-rail">
+            <section class="task-lane">
               <div class="section-title">
-                <h3>下达校验</h3>
-                <button id="checkReleaseBtn" type="button">重新校验</button>
+                <div>
+                  <h3>下达队列</h3>
+                  <p>选择批次后在左侧确认下达链路和协同对象</p>
+                </div>
               </div>
-              <div id="gateList" class="gate-list"></div>
+              <div id="releaseList" class="task-list"></div>
             </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>推送内容</h3>
+            <section id="releaseDetailPanel" class="order-detail-panel release-detail-panel">
+              <div class="detail-head">
+                <div>
+                  <span id="detailStatus">待下达</span>
+                  <h2 id="detailReleaseNo">REL-001</h2>
+                  <p id="detailTitle">D-001 · SMT 贴片</p>
+                </div>
+                <button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
               </div>
-              <div id="payloadList" class="readiness-list"></div>
-            </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>联动动作</h3>
-              </div>
-              <div class="action-grid dispatch-actions">
-                <button id="checkBtn" type="button">执行校验</button>
-                <button id="releaseBtn" type="button">确认下达</button>
-                <button id="resendBtn" type="button">重发通知</button>
-                <button id="syncBtn" type="button">同步协同模块</button>
-                <button id="blockBtn" class="danger-action" type="button">标记拦截</button>
-                <button id="withdrawBtn" type="button">撤回下达</button>
-              </div>
-            </section>
+              <div class="detail-grid" id="detailGrid"></div>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>最近记录</h3>
-              </div>
-              <div id="releaseLogList" class="integration-list"></div>
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>下达校验</h3>
+                  <button id="checkReleaseBtn" type="button">重新校验</button>
+                </div>
+                <div id="gateList" class="gate-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>推送内容</h3>
+                </div>
+                <div id="payloadList" class="readiness-list"></div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>联动动作</h3>
+                </div>
+                <div class="action-grid dispatch-actions">
+                  <button id="checkBtn" type="button">执行校验</button>
+                  <button id="releaseBtn" type="button">确认下达</button>
+                  <button id="resendBtn" type="button">重发通知</button>
+                  <button id="syncBtn" type="button">同步协同模块</button>
+                  <button id="blockBtn" class="danger-action" type="button">标记拦截</button>
+                  <button id="withdrawBtn" type="button">撤回下达</button>
+                </div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>最近记录</h3>
+                </div>
+                <div id="releaseLogList" class="integration-list"></div>
+              </section>
             </section>
           </aside>
         </section>
