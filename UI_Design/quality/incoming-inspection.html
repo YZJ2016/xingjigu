@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 来料检验</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./quality-upstream.css" />
+  </head>
+  <body>
+    <script>
+      window.QUALITY_PAGE = { id: "incoming", title: "来料检验", eyebrow: "质量检验 / 来料检验" };
+    </script>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand"><div class="brand-mark">X</div><div><div class="brand-name">星技谷 MES</div><div class="brand-subtitle">生产运营中枢</div></div></div>
+        <div class="menu-heading">业务导航</div>
+        <nav id="qualityModuleMenu" class="module-menu"></nav>
+        <div class="sidebar-footer"><div class="factory-card"><div class="factory-card__label">当前工厂</div><div class="factory-card__name">华东一厂 · 电子装配车间</div><div class="factory-card__meta"><span>IQC 准入</span><span>WMS / 采购 / 供应商批次</span></div></div></div>
+      </aside>
+      <main class="main quality-main">
+        <header class="topbar">
+          <div><div id="pageEyebrow" class="eyebrow"></div><h1 id="pageTitle"></h1><p id="pageSubtitle"></p></div>
+          <div class="topbar-actions"><button id="primaryActionBtn" class="primary-action" type="button">模拟 IQC 判定回执</button><button id="resetQualityBtn" class="secondary-action" type="button">重置演示</button><a class="quality-link" href="../materials/line-side-inventory.html">线边库存</a><a class="quality-link" href="../materials/shortage-alerts.html">缺料预警</a><a class="quality-link" href="../index.html">返回首页</a><div class="user-chip"><span class="avatar">质</span><span id="userRole"></span></div></div>
+        </header>
+        <section id="qualityMetrics" class="quality-metrics"></section>
+        <section class="quality-layout">
+          <div class="quality-left">
+            <div class="quality-toolbar"><label>搜索<input id="searchInput" type="search" placeholder="到货单、批次、供应商、物料、责任人" /></label><label>状态<select id="statusFilter"></select></label><label>产线 / 区域<select id="lineFilter"></select></label></div>
+            <section class="quality-panel"><div class="quality-panel__head"><div><h3 id="tableTitle"></h3><p id="tableHint"></p></div><button id="openDetailBtn" type="button" hidden>打开详情</button></div><div class="quality-table-wrap"><table class="quality-table"><thead id="tableHead"></thead><tbody id="qualityTableBody"></tbody></table></div></section>
+            <section class="quality-panel"><div class="quality-panel__head"><div><h3 id="cardTitle"></h3><p>体现来源系统、校验门、处置动作和追溯衔接</p></div></div><div id="qualityCards" class="quality-card-grid"></div></section>
+            <section class="simulation-box"><div class="simulation-box__head"><div><h3 id="simulationTitle"></h3><p id="simulationHint"></p></div></div><div class="simulation-form"><input id="simulationInput" type="text" /><div class="simulation-actions"><button id="simulateBtn" type="button">记录模拟外部回执</button><button id="secondaryActionBtn" type="button">登记模拟异常处置</button></div></div></section>
+          </div>
+          <aside class="quality-side"><section id="qualityDetail" class="quality-detail"><div class="quality-detail__head"><div><span id="detailStatus" class="pill"></span><h3 id="detailTitle"></h3><p id="detailSubtitle"></p></div><button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情">×</button></div><div id="detailKv" class="detail-kv"></div></section><section class="quality-detail"><h3>业务履历</h3><div id="timelineList" class="quality-timeline"></div></section><section class="quality-detail"><h3>闭环衔接</h3><div id="actionList" class="action-list"></div><div id="quickLinks" class="quick-links"></div></section><section class="quality-detail"><h3>模拟记录</h3><div id="logList" class="action-list"></div></section></aside>
+        </section>
+      </main>
+    </div>
+    <script src="./quality-upstream.js"></script>
+  </body>
+</html>

@@ -18,6 +18,16 @@ const modules = [
 
 const STORAGE_KEY = "xingjigu_mes_workbench_v2";
 
+const qualityPages = {
+  来料检验: "incoming-inspection.html",
+  首件检验: "first-article.html",
+  巡检任务: "patrol-tasks.html",
+  过程检验: "process-inspection.html",
+  成品检验: "final-inspection.html",
+  不良记录: "defect-records.html",
+  返工评审: "rework-review.html",
+};
+
 const initialOrders = [
   { id: "MO-202606-0001", product: "智能温控控制器 TCU-100", customer: "A 客户", qty: 1000, done: 428, due: "2026-06-30", line: "Line-A", status: "已下达", priority: "高", risk: "缺料", quality: 98.7, oee: 86.4 },
   { id: "MO-202606-0002", product: "工业网关 GW-240", customer: "B 客户", qty: 600, done: 315, due: "2026-06-28", line: "Line-B", status: "生产中", priority: "高", risk: "交期", quality: 97.9, oee: 83.8 },
@@ -276,6 +286,66 @@ function applyMenuEntry(moduleId, entry) {
     window.location.href = "./station/shift-handover.html";
     return;
   }
+  if (moduleId === "materials" && entry === "用料需求") {
+    window.location.href = "./materials/material-requirements.html";
+    return;
+  }
+  if (moduleId === "materials" && entry === "领料申请") {
+    window.location.href = "./materials/picking-requests.html";
+    return;
+  }
+  if (moduleId === "materials" && entry === "配送进度") {
+    window.location.href = "./materials/delivery-progress.html";
+    return;
+  }
+  if (moduleId === "materials" && entry === "线边库存") {
+    window.location.href = "./materials/line-side-inventory.html";
+    return;
+  }
+  if (moduleId === "materials" && entry === "投料记录") {
+    window.location.href = "./materials/feeding-records.html";
+    return;
+  }
+  if (moduleId === "materials" && entry === "余料退回") {
+    window.location.href = "./materials/return-materials.html";
+    return;
+  }
+  if (moduleId === "materials" && entry === "缺料预警") {
+    window.location.href = "./materials/shortage-alerts.html";
+    return;
+  }
+  if (moduleId === "barcode" && entry === "生产批次") {
+    window.location.href = "./barcode/production-batches.html";
+    return;
+  }
+  if (moduleId === "barcode" && entry === "产品序列号") {
+    window.location.href = "./barcode/product-serials.html";
+    return;
+  }
+  if (moduleId === "barcode" && entry === "物料标签") {
+    window.location.href = "./barcode/material-labels.html";
+    return;
+  }
+  if (moduleId === "barcode" && entry === "成品标签") {
+    window.location.href = "./barcode/finished-labels.html";
+    return;
+  }
+  if (moduleId === "barcode" && entry === "箱码托盘码") {
+    window.location.href = "./barcode/box-pallet-codes.html";
+    return;
+  }
+  if (moduleId === "barcode" && entry === "标签打印") {
+    window.location.href = "./barcode/label-printing.html";
+    return;
+  }
+  if (moduleId === "barcode" && entry === "补打申请") {
+    window.location.href = "./barcode/reprint-requests.html";
+    return;
+  }
+  if (moduleId === "quality" && qualityPages[entry]) {
+    window.location.href = `./quality/${qualityPages[entry]}`;
+    return;
+  }
   const actions = {
     生产总览: () => {
       state.line = "全部产线";
@@ -463,7 +533,7 @@ function renderPreview() {
   submenuPreview.innerHTML = modules
     .slice(0, 6)
     .map((module) => `
-      <button class="preview-card" type="button" data-title="${module.title}">
+      <button class="preview-card" type="button" data-module="${module.id}" data-entry="${module.items[0]}" data-title="${module.title}">
         <div class="preview-card__title">
           <span class="preview-card__dot" style="background:${module.color}"></span>
           ${module.title}
@@ -476,7 +546,7 @@ function renderPreview() {
   submenuPreview.querySelectorAll(".preview-card").forEach((card) => {
     card.addEventListener("click", () => {
       setContext(card.dataset.title, `已从常用业务入口进入「${card.dataset.title}」。`);
-      showToast(`打开 ${card.dataset.title}`);
+      applyMenuEntry(card.dataset.module, card.dataset.entry);
     });
   });
 }
