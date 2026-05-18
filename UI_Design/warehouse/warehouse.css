@@ -1,0 +1,377 @@
+.warehouse-main {
+  min-width: 0;
+}
+
+.warehouse-main .secondary-link {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.warehouse-main .secondary-link:hover,
+.quick-links a:hover {
+  border-color: rgba(0, 122, 255, 0.24);
+  background: rgba(0, 122, 255, 0.08);
+}
+
+.warehouse-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.warehouse-metrics article,
+.warehouse-panel,
+.warehouse-detail {
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+.warehouse-metrics article {
+  padding: 16px;
+  min-width: 0;
+}
+
+.warehouse-metrics span,
+.warehouse-card span,
+.warehouse-detail em,
+.warehouse-timeline span {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 760;
+}
+
+.warehouse-metrics strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.warehouse-metrics em {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 680;
+}
+
+.warehouse-layout {
+  display: grid;
+  grid-template-columns: minmax(760px, 1fr) 420px;
+  gap: 14px;
+  align-items: start;
+}
+
+.warehouse-left {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.warehouse-toolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 150px 150px;
+  gap: 10px;
+  align-items: end;
+}
+
+.warehouse-toolbar label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.warehouse-toolbar input,
+.warehouse-toolbar select,
+.simulation-box input {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.warehouse-panel {
+  padding: 14px;
+  min-width: 0;
+}
+
+.warehouse-panel__head,
+.warehouse-detail__head,
+.simulation-box__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.warehouse-panel h3,
+.warehouse-detail h3,
+.simulation-box h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.warehouse-panel p,
+.warehouse-detail p,
+.simulation-box p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 680;
+}
+
+.warehouse-panel button,
+.warehouse-detail button,
+.simulation-box button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 12px;
+  background: var(--surface-strong);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 820;
+  cursor: pointer;
+}
+
+.warehouse-panel button:hover,
+.warehouse-detail button:hover,
+.simulation-box button:hover {
+  border-color: rgba(0, 122, 255, 0.26);
+  background: rgba(0, 122, 255, 0.08);
+}
+
+.warehouse-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.warehouse-table {
+  width: 100%;
+  min-width: 1080px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.warehouse-table th,
+.warehouse-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.warehouse-table th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 820;
+  background: rgba(248, 250, 252, 0.8);
+}
+
+.warehouse-table tr {
+  cursor: pointer;
+}
+
+.warehouse-table tr.is-active td {
+  background: rgba(0, 122, 255, 0.08);
+}
+
+.warehouse-table strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.warehouse-table small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.warehouse-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.warehouse-card {
+  display: grid;
+  gap: 8px;
+  min-height: 126px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.warehouse-card strong {
+  min-width: 0;
+  font-size: 14px;
+}
+
+.warehouse-card em {
+  color: var(--ink);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 720;
+}
+
+.warehouse-side {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.warehouse-detail {
+  padding: 16px;
+}
+
+.warehouse-detail__head {
+  align-items: center;
+}
+
+.warehouse-detail__head .icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  padding: 0;
+  font-size: 18px;
+}
+
+.detail-kv,
+.warehouse-timeline,
+.action-list {
+  display: grid;
+  gap: 8px;
+}
+
+.detail-kv div,
+.warehouse-timeline div,
+.action-list div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.detail-kv span,
+.warehouse-timeline span,
+.action-list span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.detail-kv strong,
+.warehouse-timeline strong,
+.action-list strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.simulation-box {
+  border: 1px solid rgba(0, 122, 255, 0.2);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(0, 122, 255, 0.06);
+}
+
+.simulation-form {
+  display: grid;
+  gap: 10px;
+}
+
+.simulation-actions,
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 11px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 20;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(20, 24, 31, 0.92);
+  color: white;
+  font-size: 13px;
+  font-weight: 760;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+@media (max-width: 1280px) {
+  .warehouse-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .warehouse-side {
+    position: static;
+  }
+}
+
+@media (max-width: 920px) {
+  .warehouse-metrics,
+  .warehouse-card-grid,
+  .warehouse-toolbar {
+    grid-template-columns: 1fr;
+  }
+}

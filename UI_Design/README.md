@@ -50,6 +50,64 @@
 - 质量检验 / 成品检验独立工作台
 - 质量检验 / 不良记录独立工作台
 - 质量检验 / 返工评审独立工作台
+- 设备与保养 / 设备状态独立工作台
+- 设备与保养 / 点检计划独立工作台
+- 设备与保养 / 保养计划独立工作台
+- 设备与保养 / 维修工单独立工作台
+- 设备与保养 / 停机记录独立工作台
+- 设备与保养 / 备件领用独立工作台
+- 设备与保养 / 设备效率独立工作台
+- 过程监控 / 实时产量独立工作台
+- 过程监控 / 设备运行独立工作台
+- 过程监控 / 工艺参数独立工作台
+- 过程监控 / 报警记录独立工作台
+- 过程监控 / 停机原因独立工作台
+- 过程监控 / 过程趋势独立工作台
+- 过程监控 / 电子看板独立工作台
+- 异常处理 / 异常上报独立工作台
+- 异常处理 / 待处理异常独立工作台
+- 异常处理 / 停线申请独立工作台
+- 异常处理 / 缺料处理独立工作台
+- 异常处理 / 质量问题独立工作台
+- 异常处理 / 设备故障独立工作台
+- 异常处理 / 处理复盘独立工作台
+- 完工与入库 / 工序完工独立工作台
+- 完工与入库 / 完工确认独立工作台
+- 完工与入库 / 包装作业独立工作台
+- 完工与入库 / 成品入库独立工作台
+- 完工与入库 / 库存冻结独立工作台
+- 完工与入库 / 退料入库独立工作台
+- 完工与入库 / 单据同步独立工作台
+- 追溯查询 / 产品追溯独立工作台
+- 追溯查询 / 批次追溯独立工作台
+- 追溯查询 / 物料去向独立工作台
+- 追溯查询 / 生产履历独立工作台
+- 追溯查询 / 检验履历独立工作台
+- 追溯查询 / 设备履历独立工作台
+- 追溯查询 / 客户追溯报告独立工作台
+- 报表与看板 / 生产日报独立分析页面
+- 报表与看板 / 良率分析独立分析页面
+- 报表与看板 / 交付达成独立分析页面
+- 报表与看板 / 设备效率独立分析页面
+- 报表与看板 / 停机损失独立分析页面
+- 报表与看板 / 物料损耗独立分析页面
+- 报表与看板 / 管理驾驶舱独立分析页面
+- 基础资料 / 产品资料独立工作台
+- 基础资料 / 物料资料独立工作台
+- 基础资料 / BOM 清单独立工作台
+- 基础资料 / 工艺路线独立工作台
+- 基础资料 / 工序工位独立工作台
+- 基础资料 / 产线车间独立工作台
+- 基础资料 / 客户供应商独立工作台
+- 系统设置 / 人员账号独立工作台
+- 系统设置 / 角色权限独立工作台
+- 系统设置 / 审批设置独立工作台
+- 系统设置 / 单据同步独立工作台
+- 系统设置 / 消息提醒独立工作台
+- 系统设置 / 操作记录独立工作台
+- 系统设置 / 数据备份独立工作台
+- 基础资料按产品、物料、BOM、工艺路线、工序工位、产线车间、客户供应商建立主数据治理底座，联动订单评审、齐套检查、派工、工位开工、投料防错、质量检验、完工入库和追溯报告
+- 系统设置按账号身份、角色授权、审批签名、单据同步、消息升级、审计留痕和备份恢复建立 MES 治理底座，联动开工准入、质量放行、库存冻结、接口补偿、异常升级和客户稽核
 - 生产订单新增、编辑、删除、分页、搜索、筛选与联动影响管理
 - 订单评审准入校验、会签标记、评审通过、退回补资料与转排程联动
 - 生产排程待排订单、7 天产线甘特图、已确认计划、工序计划、约束确认与派工准备联动
@@ -92,6 +150,48 @@
 - 成品检验按生产履历、首件、IPQC、过程参数、报工、不良和包装标签执行 FQC 放行，衔接成品标签与入库
 - 不良记录按 SN、批次、工序、设备、人员和物料批次形成 NCR，支持隔离、复判、让步、报废和返工评审入口
 - 返工评审按 MRB 处置方式、返工路线、责任工位和复检结果形成闭环，回写派工、工位作业和追溯
+- 设备状态按 PLC、SCADA、设备 API 和人工复核汇聚运行、待机、故障、满载等状态，联动开工准入、维修工单、停机记录和 OEE
+- 点检计划按班前、班中和故障后复检管理点检项目，接收模拟 PDA/扫码枪/工牌回执并联动漏检拦截、异常复核和开工检查
+- 保养计划按日历、运行时长、生产计数和 CBM 阈值触发预防保养，联动 APS 产能日历、执行验收和设备恢复
+- 维修工单按设备报警、扫码报修、点检异常和异常中心触发，跟踪响应、到场、维修、备件、试运行和验收闭环
+- 停机记录按 PLC 状态日志、班组补录和维修结果归因，形成停机原因、OEE 扣减、维修复盘和计划重排依据
+- 备件领用按维修保养工单绑定备件批次、WMS 出库、安装设备、成本归集和低库存补采购
+- 设备效率按设备、产线、班次拆解 OEE 三分项，联动停机 TOP、维修历史、良品结果和 TPM 改善建议
+- 实时产量按 PLC 产量脉冲、工位 HMI 和工序报工草稿汇聚产量，绑定工单、派工、批次、设备和时间戳
+- 设备运行按 PLC、SCADA 和设备 API 汇聚运行、待机、故障、满载等状态，联动开工准入、维修和排程
+- 工艺参数按 PLC、测试台和工位 HMI 采集关键参数，联动规格校验、SPC、过程检验和报工拦截
+- 报警记录按 SCADA、设备 API、参数超限和扫码异常生成事件，跟踪等级、派单、响应和关闭结果
+- 停机原因按 PLC 停机日志、班组模拟 HMI 补录和维修验收归因，联动 OEE、复盘和计划调整
+- 过程趋势按时序参数、产量节拍、设备状态和质量结果聚合趋势，识别 SPC 漂移、瓶颈和失控风险
+- 电子看板按 MES 聚合指标发布产量、设备、参数、报警和停机状态，保留现场签收、刷新和追溯入口
+- 异常上报按工位终端、PDA、Andon、PLC、质量、物料和人工确认统一生成异常事件，进入分级派单
+- 待处理异常按 SLA、责任人、业务联动和恢复验证组织设备、质量、缺料、人员和工艺异常
+- 停线申请按异常来源、锁定范围、审批状态、恢复条件和排程影响形成停线闭环
+- 缺料处理按 WMS、线边库、采购到货和齐套检查事实联动调拨、替代料、催料和计划调整
+- 质量问题按 SN、批次、工序、不良代码形成 NCR/MRB、隔离、返工、停线建议和 CAPA 闭环
+- 设备故障按 PLC/SCADA/扫码报修/点检异常触发维修派单、试运行验收、停机归因和 OEE 回写
+- 处理复盘按 RCA、CAPA、TPM 改善和有效性验证沉淀重大或重复异常知识
+- 工序完工接收模拟工位 HMI、扫码枪、PLC 和测试台回执，校验数量、工时、用料、质量和 WIP 结转
+- 完工确认按工序、FQC、NCR、SPC、用料核销、批次谱系、成品标签和未关闭异常形成入库前校验门
+- 包装作业按 SN、箱码、托盘码、包材批次和客户标签版本形成包装层级追溯
+- 成品入库跟踪 MES 入库指令、WMS 模拟扫码上架、库位建议、箱托校验和成品批次状态
+- 库存冻结按质量异常、追溯召回、客户投诉和 WMS 回执管理冻结、解冻、拦截和复判闭环
+- 退料入库接收余料退回、换线退料、冻结退料的模拟 PDA/电子秤/WMS 回执并核销用料差异
+- 单据同步跟踪完工、入库、退料、冻结和工单关闭向 ERP/WMS 的同步、重试、补偿和对账结果
+- 产品追溯按 SN 或成品批次反查工单、物料、工序、检验、设备、包装和出货客户，形成查询快照
+- 批次追溯按原料批次或成品批次双向圈定投入、产出、库存和客户影响范围
+- 物料去向按物料批次查询 WMS 出库、线边签收、投料消耗、余料退回和成品去向
+- 生产履历汇聚工位终端、扫码枪、HMI、PLC、报工和交接记录，支撑单件或批次追因
+- 检验履历串联 IQC、FAI、IPQC、FQC、NCR/MRB 和质量放行记录，支撑客户稽核证据
+- 设备履历关联 PLC/SCADA、点检、维修、停机、校准和生产批次，用于质量追因和 TPM 改善
+- 客户追溯报告汇总客户投诉、出货批次、SN、质量证据、影响范围、审批状态和对外报告快照
+- 生产日报按 ERP 工单、MES 报工、质量放行、设备状态和 WMS 入库汇聚日结快照，跟踪发布、复核和 BI 读取状态
+- 良率分析按产品、工序、批次和不良代码串联 IQC、FAI、IPQC、FQC、NCR 和返工闭环
+- 交付达成按 ERP 交期、MES 完工、WMS 入库和未闭环风险分析客户订单达成情况
+- 设备效率报表按设备、产线和班次拆解 OEE 三分项，联动停机、维修、质量和 TPM 改善
+- 停机损失按 PLC/SCADA 停机事实、班组补录和维修归因计算损失并沉淀复盘入口
+- 物料损耗按 BOM 标准、投料确认、报工核销、余料退回和 WMS 回执分析超耗与成本归集
+- 管理驾驶舱跨订单、质量、设备、物料、异常和交付汇总已校验的经营指标和跨部门管理动作
 - 生产订单池
 - 产线负荷
 - 当前选中订单闭环进度
@@ -212,6 +312,76 @@ UI_Design/
     quality-upstream.js
     quality-downstream.css
     quality-downstream.js
+  equipment/
+    equipment-status.html
+    inspection-plan.html
+    maintenance-plan.html
+    repair-orders.html
+    downtime-records.html
+    spare-parts.html
+    equipment-efficiency.html
+    equipment.css
+    equipment.js
+  monitoring/
+    realtime-output.html
+    device-runtime.html
+    process-parameters.html
+    alarm-records.html
+    downtime-reasons.html
+    process-trends.html
+    electronic-board.html
+    monitoring.css
+    monitoring.js
+  exceptions/
+    exception-report.html
+    pending-exceptions.html
+    line-stop.html
+    material-shortage.html
+    quality-issues.html
+    equipment-faults.html
+    review.html
+    exceptions.css
+    exceptions.js
+  warehouse/
+    operation-completion.html
+    completion-confirmation.html
+    packaging.html
+    finished-goods-receipt.html
+    inventory-freeze.html
+    return-receipt.html
+    document-sync.html
+    warehouse.css
+    warehouse.js
+  traceability/
+    product-trace.html
+    batch-trace.html
+    material-flow.html
+    production-history.html
+    inspection-history.html
+    equipment-history.html
+    customer-report.html
+    traceability.css
+    traceability.js
+  reports/
+    production-daily.html
+    yield-analysis.html
+    delivery-attainment.html
+    equipment-efficiency.html
+    downtime-loss.html
+    material-loss.html
+    management-cockpit.html
+    reports.css
+    reports.js
+  settings/
+    personnel-accounts.html
+    role-permissions.html
+    approval-settings.html
+    document-sync.html
+    message-alerts.html
+    operation-logs.html
+    data-backup.html
+    settings.css
+    settings.js
 ```
 
 ## 打开方式
@@ -472,6 +642,216 @@ UI_Design/quality/defect-records.html
 
 ```text
 UI_Design/quality/rework-review.html
+```
+
+设备状态工作台：
+
+```text
+UI_Design/equipment/equipment-status.html
+```
+
+点检计划工作台：
+
+```text
+UI_Design/equipment/inspection-plan.html
+```
+
+保养计划工作台：
+
+```text
+UI_Design/equipment/maintenance-plan.html
+```
+
+维修工单工作台：
+
+```text
+UI_Design/equipment/repair-orders.html
+```
+
+停机记录工作台：
+
+```text
+UI_Design/equipment/downtime-records.html
+```
+
+备件领用工作台：
+
+```text
+UI_Design/equipment/spare-parts.html
+```
+
+设备效率工作台：
+
+```text
+UI_Design/equipment/equipment-efficiency.html
+```
+
+实时产量工作台：
+
+```text
+UI_Design/monitoring/realtime-output.html
+```
+
+设备运行工作台：
+
+```text
+UI_Design/monitoring/device-runtime.html
+```
+
+工艺参数工作台：
+
+```text
+UI_Design/monitoring/process-parameters.html
+```
+
+报警记录工作台：
+
+```text
+UI_Design/monitoring/alarm-records.html
+```
+
+停机原因工作台：
+
+```text
+UI_Design/monitoring/downtime-reasons.html
+```
+
+过程趋势工作台：
+
+```text
+UI_Design/monitoring/process-trends.html
+```
+
+电子看板工作台：
+
+```text
+UI_Design/monitoring/electronic-board.html
+```
+
+异常上报工作台：
+
+```text
+UI_Design/exceptions/exception-report.html
+```
+
+待处理异常工作台：
+
+```text
+UI_Design/exceptions/pending-exceptions.html
+```
+
+停线申请工作台：
+
+```text
+UI_Design/exceptions/line-stop.html
+```
+
+缺料处理工作台：
+
+```text
+UI_Design/exceptions/material-shortage.html
+```
+
+质量问题工作台：
+
+```text
+UI_Design/exceptions/quality-issues.html
+```
+
+设备故障工作台：
+
+```text
+UI_Design/exceptions/equipment-faults.html
+```
+
+处理复盘工作台：
+
+```text
+UI_Design/exceptions/review.html
+```
+
+产品追溯工作台：
+
+```text
+UI_Design/traceability/product-trace.html
+```
+
+批次追溯工作台：
+
+```text
+UI_Design/traceability/batch-trace.html
+```
+
+物料去向工作台：
+
+```text
+UI_Design/traceability/material-flow.html
+```
+
+生产履历工作台：
+
+```text
+UI_Design/traceability/production-history.html
+```
+
+检验履历工作台：
+
+```text
+UI_Design/traceability/inspection-history.html
+```
+
+设备履历工作台：
+
+```text
+UI_Design/traceability/equipment-history.html
+```
+
+客户追溯报告工作台：
+
+```text
+UI_Design/traceability/customer-report.html
+```
+
+生产日报分析页面：
+
+```text
+UI_Design/reports/production-daily.html
+```
+
+良率分析页面：
+
+```text
+UI_Design/reports/yield-analysis.html
+```
+
+交付达成分析页面：
+
+```text
+UI_Design/reports/delivery-attainment.html
+```
+
+设备效率报表页面：
+
+```text
+UI_Design/reports/equipment-efficiency.html
+```
+
+停机损失分析页面：
+
+```text
+UI_Design/reports/downtime-loss.html
+```
+
+物料损耗分析页面：
+
+```text
+UI_Design/reports/material-loss.html
+```
+
+管理驾驶舱页面：
+
+```text
+UI_Design/reports/management-cockpit.html
 ```
 
 也可以在 `UI_Design` 目录启动任意静态服务后访问首页。

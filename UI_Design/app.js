@@ -6,7 +6,7 @@ const modules = [
   { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
   { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
   { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
-  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "点检任务", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
+  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "点检计划", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
   { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机原因", "过程趋势", "电子看板"] },
   { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
   { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
@@ -27,6 +27,78 @@ const qualityPages = {
   不良记录: "defect-records.html",
   返工评审: "rework-review.html",
 };
+
+const equipmentPages = {
+  设备状态: "equipment-status.html",
+  点检计划: "inspection-plan.html",
+  保养计划: "maintenance-plan.html",
+  维修工单: "repair-orders.html",
+  停机记录: "downtime-records.html",
+  备件领用: "spare-parts.html",
+  设备效率: "equipment-efficiency.html",
+};
+
+const processPages = {
+  实时产量: "realtime-output.html",
+  设备运行: "device-runtime.html",
+  工艺参数: "process-parameters.html",
+  报警记录: "alarm-records.html",
+  停机原因: "downtime-reasons.html",
+  过程趋势: "process-trends.html",
+  电子看板: "electronic-board.html",
+};
+
+const warehousePages = {
+  工序完工: "operation-completion.html",
+  完工确认: "completion-confirmation.html",
+  包装作业: "packaging.html",
+  成品入库: "finished-goods-receipt.html",
+  库存冻结: "inventory-freeze.html",
+  退料入库: "return-receipt.html",
+  单据同步: "document-sync.html",
+};
+
+const tracePages = {
+  产品追溯: "product-trace.html",
+  批次追溯: "batch-trace.html",
+  物料去向: "material-flow.html",
+  生产履历: "production-history.html",
+  检验履历: "inspection-history.html",
+  设备履历: "equipment-history.html",
+  客户追溯报告: "customer-report.html",
+};
+
+const reportPages = {
+  生产日报: "production-daily.html",
+  良率分析: "yield-analysis.html",
+  交付达成: "delivery-attainment.html",
+  设备效率: "equipment-efficiency.html",
+  停机损失: "downtime-loss.html",
+  物料损耗: "material-loss.html",
+  管理驾驶舱: "management-cockpit.html",
+};
+
+const basicPages = {
+  产品资料: "product-master.html",
+  物料资料: "material-master.html",
+  "BOM 清单": "bom-list.html",
+  工艺路线: "routing.html",
+  工序工位: "operation-stations.html",
+  产线车间: "workshops.html",
+  客户供应商: "partners.html",
+};
+
+const systemPages = {
+  人员账号: "personnel-accounts.html",
+  角色权限: "role-permissions.html",
+  审批设置: "approval-settings.html",
+  单据同步: "document-sync.html",
+  消息提醒: "message-alerts.html",
+  操作记录: "operation-logs.html",
+  数据备份: "data-backup.html",
+};
+
+const homePreviewModuleIds = ["basic", "orders", "dispatch", "station", "materials", "quality", "equipment", "process", "exceptions", "warehouse", "reports"];
 
 const initialOrders = [
   { id: "MO-202606-0001", product: "智能温控控制器 TCU-100", customer: "A 客户", qty: 1000, done: 428, due: "2026-06-30", line: "Line-A", status: "已下达", priority: "高", risk: "缺料", quality: 98.7, oee: 86.4 },
@@ -346,6 +418,47 @@ function applyMenuEntry(moduleId, entry) {
     window.location.href = `./quality/${qualityPages[entry]}`;
     return;
   }
+  if (moduleId === "equipment" && equipmentPages[entry]) {
+    window.location.href = `./equipment/${equipmentPages[entry]}`;
+    return;
+  }
+  if (moduleId === "process" && processPages[entry]) {
+    window.location.href = `./monitoring/${processPages[entry]}`;
+    return;
+  }
+  if (moduleId === "warehouse" && warehousePages[entry]) {
+    window.location.href = `./warehouse/${warehousePages[entry]}`;
+    return;
+  }
+  if (moduleId === "trace" && tracePages[entry]) {
+    window.location.href = `./traceability/${tracePages[entry]}`;
+    return;
+  }
+  if (moduleId === "reports" && reportPages[entry]) {
+    window.location.href = `./reports/${reportPages[entry]}`;
+    return;
+  }
+  if (moduleId === "basic" && basicPages[entry]) {
+    window.location.href = `./basic/${basicPages[entry]}`;
+    return;
+  }
+  if (moduleId === "system" && systemPages[entry]) {
+    window.location.href = `./settings/${systemPages[entry]}`;
+    return;
+  }
+  const exceptionPages = {
+    异常上报: "exception-report.html",
+    待处理异常: "pending-exceptions.html",
+    停线申请: "line-stop.html",
+    缺料处理: "material-shortage.html",
+    质量问题: "quality-issues.html",
+    设备故障: "equipment-faults.html",
+    处理复盘: "review.html",
+  };
+  if (moduleId === "exceptions" && exceptionPages[entry]) {
+    window.location.href = `./exceptions/${exceptionPages[entry]}`;
+    return;
+  }
   const actions = {
     生产总览: () => {
       state.line = "全部产线";
@@ -531,7 +644,7 @@ function renderTodos() {
 
 function renderPreview() {
   submenuPreview.innerHTML = modules
-    .slice(0, 6)
+    .filter((module) => homePreviewModuleIds.includes(module.id))
     .map((module) => `
       <button class="preview-card" type="button" data-module="${module.id}" data-entry="${module.items[0]}" data-title="${module.title}">
         <div class="preview-card__title">

@@ -1,0 +1,332 @@
+- generic [ref=e2]:
+  - complementary "MES 业务导航菜单" [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: X
+      - generic [ref=e6]:
+        - generic [ref=e7]: 星技谷 MES
+        - generic [ref=e8]: 生产运营中枢
+    - generic [ref=e9]: 业务导航
+    - navigation [ref=e10]:
+      - button "首 首页工作台 日常工作 ›" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: 首
+        - generic [ref=e14]:
+          - generic [ref=e15]: 首页工作台
+          - generic [ref=e16]: 日常工作
+        - generic [ref=e17]: ›
+      - button "计 订单与计划 计划部门 ›" [ref=e19] [cursor=pointer]:
+        - generic [ref=e20]: 计
+        - generic [ref=e21]:
+          - generic [ref=e22]: 订单与计划
+          - generic [ref=e23]: 计划部门
+        - generic [ref=e24]: ›
+      - button "任 派工与生产任务 车间管理 ›" [ref=e26] [cursor=pointer]:
+        - generic [ref=e27]: 任
+        - generic [ref=e28]:
+          - generic [ref=e29]: 派工与生产任务
+          - generic [ref=e30]: 车间管理
+        - generic [ref=e31]: ›
+      - button "位 工位作业 现场操作 ›" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 位
+        - generic [ref=e35]:
+          - generic [ref=e36]: 工位作业
+          - generic [ref=e37]: 现场操作
+        - generic [ref=e38]: ›
+      - button "料 物料与线边库 物料管理 ›" [ref=e40] [cursor=pointer]:
+        - generic [ref=e41]: 料
+        - generic [ref=e42]:
+          - generic [ref=e43]: 物料与线边库
+          - generic [ref=e44]: 物料管理
+        - generic [ref=e45]: ›
+      - button "码 条码与标签 现场标识 ›" [ref=e47] [cursor=pointer]:
+        - generic [ref=e48]: 码
+        - generic [ref=e49]:
+          - generic [ref=e50]: 条码与标签
+          - generic [ref=e51]: 现场标识
+        - generic [ref=e52]: ›
+      - button "质 质量检验 质量部门 ›" [ref=e54] [cursor=pointer]:
+        - generic [ref=e55]: 质
+        - generic [ref=e56]:
+          - generic [ref=e57]: 质量检验
+          - generic [ref=e58]: 质量部门
+        - generic [ref=e59]: ›
+      - button "设 设备与保养 设备部门 ›" [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: 设
+        - generic [ref=e63]:
+          - generic [ref=e64]: 设备与保养
+          - generic [ref=e65]: 设备部门
+        - generic [ref=e66]: ›
+      - button "控 过程监控 生产现场 ›" [ref=e68] [cursor=pointer]:
+        - generic [ref=e69]: 控
+        - generic [ref=e70]:
+          - generic [ref=e71]: 过程监控
+          - generic [ref=e72]: 生产现场
+        - generic [ref=e73]: ›
+      - button "异 异常处理 现场协同 ›" [ref=e75] [cursor=pointer]:
+        - generic [ref=e76]: 异
+        - generic [ref=e77]:
+          - generic [ref=e78]: 异常处理
+          - generic [ref=e79]: 现场协同
+        - generic [ref=e80]: ›
+      - button "入 完工与入库 仓储协同 ›" [ref=e82] [cursor=pointer]:
+        - generic [ref=e83]: 入
+        - generic [ref=e84]:
+          - generic [ref=e85]: 完工与入库
+          - generic [ref=e86]: 仓储协同
+        - generic [ref=e87]: ›
+      - button "追 追溯查询 质量追溯 ›" [ref=e89] [cursor=pointer]:
+        - generic [ref=e90]: 追
+        - generic [ref=e91]:
+          - generic [ref=e92]: 追溯查询
+          - generic [ref=e93]: 质量追溯
+        - generic [ref=e94]: ›
+      - button "表 报表与看板 经营分析 ›" [ref=e96] [cursor=pointer]:
+        - generic [ref=e97]: 表
+        - generic [ref=e98]:
+          - generic [ref=e99]: 报表与看板
+          - generic [ref=e100]: 经营分析
+        - generic [ref=e101]: ›
+      - button "基 基础资料 资料维护 ›" [ref=e103] [cursor=pointer]:
+        - generic [ref=e104]: 基
+        - generic [ref=e105]:
+          - generic [ref=e106]: 基础资料
+          - generic [ref=e107]: 资料维护
+        - generic [ref=e108]: ›
+      - generic [ref=e109]:
+        - button "系 系统设置 管理配置 ›" [ref=e110] [cursor=pointer]:
+          - generic [ref=e111]: 系
+          - generic [ref=e112]:
+            - generic [ref=e113]: 系统设置
+            - generic [ref=e114]: 管理配置
+          - generic [ref=e115]: ›
+        - generic [ref=e116]:
+          - link "人员账号" [ref=e117] [cursor=pointer]:
+            - /url: "#system-0"
+          - link "角色权限" [ref=e118] [cursor=pointer]:
+            - /url: "#system-1"
+          - link "审批设置" [ref=e119] [cursor=pointer]:
+            - /url: "#system-2"
+          - link "单据同步" [ref=e120] [cursor=pointer]:
+            - /url: "#system-3"
+          - link "消息提醒" [ref=e121] [cursor=pointer]:
+            - /url: "#system-4"
+          - link "操作记录" [ref=e122] [cursor=pointer]:
+            - /url: "#system-5"
+          - link "数据备份" [ref=e123] [cursor=pointer]:
+            - /url: "#system-6"
+    - generic [ref=e125]:
+      - generic [ref=e126]: 当前工厂
+      - generic [ref=e127]: 华东一厂 · 电子装配车间
+      - generic [ref=e128]:
+        - generic [ref=e129]: 系统设置
+        - generic [ref=e130]: 权限 / 审计 / 集成
+  - main [ref=e131]:
+    - generic [ref=e132]:
+      - generic [ref=e133]:
+        - generic [ref=e134]: 系统设置 / 单据同步
+        - heading "单据同步" [level=1] [ref=e135]
+        - paragraph [ref=e136]: 接口管理员维护 ERP、PLM、WMS、QMS、BI 单据同步策略，跟踪幂等键、重试、死信、补偿和日终对账
+      - generic [ref=e137]:
+        - button "模拟状态回执" [ref=e138] [cursor=pointer]
+        - button "重置演示" [ref=e139] [cursor=pointer]
+        - link "操作记录" [ref=e140] [cursor=pointer]:
+          - /url: ./operation-logs.html
+        - link "返回首页" [ref=e141] [cursor=pointer]:
+          - /url: ../index.html
+        - generic [ref=e142]:
+          - generic [ref=e143]: 系
+          - generic [ref=e144]: 接口管理员
+    - region "系统设置筛选" [ref=e145]:
+      - generic [ref=e146]:
+        - text: 搜索
+        - searchbox "搜索" [ref=e147]
+      - generic [ref=e148]:
+        - text: 状态
+        - combobox "状态" [ref=e149]:
+          - option "全部状态" [selected]
+          - option "正常"
+          - option "重试中"
+          - option "有差异"
+          - option "死信待补偿"
+      - generic [ref=e150]:
+        - text: 来源
+        - combobox "来源" [ref=e151]:
+          - option "全部来源" [selected]
+          - option "ERP 工单下达"
+          - option "PLM 发布消息"
+          - option "成品入库单"
+          - option "工序完工"
+      - generic [ref=e152]:
+        - text: 详情面板
+        - combobox "详情面板" [ref=e153]:
+          - option "打开" [selected]
+          - option "收起"
+    - generic [ref=e154]:
+      - article [ref=e155]:
+        - text: 接口目录
+        - strong [ref=e156]: "4"
+        - paragraph [ref=e157]: 当前页面样例记录
+      - article [ref=e158]:
+        - text: 今日成功
+        - strong [ref=e159]: "1"
+        - paragraph [ref=e160]: 已进入可执行或可引用状态
+      - article [ref=e161]:
+        - text: 待补偿
+        - strong [ref=e162]: "1"
+        - paragraph [ref=e163]: 需要责任人复核确认
+      - article [ref=e164]:
+        - text: 对账差异
+        - strong [ref=e165]: "2"
+        - paragraph [ref=e166]: 已触发拦截、补偿或演练
+    - generic [ref=e167]:
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - generic [ref=e171]:
+            - heading "单据同步与接口可靠性" [level=3] [ref=e172]
+            - paragraph [ref=e173]: 单据同步负责跨系统状态一致，异常时进入补偿和对账，不直接修改外部系统账务事实
+          - table [ref=e175]:
+            - rowgroup [ref=e176]:
+              - row "接口 / 单据 来源到目标 触发业务 幂等与重试 状态 最近消息 责任人 时间戳" [ref=e177]:
+                - columnheader "接口 / 单据" [ref=e178]
+                - columnheader "来源到目标" [ref=e179]
+                - columnheader "触发业务" [ref=e180]
+                - columnheader "幂等与重试" [ref=e181]
+                - columnheader "状态" [ref=e182]
+                - columnheader "最近消息" [ref=e183]
+                - columnheader "责任人" [ref=e184]
+                - columnheader "时间戳" [ref=e185]
+            - rowgroup [ref=e186]:
+              - row "IF-ERP-MO-IN ERP 生产订单入站 ERP -> MES ERP 工单下达 production_order / idempotent_key 正常 今日 42 笔成功，重复推送 2 笔已去重 接口管理员 陶然 2026-06-20 10:00" [ref=e187] [cursor=pointer]:
+                - cell "IF-ERP-MO-IN ERP 生产订单入站" [ref=e188]:
+                  - strong [ref=e189]: IF-ERP-MO-IN
+                  - generic [ref=e190]: ERP 生产订单入站
+                - cell "ERP -> MES" [ref=e191]
+                - cell "ERP 工单下达" [ref=e192]
+                - cell "production_order / idempotent_key" [ref=e193]
+                - cell "正常" [ref=e194]:
+                  - generic [ref=e195]: 正常
+                - cell "今日 42 笔成功，重复推送 2 笔已去重" [ref=e196]
+                - cell "接口管理员 陶然" [ref=e197]
+                - cell "2026-06-20 10:00" [ref=e198]
+              - row "IF-PLM-BOM PLM BOM 工艺同步 PLM -> MES PLM 发布消息 BOM / routing / SOP 快照 重试中 RT-HMI-70-V1.0 附件校验超时 工艺工程师 林澈 2026-06-20 10:15" [ref=e199] [cursor=pointer]:
+                - cell "IF-PLM-BOM PLM BOM 工艺同步" [ref=e200]:
+                  - strong [ref=e201]: IF-PLM-BOM
+                  - generic [ref=e202]: PLM BOM 工艺同步
+                - cell "PLM -> MES" [ref=e203]
+                - cell "PLM 发布消息" [ref=e204]
+                - cell "BOM / routing / SOP 快照" [ref=e205]
+                - cell "重试中" [ref=e206]:
+                  - generic [ref=e207]: 重试中
+                - cell "RT-HMI-70-V1.0 附件校验超时" [ref=e208]
+                - cell "工艺工程师 林澈" [ref=e209]
+                - cell "2026-06-20 10:15" [ref=e210]
+              - row "IF-WMS-RCV WMS 成品入库回执 MES -> WMS -> MES 成品入库单 finished_goods_lot / wms_receipt_no 有差异 MES 12 箱，WMS 回执 11 箱 仓储主管 王宁 2026-06-20 10:28" [ref=e211] [cursor=pointer]:
+                - cell "IF-WMS-RCV WMS 成品入库回执" [ref=e212]:
+                  - strong [ref=e213]: IF-WMS-RCV
+                  - generic [ref=e214]: WMS 成品入库回执
+                - cell "MES -> WMS -> MES" [ref=e215]
+                - cell "成品入库单" [ref=e216]
+                - cell "finished_goods_lot / wms_receipt_no" [ref=e217]
+                - cell "有差异" [ref=e218]:
+                  - generic [ref=e219]: 有差异
+                - cell "MES 12 箱，WMS 回执 11 箱" [ref=e220]
+                - cell "仓储主管 王宁" [ref=e221]
+                - cell "2026-06-20 10:28" [ref=e222]
+              - row "IF-ERP-CLOSE ERP 完工回传 MES -> ERP 工序完工 + 入库确认 good_qty / actual_time / material_issue 死信待补偿 ERP 成本中心缺失，已进入补偿池 接口管理员 陶然 2026-06-20 10:44" [ref=e223] [cursor=pointer]:
+                - cell "IF-ERP-CLOSE ERP 完工回传" [ref=e224]:
+                  - strong [ref=e225]: IF-ERP-CLOSE
+                  - generic [ref=e226]: ERP 完工回传
+                - cell "MES -> ERP" [ref=e227]
+                - cell "工序完工 + 入库确认" [ref=e228]
+                - cell "good_qty / actual_time / material_issue" [ref=e229]
+                - cell "死信待补偿" [ref=e230]:
+                  - generic [ref=e231]: 死信待补偿
+                - cell "ERP 成本中心缺失，已进入补偿池" [ref=e232]
+                - cell "接口管理员 陶然" [ref=e233]
+                - cell "2026-06-20 10:44" [ref=e234]
+        - generic [ref=e235]:
+          - generic [ref=e237]:
+            - heading "单据同步闭环" [level=3] [ref=e238]
+            - paragraph [ref=e239]: 保留来源系统、校验结果、责任人、时间戳、单据或追溯引用和下一步闭环动作
+          - generic [ref=e240]:
+            - article [ref=e241]:
+              - strong [ref=e242]: 状态来源
+              - paragraph [ref=e243]: ERP 工单下达
+              - generic [ref=e244]: 今日 42 笔成功，重复推送 2 笔已去重
+            - article [ref=e245]:
+              - strong [ref=e246]: 业务影响
+              - paragraph [ref=e247]: 工单入站后触发主数据校验
+              - generic [ref=e248]: production_order / idempotent_key
+            - article [ref=e249]:
+              - strong [ref=e250]: 下一步闭环
+              - paragraph [ref=e251]: 日终对账
+              - generic [ref=e252]: integration_message IF-ERP-MO
+        - generic [ref=e253]:
+          - generic [ref=e255]:
+            - heading "模拟 ERP / WMS 单据回执" [level=3] [ref=e256]
+            - paragraph [ref=e257]: 模拟外部系统消息回传、失败重试或死信修复，不表示后台直接入账或出入库
+          - generic [ref=e258]:
+            - textbox [ref=e259]
+            - button "记录模拟回执" [ref=e260]
+            - button "登记复核结果" [ref=e261]
+      - complementary [ref=e262]:
+        - generic [ref=e263]:
+          - generic [ref=e264]:
+            - generic [ref=e265]:
+              - generic [ref=e266]: 正常
+              - heading "ERP 生产订单入站" [level=3] [ref=e267]
+              - paragraph [ref=e268]: IF-ERP-MO-IN · ERP -> MES
+            - button "关闭详情" [ref=e269] [cursor=pointer]: ×
+          - generic [ref=e270]:
+            - generic [ref=e271]:
+              - term [ref=e272]: 来源
+              - definition [ref=e273]: ERP 工单下达
+            - generic [ref=e274]:
+              - term [ref=e275]: 范围
+              - definition [ref=e276]: production_order / idempotent_key
+            - generic [ref=e277]:
+              - term [ref=e278]: 校验
+              - definition [ref=e279]: 今日 42 笔成功，重复推送 2 笔已去重
+            - generic [ref=e280]:
+              - term [ref=e281]: 责任人
+              - definition [ref=e282]: 接口管理员 陶然
+            - generic [ref=e283]:
+              - term [ref=e284]: 时间戳
+              - definition [ref=e285]: 2026-06-20 10:00
+            - generic [ref=e286]:
+              - term [ref=e287]: 追溯引用
+              - definition [ref=e288]: integration_message IF-ERP-MO
+            - generic [ref=e289]:
+              - term [ref=e290]: 风险说明
+              - definition [ref=e291]: 工单入站后触发主数据校验
+            - generic [ref=e292]:
+              - term [ref=e293]: 下一步
+              - definition [ref=e294]: 日终对账
+        - generic [ref=e295]:
+          - heading "履历与责任链" [level=3] [ref=e296]
+          - generic [ref=e297]:
+            - article [ref=e298]:
+              - strong [ref=e299]: 配置生效
+              - generic [ref=e300]: 接口管理员 陶然 于 2026-06-20 10:00 更新，状态为 正常
+            - article [ref=e301]:
+              - strong [ref=e302]: 校验回执
+              - generic [ref=e303]: 今日 42 笔成功，重复推送 2 笔已去重
+            - article [ref=e304]:
+              - strong [ref=e305]: 审计留痕
+              - generic [ref=e306]: integration_message IF-ERP-MO 已写入操作记录或业务履历
+        - generic [ref=e307]:
+          - heading "联动闭环" [level=3] [ref=e308]
+          - generic [ref=e309]:
+            - article [ref=e310]:
+              - strong [ref=e311]: 上游输入
+              - generic [ref=e312]: ERP 工单下达
+            - article [ref=e313]:
+              - strong [ref=e314]: 下游控制
+              - generic [ref=e315]: production_order / idempotent_key
+            - article [ref=e316]:
+              - strong [ref=e317]: 异常处理
+              - generic [ref=e318]: 日终对账
+        - generic [ref=e319]:
+          - heading "模拟操作记录" [level=3] [ref=e320]
+          - article [ref=e322]:
+            - strong [ref=e323]: 暂无模拟记录
+            - generic [ref=e324]: 页面会保存模拟回执、复核结果和重置前的演示状态。

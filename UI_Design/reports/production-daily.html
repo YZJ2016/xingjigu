@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 生产日报</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./reports.css" />
+  </head>
+  <body>
+    <script>window.REPORT_PAGE = { id: "daily", title: "生产日报", eyebrow: "报表与看板 / 生产日报" };</script>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand"><div class="brand-mark">X</div><div><div class="brand-name">星技谷 MES</div><div class="brand-subtitle">生产运营中枢</div></div></div>
+        <div class="menu-heading">业务导航</div>
+        <nav id="reportsModuleMenu" class="module-menu"></nav>
+        <div class="sidebar-footer"><div class="factory-card"><div class="factory-card__label">当前工厂</div><div class="factory-card__name">华东一厂 · 电子装配车间</div><div class="factory-card__meta"><span>经营分析</span><span>MES / BI 数据口径</span></div></div></div>
+      </aside>
+      <main id="reportsApp" class="main reports-main"></main>
+    </div>
+    <script src="./reports.js"></script>
+  </body>
+</html>

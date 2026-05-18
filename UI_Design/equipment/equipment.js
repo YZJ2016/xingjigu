@@ -1,0 +1,565 @@
+const pageConfig = window.EQUIPMENT_PAGE || { id: "status", title: "设备状态", eyebrow: "设备与保养 / 设备状态" };
+const STORAGE_KEY = `xingjigu_mes_equipment_${pageConfig.id}_v1`;
+
+const modules = [
+  { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
+  { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
+  { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
+  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
+  { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
+  { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
+  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
+  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "点检计划", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
+  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机原因", "过程趋势", "电子看板"] },
+  { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
+  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
+  { id: "trace", title: "追溯查询", layer: "质量追溯", color: "#8e8e93", mark: "追", items: ["产品追溯", "批次追溯", "物料去向", "生产履历", "检验履历", "设备履历", "客户追溯报告"] },
+  { id: "reports", title: "报表与看板", layer: "经营分析", color: "#8e8e93", mark: "表", items: ["生产日报", "良率分析", "交付达成", "设备效率", "停机损失", "物料损耗", "管理驾驶舱"] },
+  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "客户供应商"] },
+  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "角色权限", "审批设置", "单据同步", "消息提醒", "操作记录", "数据备份"] },
+];
+
+const equipmentPages = {
+  设备状态: "equipment-status.html",
+  点检计划: "inspection-plan.html",
+  点检任务: "inspection-plan.html",
+  保养计划: "maintenance-plan.html",
+  维修工单: "repair-orders.html",
+  停机记录: "downtime-records.html",
+  备件领用: "spare-parts.html",
+  设备效率: "equipment-efficiency.html",
+};
+
+const pageDefinitions = {
+  status: {
+    subtitle: "设备员和车间主任按产线监控 PLC/SCADA 状态、当前工单、报警、开工准入和 OEE 影响",
+    user: "设备监控员",
+    metrics: ["设备数", "运行中", "异常/故障", "需联动"],
+    columns: ["设备", "产线 / 工位", "状态来源", "当前工单", "运行状态", "OEE / 时长", "异常与准入", "责任人"],
+    tableTitle: "设备实时状态",
+    tableHint: "来自 PLC、SCADA、设备 API 和人工确认，后台只监控状态与处置闭环",
+    cardTitle: "状态来源与生产联动",
+    simulationTitle: "模拟 PLC / SCADA 状态回传",
+    simulationHint: "模拟外部设备信号回传，不表示后台直接控制设备启停",
+  },
+  inspection: {
+    subtitle: "班组长和设备员按班次下发点检计划，接收现场 PDA/扫码点检回执并跟踪漏检、异常和复核",
+    user: "设备点检员",
+    metrics: ["计划项", "待点检", "已完成", "异常项"],
+    columns: ["点检计划", "设备 / 工位", "点检项目", "计划时间", "回执来源", "执行状态", "异常说明", "责任人"],
+    tableTitle: "班前与班中点检计划",
+    tableHint: "后台管理点检标准、计划和回执，不替代现场设备点检动作",
+    cardTitle: "点检、漏检和异常闭环",
+    simulationTitle: "模拟 PDA / 工牌扫码点检回执",
+    simulationHint: "模拟现场 PDA、扫码枪或工牌/NFC 回传点检结果，后台只做记录、预警和复核",
+  },
+  maintenance: {
+    subtitle: "预防保养按日历、运行时长和生产计数触发，形成保养窗口、执行确认、验收和 APS 产能日历联动",
+    user: "保养计划员",
+    metrics: ["保养单", "待执行", "已验收", "影响排程"],
+    columns: ["保养计划", "设备 / 产线", "触发依据", "窗口时间", "执行内容", "状态", "APS 联动", "责任人"],
+    tableTitle: "预防保养计划",
+    tableHint: "计划停机窗口同步排程，保养完成后回写设备状态和验收记录",
+    cardTitle: "保养触发、执行与验收",
+    simulationTitle: "模拟保养执行回执",
+    simulationHint: "模拟维修工移动端或设备 HMI 回传保养结果，后台只记录验收和状态恢复",
+  },
+  repair: {
+    subtitle: "设备故障由报警、扫码报修或异常中心触发，按技能矩阵派单，记录响应、维修、备件和验收",
+    user: "维修调度员",
+    metrics: ["维修单", "待响应", "维修中", "超时风险"],
+    columns: ["维修工单", "设备 / 故障", "报修来源", "响应 / 到场", "维修状态", "备件", "生产影响", "责任人"],
+    tableTitle: "维修工单闭环",
+    tableHint: "故障报修、派单、维修、试运行和验收全程留痕，并回写异常中心",
+    cardTitle: "报修、派单和验收链路",
+    simulationTitle: "模拟扫码报修 / 维修回执",
+    simulationHint: "模拟现场扫码报修、设备报警或维修移动端回传，不表示后台直接维修设备",
+  },
+  downtime: {
+    subtitle: "停机记录按 PLC 状态、班组补录和维修结果归因，支撑 OEE、停机损失、复盘和计划重排",
+    user: "停机分析员",
+    metrics: ["停机笔数", "故障停机", "待归因", "影响分钟"],
+    columns: ["停机记录", "设备 / 工单", "停机来源", "开始 / 时长", "原因代码", "归因状态", "OEE 影响", "责任人"],
+    tableTitle: "停机记录与原因归因",
+    tableHint: "从设备状态日志沉淀停机事实，归因后进入 OEE 和异常复盘",
+    cardTitle: "停机事实、归因和改善",
+    simulationTitle: "模拟设备状态日志回传",
+    simulationHint: "模拟 PLC/SCADA 停机事件回传，后台只做归因、复核和指标扣减",
+  },
+  spares: {
+    subtitle: "维修和保养领用备件需绑定工单、设备、安装时间和 WMS 出库，支撑成本、库存和追溯",
+    user: "备件管理员",
+    metrics: ["领用单", "待审批", "已出库", "低库存"],
+    columns: ["备件领用", "维修 / 保养单", "备件 / 批次", "申请 / 实发", "WMS 回执", "安装设备", "成本归集", "责任人"],
+    tableTitle: "备件领用与安装追溯",
+    tableHint: "备件消耗绑定维修保养工单，驱动 WMS 出库、成本归集和补采购",
+    cardTitle: "领用、出库和安装闭环",
+    simulationTitle: "模拟 WMS / 扫码出库回执",
+    simulationHint: "模拟 WMS、PDA 或扫码枪回传备件出库与安装结果，后台只做核销和追溯",
+  },
+  efficiency: {
+    subtitle: "按设备、产线和班次拆解 OEE 三分项，联动停机记录、维修历史、良品率和改善建议",
+    user: "设备效率分析员",
+    metrics: ["设备 OEE", "可用率", "性能率", "质量率"],
+    columns: ["设备 / 班次", "产线 / 工序", "计划 / 停机", "产量表现", "质量结果", "OEE", "改善方向", "责任人"],
+    tableTitle: "设备效率分析",
+    tableHint: "OEE = 可用率 x 性能率 x 质量率，可下钻停机、维修和质量原因",
+    cardTitle: "OEE 三分项和改善闭环",
+    simulationTitle: "模拟 OEE 日报重算",
+    simulationHint: "模拟状态日志、产量和质量结果聚合，不代表后台直接修改设备实绩",
+  },
+};
+
+const initialRows = {
+  status: [
+    { id: "EQ-SMT-01", equipment: "SMT 贴片机 1", equipmentNo: "SMT-01", line: "Line-A", station: "SMT-WS-01", order: "MO-202606-0001", dispatch: "D-001", source: "PLC 状态 + SCADA 采集", status: "运行中", statusDetail: "炉温稳定，节拍 8.4s", duration: "运行 186 分钟", oee: 86.4, downtime: 0, owner: "设备员 周诚", risk: "供料器振动值接近预警线", next: "观察供料器并准备点检", trace: "equipment_state_log / 当前班次" },
+    { id: "EQ-DIP-A1", equipment: "DIP 波峰焊线", equipmentNo: "DIP-A1", line: "Line-A", station: "DIP-WS-02", order: "MO-202606-0001", dispatch: "D-002", source: "设备 API + 班组确认", status: "待机", statusDetail: "等待 SMT 批次转入", duration: "待机 42 分钟", oee: 79.8, downtime: 12, owner: "班组长 郑峰", risk: "13:00 前需完成开工准入", next: "开工检查", trace: "派工单 D-002 / 设备准入" },
+    { id: "EQ-TEST-B2", equipment: "功能测试台 B2", equipmentNo: "TEST-B2", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "测试台 API", status: "故障", statusDetail: "通信超时 ALM-204", duration: "故障 18 分钟", oee: 62.5, downtime: 18, owner: "维修员 吴启", risk: "影响 GW-240 测试排队", next: "自动触发维修工单", trace: "alarm_event ALM-204" },
+    { id: "EQ-AGING-01", equipment: "老化房 1", equipmentNo: "AGING-01", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "SCADA 温度/通道采集", status: "满载", statusDetail: "通道占用 92%", duration: "运行 244 分钟", oee: 88.2, downtime: 0, owner: "设备主管 袁立", risk: "16:40 可能排队", next: "同步 APS 瓶颈预警", trace: "oee_daily / 通道履历" },
+  ],
+  inspection: [
+    { id: "IP-20260620-01", equipment: "SMT 贴片机 1", equipmentNo: "SMT-01", line: "Line-A", station: "SMT-WS-01", order: "MO-202606-0001", dispatch: "D-001", source: "班前点检计划", status: "异常待复核", statusDetail: "供料器 12 振动偏高", duration: "08:00 / 已回执", oee: 0, downtime: 0, owner: "设备员 周诚", risk: "需维修员复核是否换件", next: "生成临时点检复核", trace: "点检表 TPM-SMT-V2.3" },
+    { id: "IP-20260620-02", equipment: "DIP 波峰焊线", equipmentNo: "DIP-A1", line: "Line-A", station: "DIP-WS-02", order: "MO-202606-0001", dispatch: "D-002", source: "班中点检计划", status: "待点检", statusDetail: "锡炉温度、喷雾压力、输送链", duration: "计划 12:30", oee: 0, downtime: 0, owner: "班组长 郑峰", risk: "漏检将拦截 13:00 开工", next: "模拟 PDA 点检回执", trace: "开工准入门" },
+    { id: "IP-20260620-03", equipment: "功能测试台 B2", equipmentNo: "TEST-B2", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "故障后复检计划", status: "待复检", statusDetail: "网口、治具针床、测试程序版本", duration: "维修后 10 分钟内", oee: 0, downtime: 0, owner: "维修员 吴启", risk: "未复检不可恢复派工", next: "维修验收", trace: "维修工单 MR-240620-03" },
+    { id: "IP-20260620-04", equipment: "老化房 1", equipmentNo: "AGING-01", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "周期点检计划", status: "已完成", statusDetail: "温控、风机、电流、门禁联锁通过", duration: "10:20 / 已签名", oee: 0, downtime: 0, owner: "设备员 黄宁", risk: "无", next: "继续运行监控", trace: "模拟工牌/NFC 签名" },
+  ],
+  maintenance: [
+    { id: "PM-20260620-01", equipment: "SMT 贴片机 1", equipmentNo: "SMT-01", line: "Line-A", station: "SMT-WS-01", order: "MO-202606-0001", dispatch: "D-001", source: "运行 480 小时触发", status: "待执行", statusDetail: "供料器清洁、轨道润滑、相机校准", duration: "窗口 19:30-20:10", oee: 0, downtime: 40, owner: "保养员 许锐", risk: "需避开 TCU-100 白班尾批", next: "同步 APS 产能日历", trace: "maintenance_order preventive" },
+    { id: "PM-20260620-02", equipment: "DIP 波峰焊线", equipmentNo: "DIP-A1", line: "Line-A", station: "DIP-WS-02", order: "MO-202606-0001", dispatch: "D-002", source: "日历周期 7 天", status: "已验收", statusDetail: "喷嘴清洁、锡渣清理、链速校验", duration: "06:40-07:18", oee: 0, downtime: 38, owner: "设备主管 袁立", risk: "已恢复可用", next: "开工检查引用", trace: "验收人：车间主任 陈伟" },
+    { id: "PM-20260620-03", equipment: "老化房 1", equipmentNo: "AGING-01", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "温控偏差趋势触发", status: "影响排程", statusDetail: "温度探头校准与风道清洁", duration: "建议 17:00-18:00", oee: 0, downtime: 60, owner: "保养员 梁溪", risk: "可能影响 ECU-80 老化排队", next: "计划调整评估", trace: "CBM 阈值预警" },
+    { id: "PM-20260621-01", equipment: "包装封箱机 C1", equipmentNo: "PACK-C1", line: "Line-C", station: "PACK-WS-02", order: "MO-202606-0011", dispatch: "D-111", source: "生产计数 1800 箱触发", status: "待确认", statusDetail: "胶带轮、传感器、压箱机构", duration: "夜班前 20 分钟", oee: 0, downtime: 20, owner: "设备员 黄宁", risk: "需确认包装尾批完成时间", next: "班次交接", trace: "计数器 PACK-C1" },
+  ],
+  repair: [
+    { id: "MR-240620-03", equipment: "功能测试台 B2", equipmentNo: "TEST-B2", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "设备报警 ALM-204", status: "维修中", statusDetail: "网关通信模块超时，已到场", duration: "响应 6 分钟 / 到场 11 分钟", oee: 0, downtime: 18, owner: "维修员 吴启", risk: "GW-240 测试排队增加", next: "更换通信板后试运行", trace: "异常事件 EX-EQ-0203" },
+    { id: "MR-240620-04", equipment: "SMT 贴片机 1", equipmentNo: "SMT-01", line: "Line-A", station: "SMT-WS-01", order: "MO-202606-0001", dispatch: "D-001", source: "点检异常 IP-20260620-01", status: "待派工", statusDetail: "供料器 12 振动偏高", duration: "待响应 9 分钟", oee: 0, downtime: 0, owner: "设备主管 袁立", risk: "若超阈值将触发停机", next: "按技能矩阵派维修员", trace: "点检异常转维修" },
+    { id: "MR-240620-01", equipment: "DIP 波峰焊线", equipmentNo: "DIP-A1", line: "Line-A", station: "DIP-WS-02", order: "MO-202606-0004", dispatch: "D-041", source: "班组扫码报修", status: "已验收", statusDetail: "喷雾阀堵塞清理完成", duration: "MTTR 25 分钟", oee: 0, downtime: 25, owner: "维修员 宋博", risk: "停机损失已归因", next: "归档维修经验", trace: "备件未消耗 / 试运行通过" },
+    { id: "MR-240620-05", equipment: "老化房 1", equipmentNo: "AGING-01", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "温度偏差预警", status: "待响应", statusDetail: "2 号温区偏差 1.8 摄氏度", duration: "待响应 4 分钟", oee: 0, downtime: 0, owner: "维修员 梁溪", risk: "影响老化测试证据完整性", next: "现场确认探头", trace: "SCADA 温度趋势" },
+  ],
+  downtime: [
+    { id: "DT-240620-01", equipment: "DIP 波峰焊线", equipmentNo: "DIP-A1", line: "Line-A", station: "DIP-WS-02", order: "MO-202606-0004", dispatch: "D-041", source: "PLC 状态日志", status: "已归因", statusDetail: "喷雾阀堵塞 / 设备故障", duration: "09:15 / 25 分钟", oee: 0, downtime: 25, owner: "设备员 周诚", risk: "OEE 可用率扣减", next: "维修经验归档", trace: "维修工单 MR-240620-01" },
+    { id: "DT-240620-02", equipment: "功能测试台 B2", equipmentNo: "TEST-B2", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "测试台 API", status: "待归因", statusDetail: "通信超时停机", duration: "11:42 / 18 分钟", oee: 0, downtime: 18, owner: "维修员 吴启", risk: "需确认故障代码与根因", next: "维修完成后归因", trace: "ALM-204" },
+    { id: "DT-240620-03", equipment: "SMT 贴片机 1", equipmentNo: "SMT-01", line: "Line-A", station: "SMT-WS-01", order: "MO-202606-0001", dispatch: "D-001", source: "班组补录", status: "待复核", statusDetail: "换料等待 / 非计划停机", duration: "10:08 / 7 分钟", oee: 0, downtime: 7, owner: "班组长 郑峰", risk: "原因代码需设备员复核", next: "复核停机原因", trace: "工位 HMI 模拟补录" },
+    { id: "DT-240620-04", equipment: "老化房 1", equipmentNo: "AGING-01", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "SCADA 计划停机", status: "计划停机", statusDetail: "温控校准窗口", duration: "17:00 / 60 分钟", oee: 0, downtime: 60, owner: "保养员 梁溪", risk: "APS 已扣除产能", next: "保养计划联动", trace: "PM-20260620-03" },
+  ],
+  spares: [
+    { id: "SP-240620-01", equipment: "功能测试台 B2", equipmentNo: "TEST-B2", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "维修工单 MR-240620-03", status: "待出库", statusDetail: "通信板 TEST-COM-02", duration: "申请 1 / 实发 0", oee: 0, downtime: 0, owner: "备件员 林蔚", risk: "库存 2 件，低于安全库存 3 件", next: "模拟 WMS 出库", trace: "spare_part_usage 待生成" },
+    { id: "SP-240620-02", equipment: "SMT 贴片机 1", equipmentNo: "SMT-01", line: "Line-A", station: "SMT-WS-01", order: "MO-202606-0001", dispatch: "D-001", source: "点检异常 MR-240620-04", status: "待审批", statusDetail: "供料器轴承 FEED-BR-12", duration: "申请 2 / 实发 0", oee: 0, downtime: 0, owner: "设备主管 袁立", risk: "需确认是否预防更换", next: "维修主管审批", trace: "备件批次 FEED202606" },
+    { id: "SP-240620-03", equipment: "DIP 波峰焊线", equipmentNo: "DIP-A1", line: "Line-A", station: "DIP-WS-02", order: "MO-202606-0004", dispatch: "D-041", source: "保养计划 PM-20260620-02", status: "已出库", statusDetail: "喷嘴清洁套件 DIP-NZ-KIT", duration: "申请 1 / 实发 1", oee: 0, downtime: 0, owner: "备件员 林蔚", risk: "成本已归集", next: "安装记录已绑定", trace: "WMS 出库 WO-SP-912" },
+    { id: "SP-240620-04", equipment: "老化房 1", equipmentNo: "AGING-01", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "保养计划 PM-20260620-03", status: "低库存", statusDetail: "温度探头 TEMP-PB-01", duration: "申请 2 / 可用 1", oee: 0, downtime: 0, owner: "采购跟进 何敏", risk: "不足 1 件，需采购补充", next: "ERP 采购申请", trace: "备件库存低水位" },
+  ],
+  efficiency: [
+    { id: "OEE-240620-SMT01", equipment: "SMT 贴片机 1", equipmentNo: "SMT-01", line: "Line-A", station: "SMT-WS-01", order: "MO-202606-0001", dispatch: "D-001", source: "状态日志 + 产量 + 质量", status: "改善观察", statusDetail: "可用率 94.2% / 性能率 92.8% / 质量率 98.7%", duration: "计划 480 / 停机 28 分钟", oee: 86.4, downtime: 28, owner: "设备主管 袁立", risk: "供料器短停影响性能率", next: "点检复核供料器", trace: "oee_daily 2026-06-20 白班" },
+    { id: "OEE-240620-DIPA1", equipment: "DIP 波峰焊线", equipmentNo: "DIP-A1", line: "Line-A", station: "DIP-WS-02", order: "MO-202606-0004", dispatch: "D-041", source: "状态日志 + 报工", status: "待改善", statusDetail: "可用率 88.9% / 性能率 91.6% / 质量率 98.1%", duration: "计划 420 / 停机 47 分钟", oee: 79.8, downtime: 47, owner: "设备员 周诚", risk: "喷雾阀故障重复出现", next: "预防保养升级", trace: "停机 TOP1：喷雾阀堵塞" },
+    { id: "OEE-240620-TESTB2", equipment: "功能测试台 B2", equipmentNo: "TEST-B2", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "测试台 API + FQC 结果", status: "异常下钻", statusDetail: "可用率 74.8% / 性能率 86.0% / 质量率 97.2%", duration: "计划 390 / 停机 72 分钟", oee: 62.5, downtime: 72, owner: "维修员 吴启", risk: "通信故障拉低可用率", next: "维修工单闭环后重算", trace: "MR-240620-03 / DT-240620-02" },
+    { id: "OEE-240620-AGING01", equipment: "老化房 1", equipmentNo: "AGING-01", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "SCADA + 通道占用", status: "瓶颈资源", statusDetail: "可用率 96.8% / 性能率 92.0% / 质量率 99.0%", duration: "计划 480 / 停机 12 分钟", oee: 88.2, downtime: 12, owner: "设备主管 袁立", risk: "通道占用高，影响排程", next: "APS 瓶颈预警", trace: "通道履历 / 老化批次" },
+  ],
+};
+
+let rows = structuredClone(initialRows[pageConfig.id]);
+let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
+let logs = [];
+
+const $ = (selector) => document.querySelector(selector);
+
+function renderFrameMenu() {
+  $("#equipmentModuleMenu").innerHTML = modules.map((module) => {
+    const openClass = module.id === "equipment" ? " is-open" : "";
+    const submenu = module.items.map((item, index) => {
+      const active = module.id === "equipment" && item === pageConfig.title ? " class=\"is-active\"" : "";
+      return `<a href="#${module.id}-${index}"${active} data-module="${module.id}" data-entry="${item}">${item}</a>`;
+    }).join("");
+    return `
+      <section class="module-group${openClass}">
+        <button class="module-button" type="button" data-module="${module.id}">
+          <span class="module-icon" style="background:${module.color}">${module.mark}</span>
+          <span>
+            <span class="module-title">${module.title}</span>
+            <span class="module-layer">${module.layer}</span>
+          </span>
+          <span class="chevron">›</span>
+        </button>
+        <div class="submenu">${submenu}</div>
+      </section>
+    `;
+  }).join("");
+
+  $("#equipmentModuleMenu").querySelectorAll(".module-button").forEach((button) => {
+    button.addEventListener("click", () => button.closest(".module-group").classList.toggle("is-open"));
+  });
+  $("#equipmentModuleMenu").querySelectorAll(".submenu a").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      goMenu(link.dataset.module, link.dataset.entry);
+    });
+  });
+}
+
+function goMenu(moduleId, entry) {
+  if (moduleId === "workbench") window.location.href = "../index.html";
+  else if (moduleId === "orders" && entry === "生产订单") window.location.href = "../orders/production-orders.html";
+  else if (moduleId === "orders" && entry === "订单评审") window.location.href = "../orders/order-reviews.html";
+  else if (moduleId === "orders" && entry === "生产排程") window.location.href = "../orders/production-schedule.html";
+  else if (moduleId === "orders" && entry === "产能负荷") window.location.href = "../orders/capacity-load.html";
+  else if (moduleId === "orders" && entry === "交期预警") window.location.href = "../orders/delivery-warning.html";
+  else if (moduleId === "orders" && entry === "计划调整") window.location.href = "../orders/plan-adjustment.html";
+  else if (moduleId === "orders" && entry === "齐套检查") window.location.href = "../orders/kit-check.html";
+  else if (moduleId === "dispatch" && entry === "派工单") window.location.href = "../dispatch/dispatch-orders.html";
+  else if (moduleId === "dispatch" && entry === "工序任务") window.location.href = "../dispatch/operation-tasks.html";
+  else if (moduleId === "dispatch" && entry === "班组任务") window.location.href = "../dispatch/team-tasks.html";
+  else if (moduleId === "dispatch" && entry === "任务下达") window.location.href = "../dispatch/task-release.html";
+  else if (moduleId === "dispatch" && entry === "任务变更") window.location.href = "../dispatch/task-change.html";
+  else if (moduleId === "dispatch" && entry === "SOP 查看") window.location.href = "../dispatch/sop-view.html";
+  else if (moduleId === "dispatch" && entry === "开工检查") window.location.href = "../dispatch/start-check.html";
+  else if (moduleId === "station" && entry === "员工登录") window.location.href = "../station/employee-login.html";
+  else if (moduleId === "station" && entry === "扫码开工") window.location.href = "../station/scan-start.html";
+  else if (moduleId === "station" && entry === "工艺指导") window.location.href = "../station/work-instruction.html";
+  else if (moduleId === "station" && entry === "投料确认") window.location.href = "../station/feeding-confirmation.html";
+  else if (moduleId === "station" && entry === "过程记录") window.location.href = "../station/process-record.html";
+  else if (moduleId === "station" && entry === "工序报工") window.location.href = "../station/operation-report.html";
+  else if (moduleId === "station" && entry === "交接班") window.location.href = "../station/shift-handover.html";
+  else if (moduleId === "materials" && entry === "用料需求") window.location.href = "../materials/material-requirements.html";
+  else if (moduleId === "materials" && entry === "领料申请") window.location.href = "../materials/picking-requests.html";
+  else if (moduleId === "materials" && entry === "配送进度") window.location.href = "../materials/delivery-progress.html";
+  else if (moduleId === "materials" && entry === "线边库存") window.location.href = "../materials/line-side-inventory.html";
+  else if (moduleId === "materials" && entry === "投料记录") window.location.href = "../materials/feeding-records.html";
+  else if (moduleId === "materials" && entry === "余料退回") window.location.href = "../materials/return-materials.html";
+  else if (moduleId === "materials" && entry === "缺料预警") window.location.href = "../materials/shortage-alerts.html";
+  else if (moduleId === "equipment" && equipmentPages[entry]) window.location.href = `./${equipmentPages[entry]}`;
+  else showToast(`${entry} 页面待建设`);
+}
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (!saved) return;
+    rows = saved.rows || rows;
+    logs = saved.logs || logs;
+    state = { ...state, ...(saved.state || {}) };
+  } catch (error) {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, state }));
+}
+
+function getDefinition() {
+  return pageDefinitions[pageConfig.id];
+}
+
+function getActive() {
+  return rows.find((item) => item.id === state.activeId) || getVisibleRows()[0] || rows[0];
+}
+
+function getVisibleRows() {
+  const keyword = state.search.trim().toLowerCase();
+  return rows.filter((item) => {
+    const text = `${item.id} ${item.equipment} ${item.equipmentNo} ${item.line} ${item.station} ${item.order} ${item.dispatch} ${item.source} ${item.status} ${item.statusDetail} ${item.owner} ${item.risk} ${item.next}`.toLowerCase();
+    const keywordMatch = !keyword || text.includes(keyword);
+    const statusMatch = state.status === "all" || item.status === state.status;
+    const lineMatch = state.line === "all" || item.line === state.line;
+    return keywordMatch && statusMatch && lineMatch;
+  });
+}
+
+function statusStyle(status) {
+  if (/故障|异常|超时|低库存|待归因|待复核|待改善/.test(status)) return "red";
+  if (/待|观察|瓶颈|满载|影响|计划停机|审批|维修中/.test(status)) return "orange";
+  if (/已|运行|完成|验收|出库/.test(status)) return "green";
+  return "blue";
+}
+
+function renderPageChrome() {
+  const def = getDefinition();
+  document.title = `星技谷 MES | ${pageConfig.title}`;
+  $("#pageEyebrow").textContent = pageConfig.eyebrow;
+  $("#pageTitle").textContent = `${pageConfig.title}工作台`;
+  $("#pageSubtitle").textContent = def.subtitle;
+  $("#userRole").textContent = def.user;
+  $("#tableTitle").textContent = def.tableTitle;
+  $("#tableHint").textContent = def.tableHint;
+  $("#cardTitle").textContent = def.cardTitle;
+  $("#simulationTitle").textContent = def.simulationTitle;
+  $("#simulationHint").textContent = def.simulationHint;
+  $("#simulationInput").placeholder = `${def.simulationTitle}，例如 ${rows[0]?.equipmentNo || "设备编号"} / ${rows[0]?.id || "单据号"}`;
+  $("#statusFilter").innerHTML = `<option value="all">全部状态</option>${[...new Set(rows.map((item) => item.status))].map((status) => `<option value="${status}">${status}</option>`).join("")}`;
+  $("#lineFilter").innerHTML = `<option value="all">全部产线</option>${[...new Set(rows.map((item) => item.line))].map((line) => `<option value="${line}">${line}</option>`).join("")}`;
+  $("#tableHead").innerHTML = `<tr>${def.columns.map((col) => `<th>${col}</th>`).join("")}</tr>`;
+}
+
+function renderMetrics() {
+  const def = getDefinition();
+  const visible = getVisibleRows();
+  const values = pageConfig.id === "efficiency"
+    ? [
+        average(visible.map((item) => item.oee)),
+        average(visible.map((item) => item.oee ? Math.min(98, item.oee + 7.8) : 0)),
+        average(visible.map((item) => item.oee ? Math.min(98, item.oee + 4.1) : 0)),
+        average(visible.map((item) => item.oee ? Math.min(99.5, item.oee + 12.3) : 0)),
+      ].map((value) => `${value}%`)
+    : [
+        visible.length,
+        visible.filter((item) => /运行|已完成|已验收|已出库/.test(item.status)).length,
+        visible.filter((item) => /故障|异常|待归因|待复核|低库存|超时/.test(item.status)).length,
+        visible.filter((item) => item.downtime > 0 || /影响|瓶颈|升级|排程/.test(item.risk + item.next + item.status)).length,
+      ];
+  $("#equipmentMetrics").innerHTML = def.metrics.map((label, index) => `
+    <article>
+      <span>${label}</span>
+      <strong>${values[index]}</strong>
+      <em>${index === 3 ? "联动排程、异常、维修或成本追溯" : "随筛选条件实时变化"}</em>
+    </article>
+  `).join("");
+}
+
+function average(values) {
+  const valid = values.filter((value) => Number(value) > 0);
+  if (!valid.length) return "0.0";
+  return (valid.reduce((sum, value) => sum + Number(value), 0) / valid.length).toFixed(1);
+}
+
+function renderTable() {
+  const visible = getVisibleRows();
+  $("#equipmentTableBody").innerHTML = visible.length ? visible.map((item) => {
+    const cells = buildCells(item);
+    return `
+      <tr class="${item.id === state.activeId ? "is-active" : ""}" data-id="${item.id}">
+        ${cells.map((cell) => `<td>${cell}</td>`).join("")}
+      </tr>
+    `;
+  }).join("") : `<tr><td colspan="8">当前筛选条件下没有${pageConfig.title}记录</td></tr>`;
+  $("#equipmentTableBody").querySelectorAll("tr[data-id]").forEach((row) => {
+    row.addEventListener("click", () => {
+      state.activeId = row.dataset.id;
+      state.detailOpen = true;
+      saveState();
+      renderAll();
+    });
+  });
+}
+
+function buildCells(item) {
+  if (pageConfig.id === "status") {
+    return [twoLine(item.equipment, item.equipmentNo), `${item.line} / ${item.station}`, item.source, twoLine(item.order, item.dispatch), pill(item.status), `${item.oee}% / ${item.duration}`, item.risk, item.owner];
+  }
+  if (pageConfig.id === "inspection") {
+    return [item.id, twoLine(item.equipment, `${item.line} / ${item.station}`), item.statusDetail, item.duration, item.source, pill(item.status), item.risk, item.owner];
+  }
+  if (pageConfig.id === "maintenance") {
+    return [item.id, twoLine(item.equipment, `${item.line} / ${item.station}`), item.source, item.duration, item.statusDetail, pill(item.status), item.next, item.owner];
+  }
+  if (pageConfig.id === "repair") {
+    return [item.id, twoLine(item.equipment, item.statusDetail), item.source, item.duration, pill(item.status), spareText(item), item.risk, item.owner];
+  }
+  if (pageConfig.id === "downtime") {
+    return [item.id, twoLine(item.equipment, `${item.order} / ${item.dispatch}`), item.source, item.duration, item.statusDetail, pill(item.status), `${item.downtime} 分钟`, item.owner];
+  }
+  if (pageConfig.id === "spares") {
+    return [item.id, item.source, twoLine(item.statusDetail, item.trace), item.duration, pill(item.status), item.equipment, item.risk, item.owner];
+  }
+  return [twoLine(item.equipment, item.equipmentNo), `${item.line} / ${item.station}`, item.duration, item.source, item.statusDetail, `${item.oee}%`, item.next, item.owner];
+}
+
+function twoLine(main, sub) {
+  return `<strong>${main}</strong><small>${sub}</small>`;
+}
+
+function pill(text) {
+  return `<span class="pill pill--${statusStyle(text)}">${text}</span>`;
+}
+
+function spareText(item) {
+  if (item.id === "MR-240620-03") return "通信板 1 件待出库";
+  if (item.id === "MR-240620-04") return "供料器轴承待评估";
+  return "未消耗关键备件";
+}
+
+function renderCards() {
+  const active = getActive();
+  const cards = [
+    ["状态来源", active.source, "保留 PLC、SCADA、HMI、PDA、WMS 或人工复核来源"],
+    ["后台边界", getBoundaryText(), "后台负责配置、监控、派单、审核、验收和追溯"],
+    ["业务闭环", active.next, "结果回写派工准入、异常中心、APS、OEE 或成本归集"],
+  ];
+  $("#equipmentCards").innerHTML = cards.map(([label, value, hint]) => `
+    <div class="equipment-card">
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <em>${hint}</em>
+    </div>
+  `).join("");
+}
+
+function getBoundaryText() {
+  if (pageConfig.id === "status" || pageConfig.id === "downtime" || pageConfig.id === "efficiency") return "模拟 PLC/SCADA/设备 API 回传状态，后台不直接控制设备";
+  if (pageConfig.id === "inspection") return "模拟 PDA、扫码枪、工牌/NFC 点检回执，后台不替代现场点检";
+  if (pageConfig.id === "spares") return "模拟 WMS、PDA、扫码枪出库和安装回执，后台不移动实物备件";
+  return "模拟维修移动端或 HMI 回执，后台不直接执行维修保养动作";
+}
+
+function renderDetail() {
+  const active = getActive();
+  $("#equipmentDetail").classList.toggle("is-hidden", !state.detailOpen);
+  $("#openDetailBtn").hidden = state.detailOpen;
+  if (!active) return;
+  $("#detailStatus").className = `pill pill--${statusStyle(active.status)}`;
+  $("#detailStatus").textContent = active.status;
+  $("#detailTitle").textContent = active.id;
+  $("#detailSubtitle").textContent = `${active.equipment} · ${active.line} · ${active.station}`;
+  $("#detailKv").innerHTML = [
+    ["设备编号", active.equipmentNo],
+    ["关联单据", `${active.order} / ${active.dispatch}`],
+    ["来源系统", active.source],
+    ["时间与时长", active.duration],
+    ["责任人", active.owner],
+    ["风险说明", active.risk],
+  ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  $("#timelineList").innerHTML = buildTimeline(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  renderLogs();
+}
+
+function buildTimeline(active) {
+  return [
+    ["来源接收", active.source],
+    ["责任确认", `${active.owner} 已接收 ${active.id}`],
+    ["业务状态", `${active.status} · ${active.duration}`],
+    ["追溯引用", active.trace],
+  ];
+}
+
+function buildActions(active) {
+  const common = [
+    ["生产联动", `${active.order} / ${active.dispatch} / ${active.station}`],
+    ["异常处置", /故障|异常|低库存|待归因|待复核/.test(active.status + active.risk) ? "需派单、复核、验收或升级异常中心" : "当前无阻断，继续监控状态和回执"],
+    ["下游结果", active.next],
+  ];
+  if (pageConfig.id === "maintenance") common.push(["排程联动", "保养窗口回写 APS 产能日历，避免误派工"]);
+  if (pageConfig.id === "repair") common.push(["验收要求", "维修完成后需试运行、班组确认和异常关闭"]);
+  if (pageConfig.id === "efficiency") common.push(["改善建议", "从停机 TOP、维修历史和质量结果下钻改善"]);
+  return common;
+}
+
+function renderLogs() {
+  $("#logList").innerHTML = logs.length ? logs.slice(0, 5).map((log) => `
+    <div><span>${log.time}</span><strong>${log.text}</strong></div>
+  `).join("") : `<div><span>暂无</span><strong>当前页面尚未产生模拟回执或人工处置记录</strong></div>`;
+}
+
+function renderAll() {
+  renderMetrics();
+  renderTable();
+  renderCards();
+  renderDetail();
+}
+
+function updateActiveStatus(status, message) {
+  const active = getActive();
+  if (!active) return;
+  active.status = status;
+  if (pageConfig.id === "status" && status.includes("故障")) active.next = "自动触发维修工单";
+  if (pageConfig.id === "inspection" && status.includes("完成")) active.next = "开工准入通过";
+  if (pageConfig.id === "maintenance" && status.includes("验收")) active.next = "设备恢复可用并回写 APS";
+  if (pageConfig.id === "repair" && status.includes("验收")) active.next = "关闭异常并恢复生产";
+  if (pageConfig.id === "downtime" && status.includes("归因")) active.next = "进入 OEE 和复盘";
+  if (pageConfig.id === "spares" && status.includes("出库")) active.next = "绑定安装记录并归集成本";
+  if (pageConfig.id === "efficiency" && status.includes("重算")) active.next = "刷新 OEE 三分项和改善建议";
+  appendLog(message || `${active.id} 状态更新为 ${status}`);
+  saveState();
+  renderAll();
+}
+
+function appendLog(text) {
+  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text });
+}
+
+function simulateStatus() {
+  const value = $("#simulationInput").value.trim();
+  const statusMap = {
+    status: "故障预警",
+    inspection: "已完成",
+    maintenance: "已验收",
+    repair: "已验收",
+    downtime: "已归因",
+    spares: "已出库",
+    efficiency: "已重算",
+  };
+  updateActiveStatus(statusMap[pageConfig.id], `${getActive().id} 已接收${getDefinition().simulationTitle}${value ? `：${value}` : ""}`);
+  showToast("模拟回执已记录");
+}
+
+function resetPage() {
+  localStorage.removeItem(STORAGE_KEY);
+  rows = structuredClone(initialRows[pageConfig.id]);
+  state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
+  logs = [];
+  $("#searchInput").value = "";
+  $("#statusFilter").value = "all";
+  $("#lineFilter").value = "all";
+  $("#simulationInput").value = "";
+  renderPageChrome();
+  renderAll();
+  showToast(`${pageConfig.title}演示已重置`);
+}
+
+function showToast(text) {
+  let toast = $("#toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = text;
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.remove(), 2200);
+}
+
+function bindEvents() {
+  $("#searchInput").addEventListener("input", (event) => {
+    state.search = event.target.value;
+    saveState();
+    renderAll();
+  });
+  $("#statusFilter").addEventListener("change", (event) => {
+    state.status = event.target.value;
+    saveState();
+    renderAll();
+  });
+  $("#lineFilter").addEventListener("change", (event) => {
+    state.line = event.target.value;
+    saveState();
+    renderAll();
+  });
+  $("#resetEquipmentBtn").addEventListener("click", resetPage);
+  $("#simulateBtn").addEventListener("click", simulateStatus);
+  $("#primaryActionBtn").addEventListener("click", () => simulateStatus());
+  $("#secondaryActionBtn").addEventListener("click", () => {
+    updateActiveStatus(pageConfig.id === "spares" ? "低库存" : "异常待处理", `${getActive().id} 已登记异常处置，等待设备责任人闭环`);
+    showToast("异常处置已登记");
+  });
+  $("#closeDetailBtn").addEventListener("click", () => {
+    state.detailOpen = false;
+    saveState();
+    renderDetail();
+  });
+  $("#openDetailBtn").addEventListener("click", () => {
+    state.detailOpen = true;
+    saveState();
+    renderDetail();
+  });
+}
+
+function init() {
+  renderFrameMenu();
+  loadState();
+  renderPageChrome();
+  $("#searchInput").value = state.search;
+  $("#statusFilter").value = state.status;
+  $("#lineFilter").value = state.line;
+  bindEvents();
+  renderAll();
+}
+
+init();

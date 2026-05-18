@@ -1,0 +1,368 @@
+.exceptions-main {
+  min-width: 0;
+}
+
+.exceptions-main .secondary-link {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.exceptions-main .secondary-link:hover {
+  border-color: rgba(0, 122, 255, 0.24);
+  background: rgba(0, 122, 255, 0.08);
+}
+
+.exception-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.exception-metrics article,
+.exceptions-panel,
+.exceptions-detail {
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+.exception-metrics article {
+  padding: 16px;
+  min-width: 0;
+}
+
+.exception-metrics span,
+.exception-card span,
+.exceptions-detail em,
+.exception-timeline span {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 760;
+}
+
+.exception-metrics strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.exception-metrics em {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 680;
+}
+
+.exceptions-layout {
+  display: grid;
+  grid-template-columns: minmax(760px, 1fr) 420px;
+  gap: 14px;
+  align-items: start;
+}
+
+.exceptions-left,
+.exceptions-side {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.exceptions-side {
+  position: sticky;
+  top: 18px;
+}
+
+.exceptions-toolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 150px 150px;
+  gap: 10px;
+  align-items: end;
+}
+
+.exceptions-toolbar label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.exceptions-toolbar input,
+.exceptions-toolbar select,
+.simulation-box input {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.exceptions-panel,
+.exceptions-detail {
+  padding: 14px;
+  min-width: 0;
+}
+
+.exceptions-panel__head,
+.exceptions-detail__head,
+.simulation-box__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.exceptions-panel h3,
+.exceptions-detail h3,
+.simulation-box h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.exceptions-panel p,
+.exceptions-detail p,
+.simulation-box p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 680;
+}
+
+.exceptions-panel button,
+.exceptions-detail button,
+.simulation-box button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 12px;
+  background: var(--surface-strong);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 820;
+  cursor: pointer;
+}
+
+.exceptions-detail__head .icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  padding: 0;
+  font-size: 18px;
+}
+
+.exceptions-panel button:hover,
+.exceptions-detail button:hover,
+.simulation-box button:hover {
+  border-color: rgba(0, 122, 255, 0.26);
+  background: rgba(0, 122, 255, 0.08);
+}
+
+.exceptions-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.exceptions-table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.exceptions-table th,
+.exceptions-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.exceptions-table th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 820;
+  background: rgba(248, 250, 252, 0.8);
+}
+
+.exceptions-table tr {
+  cursor: pointer;
+}
+
+.exceptions-table tr.is-active td {
+  background: rgba(255, 59, 48, 0.08);
+}
+
+.exceptions-table strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exceptions-table small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exception-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.exception-card {
+  display: grid;
+  gap: 8px;
+  min-height: 126px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.exception-card strong {
+  min-width: 0;
+  font-size: 14px;
+}
+
+.exception-card em {
+  color: var(--ink);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 720;
+}
+
+.detail-kv,
+.exception-timeline,
+.action-list {
+  display: grid;
+  gap: 8px;
+}
+
+.detail-kv div,
+.exception-timeline div,
+.action-list div {
+  display: grid;
+  grid-template-columns: 102px minmax(0, 1fr);
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.detail-kv span,
+.exception-timeline span,
+.action-list span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.detail-kv strong,
+.exception-timeline strong,
+.action-list strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.simulation-box {
+  border: 1px solid rgba(255, 59, 48, 0.24);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 59, 48, 0.07);
+}
+
+.simulation-form {
+  display: grid;
+  gap: 10px;
+}
+
+.simulation-actions,
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 11px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 20;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(20, 24, 31, 0.92);
+  color: white;
+  font-size: 13px;
+  font-weight: 760;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.is-hidden,
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 1280px) {
+  .exceptions-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .exceptions-side {
+    position: static;
+  }
+}
+
+@media (max-width: 920px) {
+  .exception-metrics,
+  .exception-card-grid,
+  .exceptions-toolbar {
+    grid-template-columns: 1fr;
+  }
+}

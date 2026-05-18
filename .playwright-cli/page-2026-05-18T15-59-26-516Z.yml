@@ -1,0 +1,330 @@
+- generic [ref=e2]:
+  - complementary "MES 业务导航菜单" [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: X
+      - generic [ref=e6]:
+        - generic [ref=e7]: 星技谷 MES
+        - generic [ref=e8]: 生产运营中枢
+    - generic [ref=e9]: 业务导航
+    - navigation [ref=e10]:
+      - button "首 首页工作台 日常工作 ›" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: 首
+        - generic [ref=e14]:
+          - generic [ref=e15]: 首页工作台
+          - generic [ref=e16]: 日常工作
+        - generic [ref=e17]: ›
+      - button "计 订单与计划 计划部门 ›" [ref=e19] [cursor=pointer]:
+        - generic [ref=e20]: 计
+        - generic [ref=e21]:
+          - generic [ref=e22]: 订单与计划
+          - generic [ref=e23]: 计划部门
+        - generic [ref=e24]: ›
+      - button "任 派工与生产任务 车间管理 ›" [ref=e26] [cursor=pointer]:
+        - generic [ref=e27]: 任
+        - generic [ref=e28]:
+          - generic [ref=e29]: 派工与生产任务
+          - generic [ref=e30]: 车间管理
+        - generic [ref=e31]: ›
+      - button "位 工位作业 现场操作 ›" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 位
+        - generic [ref=e35]:
+          - generic [ref=e36]: 工位作业
+          - generic [ref=e37]: 现场操作
+        - generic [ref=e38]: ›
+      - button "料 物料与线边库 物料管理 ›" [ref=e40] [cursor=pointer]:
+        - generic [ref=e41]: 料
+        - generic [ref=e42]:
+          - generic [ref=e43]: 物料与线边库
+          - generic [ref=e44]: 物料管理
+        - generic [ref=e45]: ›
+      - button "码 条码与标签 现场标识 ›" [ref=e47] [cursor=pointer]:
+        - generic [ref=e48]: 码
+        - generic [ref=e49]:
+          - generic [ref=e50]: 条码与标签
+          - generic [ref=e51]: 现场标识
+        - generic [ref=e52]: ›
+      - button "质 质量检验 质量部门 ›" [ref=e54] [cursor=pointer]:
+        - generic [ref=e55]: 质
+        - generic [ref=e56]:
+          - generic [ref=e57]: 质量检验
+          - generic [ref=e58]: 质量部门
+        - generic [ref=e59]: ›
+      - button "设 设备与保养 设备部门 ›" [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: 设
+        - generic [ref=e63]:
+          - generic [ref=e64]: 设备与保养
+          - generic [ref=e65]: 设备部门
+        - generic [ref=e66]: ›
+      - button "控 过程监控 生产现场 ›" [ref=e68] [cursor=pointer]:
+        - generic [ref=e69]: 控
+        - generic [ref=e70]:
+          - generic [ref=e71]: 过程监控
+          - generic [ref=e72]: 生产现场
+        - generic [ref=e73]: ›
+      - button "异 异常处理 现场协同 ›" [ref=e75] [cursor=pointer]:
+        - generic [ref=e76]: 异
+        - generic [ref=e77]:
+          - generic [ref=e78]: 异常处理
+          - generic [ref=e79]: 现场协同
+        - generic [ref=e80]: ›
+      - button "入 完工与入库 仓储协同 ›" [ref=e82] [cursor=pointer]:
+        - generic [ref=e83]: 入
+        - generic [ref=e84]:
+          - generic [ref=e85]: 完工与入库
+          - generic [ref=e86]: 仓储协同
+        - generic [ref=e87]: ›
+      - button "追 追溯查询 质量追溯 ›" [ref=e89] [cursor=pointer]:
+        - generic [ref=e90]: 追
+        - generic [ref=e91]:
+          - generic [ref=e92]: 追溯查询
+          - generic [ref=e93]: 质量追溯
+        - generic [ref=e94]: ›
+      - button "表 报表与看板 经营分析 ›" [ref=e96] [cursor=pointer]:
+        - generic [ref=e97]: 表
+        - generic [ref=e98]:
+          - generic [ref=e99]: 报表与看板
+          - generic [ref=e100]: 经营分析
+        - generic [ref=e101]: ›
+      - button "基 基础资料 资料维护 ›" [ref=e103] [cursor=pointer]:
+        - generic [ref=e104]: 基
+        - generic [ref=e105]:
+          - generic [ref=e106]: 基础资料
+          - generic [ref=e107]: 资料维护
+        - generic [ref=e108]: ›
+      - generic [ref=e109]:
+        - button "系 系统设置 管理配置 ›" [ref=e110] [cursor=pointer]:
+          - generic [ref=e111]: 系
+          - generic [ref=e112]:
+            - generic [ref=e113]: 系统设置
+            - generic [ref=e114]: 管理配置
+          - generic [ref=e115]: ›
+        - generic [ref=e116]:
+          - link "人员账号" [ref=e117] [cursor=pointer]:
+            - /url: "#system-0"
+          - link "角色权限" [ref=e118] [cursor=pointer]:
+            - /url: "#system-1"
+          - link "审批设置" [ref=e119] [cursor=pointer]:
+            - /url: "#system-2"
+          - link "单据同步" [ref=e120] [cursor=pointer]:
+            - /url: "#system-3"
+          - link "消息提醒" [ref=e121] [cursor=pointer]:
+            - /url: "#system-4"
+          - link "操作记录" [ref=e122] [cursor=pointer]:
+            - /url: "#system-5"
+          - link "数据备份" [ref=e123] [cursor=pointer]:
+            - /url: "#system-6"
+    - generic [ref=e125]:
+      - generic [ref=e126]: 当前工厂
+      - generic [ref=e127]: 华东一厂 · 电子装配车间
+      - generic [ref=e128]:
+        - generic [ref=e129]: 系统设置
+        - generic [ref=e130]: 权限 / 审计 / 集成
+  - main [ref=e131]:
+    - generic [ref=e132]:
+      - generic [ref=e133]:
+        - generic [ref=e134]: 系统设置 / 人员账号
+        - heading "人员账号" [level=1] [ref=e135]
+        - paragraph [ref=e136]: 系统管理员维护员工身份、终端绑定、班组数据范围和账号状态，现场登录仍由工位终端、扫码枪或工牌/NFC 回传
+      - generic [ref=e137]:
+        - button "模拟状态回执" [ref=e138] [cursor=pointer]
+        - button "重置演示" [ref=e139] [cursor=pointer]
+        - link "操作记录" [ref=e140] [cursor=pointer]:
+          - /url: ./operation-logs.html
+        - link "返回首页" [ref=e141] [cursor=pointer]:
+          - /url: ../index.html
+        - generic [ref=e142]:
+          - generic [ref=e143]: 系
+          - generic [ref=e144]: 系统管理员
+    - region "系统设置筛选" [ref=e145]:
+      - generic [ref=e146]:
+        - text: 搜索
+        - searchbox "搜索" [ref=e147]
+      - generic [ref=e148]:
+        - text: 状态
+        - combobox "状态" [ref=e149]:
+          - option "全部状态" [selected]
+          - option "可登录"
+          - option "需复核"
+          - option "锁定"
+      - generic [ref=e150]:
+        - text: 来源
+        - combobox "来源" [ref=e151]:
+          - option "全部来源" [selected]
+          - option "HR 员工主档"
+          - option "HR 在职"
+          - option "工牌 NFC"
+      - generic [ref=e152]:
+        - text: 详情面板
+        - combobox "详情面板" [ref=e153]:
+          - option "打开" [selected]
+          - option "收起"
+    - generic [ref=e154]:
+      - article [ref=e428]:
+        - text: 账号总数
+        - strong [ref=e429]: "4"
+        - paragraph [ref=e430]: 当前页面样例记录
+      - article [ref=e431]:
+        - text: 可登录
+        - strong [ref=e432]: "2"
+        - paragraph [ref=e433]: 已进入可执行或可引用状态
+      - article [ref=e434]:
+        - text: 需复核
+        - strong [ref=e435]: "1"
+        - paragraph [ref=e436]: 需要责任人复核确认
+      - article [ref=e437]:
+        - text: 锁定拦截
+        - strong [ref=e438]: "1"
+        - paragraph [ref=e439]: 已触发拦截、补偿或演练
+    - generic [ref=e167]:
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - generic [ref=e171]:
+            - heading "人员账号与现场身份准入" [level=3] [ref=e172]
+            - paragraph [ref=e173]: 账号配置用于控制 MES 后台、工位终端、PDA 和电子签名身份边界，不替代现场刷卡登录动作
+          - table [ref=e175]:
+            - rowgroup [ref=e176]:
+              - row "账号 / 员工 岗位 / 班组 身份来源 终端与范围 状态 最近校验 责任人 时间戳" [ref=e440]:
+                - columnheader "账号 / 员工" [ref=e441]
+                - columnheader "岗位 / 班组" [ref=e442]
+                - columnheader "身份来源" [ref=e443]
+                - columnheader "终端与范围" [ref=e444]
+                - columnheader "状态" [ref=e445]
+                - columnheader "最近校验" [ref=e446]
+                - columnheader "责任人" [ref=e447]
+                - columnheader "时间戳" [ref=e448]
+            - rowgroup [ref=e186]:
+              - row "USR-PLN-001 计划主管 李敏 计划部 / 全车间 HR 员工主档 + MES 账号 后台工作台 / 订单与计划 / Line-A-B 可登录 电子签名有效，最后登录 08:42 系统管理员 许航 2026-06-20 08:45" [ref=e449] [cursor=pointer]:
+                - cell "USR-PLN-001 计划主管 李敏" [ref=e450]:
+                  - strong [ref=e451]: USR-PLN-001
+                  - generic [ref=e452]: 计划主管 李敏
+                - cell "计划部 / 全车间" [ref=e453]
+                - cell "HR 员工主档 + MES 账号" [ref=e454]
+                - cell "后台工作台 / 订单与计划 / Line-A-B" [ref=e455]
+                - cell "可登录" [ref=e456]:
+                  - generic [ref=e457]: 可登录
+                - cell "电子签名有效，最后登录 08:42" [ref=e458]
+                - cell "系统管理员 许航" [ref=e459]
+                - cell "2026-06-20 08:45" [ref=e460]
+              - row "USR-QA-018 质量工程师 孟可 质量部 / FQC HR 在职 + QMS 资质 质量检验 / 库存冻结 / 返工评审 需复核 FQC 放行资质 06-25 到期 权限管理员 赵岚 2026-06-20 09:12" [ref=e461] [cursor=pointer]:
+                - cell "USR-QA-018 质量工程师 孟可" [ref=e462]:
+                  - strong [ref=e463]: USR-QA-018
+                  - generic [ref=e464]: 质量工程师 孟可
+                - cell "质量部 / FQC" [ref=e465]
+                - cell "HR 在职 + QMS 资质" [ref=e466]
+                - cell "质量检验 / 库存冻结 / 返工评审" [ref=e467]
+                - cell "需复核" [ref=e468]:
+                  - generic [ref=e469]: 需复核
+                - cell "FQC 放行资质 06-25 到期" [ref=e470]
+                - cell "权限管理员 赵岚" [ref=e471]
+                - cell "2026-06-20 09:12" [ref=e472]
+              - row "USR-WIP-044 班组长 郑峰 Line-A / 白班 工牌 NFC + 班组排班 工位终端 / 班组任务 / 交接班 可登录 模拟工牌 NFC 最近回传 09:30 车间主任 陈伟 2026-06-20 09:31" [ref=e473] [cursor=pointer]:
+                - cell "USR-WIP-044 班组长 郑峰" [ref=e474]:
+                  - strong [ref=e475]: USR-WIP-044
+                  - generic [ref=e476]: 班组长 郑峰
+                - cell "Line-A / 白班" [ref=e477]
+                - cell "工牌 NFC + 班组排班" [ref=e478]
+                - cell "工位终端 / 班组任务 / 交接班" [ref=e479]
+                - cell "可登录" [ref=e480]:
+                  - generic [ref=e481]: 可登录
+                - cell "模拟工牌 NFC 最近回传 09:30" [ref=e482]
+                - cell "车间主任 陈伟" [ref=e483]
+                - cell "2026-06-20 09:31" [ref=e484]
+              - row "USR-MAT-027 仓储员 田悦 仓储部 / 成品库 HR 员工主档 + PDA 设备绑定 完工入库 / 退料入库 / 包装签收 锁定 PDA 登录失败 5 次，已锁定 系统管理员 许航 2026-06-20 10:06" [ref=e485] [cursor=pointer]:
+                - cell "USR-MAT-027 仓储员 田悦" [ref=e486]:
+                  - strong [ref=e487]: USR-MAT-027
+                  - generic [ref=e488]: 仓储员 田悦
+                - cell "仓储部 / 成品库" [ref=e489]
+                - cell "HR 员工主档 + PDA 设备绑定" [ref=e490]
+                - cell "完工入库 / 退料入库 / 包装签收" [ref=e491]
+                - cell "锁定" [ref=e492]:
+                  - generic [ref=e493]: 锁定
+                - cell "PDA 登录失败 5 次，已锁定" [ref=e494]
+                - cell "系统管理员 许航" [ref=e495]
+                - cell "2026-06-20 10:06" [ref=e496]
+        - generic [ref=e235]:
+          - generic [ref=e237]:
+            - heading "账号配置影响链路" [level=3] [ref=e238]
+            - paragraph [ref=e239]: 保留来源系统、校验结果、责任人、时间戳、单据或追溯引用和下一步闭环动作
+          - generic [ref=e240]:
+            - article [ref=e497]:
+              - strong [ref=e498]: 状态来源
+              - paragraph [ref=e499]: HR 员工主档 + MES 账号
+              - generic [ref=e500]: 电子签名有效，最后登录 08:42
+            - article [ref=e501]:
+              - strong [ref=e502]: 业务影响
+              - paragraph [ref=e503]: 可执行排程确认与计划调整会签
+              - generic [ref=e504]: 后台工作台 / 订单与计划 / Line-A-B
+            - article [ref=e505]:
+              - strong [ref=e506]: 下一步闭环
+              - paragraph [ref=e507]: 每月权限复核
+              - generic [ref=e508]: sys_user / employee_id E1024
+        - generic [ref=e253]:
+          - generic [ref=e255]:
+            - heading "模拟 HR / 工牌 NFC 身份同步" [level=3] [ref=e256]
+            - paragraph [ref=e257]: 模拟外部 HR、门禁或工牌/NFC 回传身份状态，后台只登记准入校验和审计记录
+          - generic [ref=e258]:
+            - textbox [ref=e259]
+            - button "记录模拟回执" [ref=e260]
+            - button "登记复核结果" [ref=e261]
+      - complementary [ref=e262]:
+        - generic [ref=e263]:
+          - generic [ref=e264]:
+            - generic [ref=e265]:
+              - generic [ref=e266]: 可登录
+              - heading "计划主管 李敏" [level=3] [ref=e267]
+              - paragraph [ref=e268]: USR-PLN-001 · 计划部 / 全车间
+            - button "关闭详情" [ref=e269] [cursor=pointer]: ×
+          - generic [ref=e270]:
+            - generic [ref=e509]:
+              - term [ref=e510]: 来源
+              - definition [ref=e511]: HR 员工主档 + MES 账号
+            - generic [ref=e512]:
+              - term [ref=e513]: 范围
+              - definition [ref=e514]: 后台工作台 / 订单与计划 / Line-A-B
+            - generic [ref=e515]:
+              - term [ref=e516]: 校验
+              - definition [ref=e517]: 电子签名有效，最后登录 08:42
+            - generic [ref=e518]:
+              - term [ref=e519]: 责任人
+              - definition [ref=e520]: 系统管理员 许航
+            - generic [ref=e521]:
+              - term [ref=e522]: 时间戳
+              - definition [ref=e523]: 2026-06-20 08:45
+            - generic [ref=e524]:
+              - term [ref=e525]: 追溯引用
+              - definition [ref=e526]: sys_user / employee_id E1024
+            - generic [ref=e527]:
+              - term [ref=e528]: 风险说明
+              - definition [ref=e529]: 可执行排程确认与计划调整会签
+            - generic [ref=e530]:
+              - term [ref=e531]: 下一步
+              - definition [ref=e532]: 每月权限复核
+        - generic [ref=e295]:
+          - heading "履历与责任链" [level=3] [ref=e296]
+          - generic [ref=e297]:
+            - article [ref=e533]:
+              - strong [ref=e534]: 配置生效
+              - generic [ref=e535]: 系统管理员 许航 于 2026-06-20 08:45 更新，状态为 可登录
+            - article [ref=e536]:
+              - strong [ref=e537]: 校验回执
+              - generic [ref=e538]: 电子签名有效，最后登录 08:42
+            - article [ref=e539]:
+              - strong [ref=e540]: 审计留痕
+              - generic [ref=e541]: sys_user / employee_id E1024 已写入操作记录或业务履历
+        - generic [ref=e307]:
+          - heading "联动闭环" [level=3] [ref=e308]
+          - generic [ref=e309]:
+            - article [ref=e542]:
+              - strong [ref=e543]: 上游输入
+              - generic [ref=e544]: HR 员工主档 + MES 账号
+            - article [ref=e545]:
+              - strong [ref=e546]: 下游控制
+              - generic [ref=e547]: 后台工作台 / 订单与计划 / Line-A-B
+            - article [ref=e548]:
+              - strong [ref=e549]: 异常处理
+              - generic [ref=e550]: 每月权限复核
+        - generic [ref=e319]:
+          - heading "模拟操作记录" [level=3] [ref=e320]
+          - article [ref=e551]:
+            - strong [ref=e552]: 暂无模拟记录
+            - generic [ref=e553]: 页面会保存模拟回执、复核结果和重置前的演示状态。

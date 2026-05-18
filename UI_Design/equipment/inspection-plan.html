@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 点检计划</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./equipment.css" />
+  </head>
+  <body>
+    <script>
+      window.EQUIPMENT_PAGE = { id: "inspection", title: "点检计划", eyebrow: "设备与保养 / 点检计划" };
+    </script>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单"><div class="brand"><div class="brand-mark">X</div><div><div class="brand-name">星技谷 MES</div><div class="brand-subtitle">生产运营中枢</div></div></div><div class="menu-heading">业务导航</div><nav id="equipmentModuleMenu" class="module-menu"></nav><div class="sidebar-footer"><div class="factory-card"><div class="factory-card__label">当前工厂</div><div class="factory-card__name">华东一厂 · 电子装配车间</div><div class="factory-card__meta"><span>设备 TPM</span><span>点检 / 漏检 / 准入</span></div></div></div></aside>
+      <main class="main equipment-main">
+        <header class="topbar"><div><div id="pageEyebrow" class="eyebrow"></div><h1 id="pageTitle"></h1><p id="pageSubtitle"></p></div><div class="topbar-actions"><button id="primaryActionBtn" class="primary-action" type="button">确认点检回执</button><button id="resetEquipmentBtn" class="secondary-action" type="button">重置演示</button><a class="secondary-link" href="../dispatch/start-check.html">开工检查</a><a class="secondary-link" href="../index.html">返回首页</a><div class="user-chip"><span class="avatar">检</span><span id="userRole"></span></div></div></header>
+        <section id="equipmentMetrics" class="equipment-metrics"></section><section class="equipment-layout"><div class="equipment-left"><div class="equipment-toolbar"><label>搜索<input id="searchInput" type="search" placeholder="计划、设备、项目、工位、责任人" /></label><label>状态<select id="statusFilter"></select></label><label>产线<select id="lineFilter"></select></label></div><section class="equipment-panel"><div class="equipment-panel__head"><div><h3 id="tableTitle"></h3><p id="tableHint"></p></div><button id="openDetailBtn" type="button" hidden>打开详情</button></div><div class="equipment-table-wrap"><table class="equipment-table"><thead id="tableHead"></thead><tbody id="equipmentTableBody"></tbody></table></div></section><section class="equipment-panel"><div class="equipment-panel__head"><div><h3 id="cardTitle"></h3><p>保留来源、边界、责任人、时间戳和下游业务入口</p></div></div><div id="equipmentCards" class="equipment-card-grid"></div></section><section class="simulation-box"><div class="simulation-box__head"><div><h3 id="simulationTitle"></h3><p id="simulationHint"></p></div></div><div class="simulation-form"><input id="simulationInput" type="text" /><div class="simulation-actions"><button id="simulateBtn" type="button">记录模拟回执</button><button id="secondaryActionBtn" type="button">登记异常处置</button></div></div></section></div><aside class="equipment-side"><section id="equipmentDetail" class="equipment-detail"><div class="equipment-detail__head"><div><span id="detailStatus" class="pill"></span><h3 id="detailTitle"></h3><p id="detailSubtitle"></p></div><button id="closeDetailBtn" class="icon-button" type="button" aria-label="关闭详情">×</button></div><div id="detailKv" class="detail-kv"></div></section><section class="equipment-detail"><h3>业务履历</h3><div id="timelineList" class="equipment-timeline"></div></section><section class="equipment-detail"><h3>处置与衔接</h3><div id="actionList" class="action-list"></div><div class="quick-links"><a href="./equipment-status.html">设备状态</a><a href="./repair-orders.html">维修工单</a></div></section><section class="equipment-detail"><h3>模拟记录</h3><div id="logList" class="action-list"></div></section></aside></section>
+      </main>
+    </div>
+    <script src="./equipment.js"></script>
+  </body>
+</html>

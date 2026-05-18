@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 单据同步</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./settings.css" />
+  </head>
+  <body>
+    <script>window.SETTINGS_PAGE = { id: "sync", title: "单据同步", eyebrow: "系统设置 / 单据同步" };</script>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand"><div class="brand-mark">X</div><div><div class="brand-name">星技谷 MES</div><div class="brand-subtitle">生产运营中枢</div></div></div>
+        <div class="menu-heading">业务导航</div>
+        <nav id="settingsModuleMenu" class="module-menu"></nav>
+        <div class="sidebar-footer"><div class="factory-card"><div class="factory-card__label">当前工厂</div><div class="factory-card__name">华东一厂 · 电子装配车间</div><div class="factory-card__meta"><span>系统设置</span><span>权限 / 审计 / 集成</span></div></div></div>
+      </aside>
+      <main id="settingsApp" class="main settings-main"></main>
+    </div>
+    <script src="./settings.js"></script>
+  </body>
+</html>
