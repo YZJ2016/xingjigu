@@ -39,16 +39,16 @@
         <header class="topbar">
           <div>
             <div class="eyebrow">工位作业 / 员工登录</div>
-            <h1>工位身份确认</h1>
+            <h1>人员到岗与工位绑定监控</h1>
           </div>
           <div class="topbar-actions">
-            <button id="batchLoginBtn" class="primary-action" type="button">推荐人员一键绑定</button>
+            <button id="batchLoginBtn" class="primary-action" type="button">同步推荐绑定回执</button>
             <button id="resetLoginBtn" class="secondary-action" type="button">重置身份演示</button>
             <a class="secondary-link" href="../dispatch/start-check.html">开工检查</a>
             <a class="secondary-link" href="../index.html">返回首页</a>
             <div class="user-chip">
               <span class="avatar">位</span>
-              <span>工位终端</span>
+              <span>班组长</span>
             </div>
           </div>
         </header>
@@ -124,7 +124,7 @@
               <div class="login-focus">
                 <section class="terminal-panel">
                   <div class="section-title">
-                    <h3>工位身份确认</h3>
+                    <h3>现场身份回执监控</h3>
                     <span id="terminalStationText">ASM-WS-03</span>
                   </div>
                   <div class="terminal-card">
@@ -136,11 +136,11 @@
                     <div class="binding-box">
                       <span>当前绑定</span>
                       <strong id="terminalBindingStatus">等待人员确认</strong>
-                      <em>绑定后允许开工、投料、过程记录和报工</em>
+                      <em>现场回执通过后允许开工、投料、过程记录和报工</em>
                     </div>
                     <div class="scan-box" aria-label="模拟扫码输入">
-                      <span>模拟身份介质</span>
-                      <input id="scanInput" type="text" placeholder="模拟扫描员工码，例如 E1003" />
+                      <span>模拟现场身份回传</span>
+                      <input id="scanInput" type="text" placeholder="模拟工位终端回传员工码，例如 E1003" />
                       <div class="auth-methods" aria-label="模拟现场身份确认方式">
                         <button type="button" data-auth-method="模拟员工码">模拟员工码</button>
                         <button type="button" data-auth-method="模拟工牌刷卡">模拟工牌刷卡</button>
@@ -150,9 +150,9 @@
                     </div>
                     <div class="terminal-actions terminal-actions--grouped">
                       <div>
-                        <span>现场动作</span>
-                        <button id="scanLoginBtn" type="button">模拟确认身份 / 绑定工位</button>
-                        <button id="logoutActiveBtn" type="button">退出 / 解除绑定</button>
+                        <span>现场回执</span>
+                        <button id="scanLoginBtn" type="button">同步身份绑定回执</button>
+                        <button id="logoutActiveBtn" type="button">登记退出回执</button>
                       </div>
                       <div>
                         <span>工位视角</span>
@@ -160,7 +160,7 @@
                       </div>
                       <div>
                         <span>异常补偿</span>
-                        <button id="faultExitBtn" type="button">模拟设备故障代退出</button>
+                        <button id="faultExitBtn" type="button">登记设备故障代退出</button>
                         <button id="makeupRecordBtn" type="button">补录上下工位</button>
                       </div>
                     </div>
@@ -182,7 +182,7 @@
                 <h3>本班上下工位履历</h3>
                 <div class="section-actions">
                   <button id="showLoginDetailBtn" type="button" hidden>显示详情</button>
-                  <button id="refreshLoginBtn" type="button">刷新终端</button>
+                  <button id="refreshLoginBtn" type="button">刷新监控</button>
                 </div>
               </div>
               <div class="operation-table-wrap">
@@ -261,7 +261,7 @@
 
             <section class="detail-section">
               <div class="section-title">
-                <h3>工位动作</h3>
+                <h3>后台处置</h3>
               </div>
               <div class="reason-grid">
                 <label>
@@ -281,12 +281,12 @@
                 </label>
               </div>
               <div class="action-grid dispatch-actions">
-                <button id="loginBtn" type="button">确认绑定</button>
-                <button id="logoutBtn" type="button">解除绑定</button>
-                <button id="qualifyBtn" type="button">资质复核通过</button>
-                <button id="replaceBtn" type="button">换人到岗</button>
+                <button id="loginBtn" type="button">同步绑定回执</button>
+                <button id="logoutBtn" type="button">登记退出回执</button>
+                <button id="qualifyBtn" type="button">发起资质复核通过</button>
+                <button id="replaceBtn" type="button">登记换人到岗</button>
                 <button id="handoverBtn" type="button">记录交接</button>
-                <button id="lockBtn" class="danger-action" type="button">锁定工位</button>
+                <button id="lockBtn" class="danger-action" type="button">锁定开工准入</button>
               </div>
             </section>
 

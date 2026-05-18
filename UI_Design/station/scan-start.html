@@ -40,17 +40,17 @@
         <header class="topbar">
           <div>
             <div class="eyebrow">工位作业 / 扫码开工</div>
-            <h1>扫码开工终端</h1>
+            <h1>扫码开工监控与准入回执</h1>
           </div>
           <div class="topbar-actions">
-            <button id="batchReadyBtn" class="primary-action" type="button">模拟放行可开工</button>
+            <button id="batchReadyBtn" class="primary-action" type="button">批量解除准入拦截</button>
             <button id="resetScanBtn" class="secondary-action" type="button">重置扫码演示</button>
             <a class="secondary-link" href="./employee-login.html">员工登录</a>
             <a class="secondary-link" href="../dispatch/start-check.html">开工检查</a>
             <a class="secondary-link" href="../index.html">返回首页</a>
             <div class="user-chip">
               <span class="avatar">扫</span>
-              <span>工位终端</span>
+              <span>班组长</span>
             </div>
           </div>
         </header>
@@ -119,7 +119,7 @@
             <section class="scan-board">
               <div class="scan-lane">
                 <div class="section-title">
-                  <h3>待扫码开工任务</h3>
+                  <h3>开工回执任务</h3>
                 </div>
                 <div id="scanTaskList" class="scan-task-list"></div>
               </div>
@@ -127,7 +127,7 @@
               <div class="scan-focus">
                 <section class="station-terminal-panel">
                   <div class="section-title">
-                    <h3>工位扫码终端</h3>
+                    <h3>现场扫码回执监控</h3>
                     <span id="terminalTitle">ASM-WS-03</span>
                   </div>
                   <div class="scan-terminal">
@@ -141,9 +141,9 @@
                       <strong id="terminalOperator">赵杰 · E1003</strong>
                       <em id="terminalShift">A1 班 · 白班</em>
                     </div>
-                    <div class="scan-input-panel" aria-label="模拟扫码开工输入">
-                      <span>模拟扫码枪输入</span>
-                      <input id="scanCodeInput" type="text" placeholder="模拟扫描派工单/批次/产品码，例如 D-004" />
+                    <div class="scan-input-panel" aria-label="模拟现场扫码回传输入">
+                      <span>模拟现场扫码回传</span>
+                      <input id="scanCodeInput" type="text" placeholder="模拟工位终端回传派工单/批次/产品码，例如 D-004" />
                       <div class="scan-mode-tabs" aria-label="模拟扫码对象">
                         <button type="button" data-scan-mode="模拟派工单码">模拟派工单码</button>
                         <button type="button" data-scan-mode="模拟工单码">模拟工单码</button>
@@ -152,9 +152,9 @@
                       </div>
                     </div>
                     <div class="scan-terminal-actions">
-                      <button id="scanStartBtn" type="button">模拟扫码开工</button>
-                      <button id="simulateDeviceBtn" type="button">模拟设备启动信号</button>
-                      <button id="simulateBlockBtn" type="button">模拟条码不匹配拦截</button>
+                      <button id="scanStartBtn" type="button">同步开工回执</button>
+                      <button id="simulateDeviceBtn" type="button">同步设备启动信号</button>
+                      <button id="simulateBlockBtn" type="button">登记条码不匹配拦截</button>
                       <button id="switchTaskBtn" type="button">切换工位任务</button>
                     </div>
                   </div>
@@ -172,10 +172,10 @@
 
             <section class="dispatch-table-panel">
               <div class="section-title">
-                <h3>扫码开工履历</h3>
+                <h3>开工回执与拦截履历</h3>
                 <div class="section-actions">
                   <button id="showScanDetailBtn" type="button" hidden>显示详情</button>
-                  <button id="refreshScanBtn" type="button">刷新终端</button>
+                  <button id="refreshScanBtn" type="button">刷新监控</button>
                 </div>
               </div>
               <div class="operation-table-wrap">
@@ -227,7 +227,7 @@
 
             <section class="detail-section">
               <div class="section-title">
-                <h3>现场动作</h3>
+                <h3>后台处置</h3>
               </div>
               <div class="reason-grid">
                 <label>
@@ -252,7 +252,7 @@
                 </label>
               </div>
               <div class="action-grid dispatch-actions">
-                <button id="detailStartBtn" type="button">确认开工</button>
+                <button id="detailStartBtn" type="button">同步开工回执</button>
                 <button id="firstPieceBtn" type="button">转首件确认</button>
                 <button id="detailBlockBtn" class="danger-action" type="button">拦截开工</button>
                 <button id="releaseBlockBtn" type="button">解除拦截</button>

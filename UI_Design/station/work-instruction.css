@@ -130,7 +130,7 @@
 
 .instruction-terminal {
   display: grid;
-  grid-template-columns: minmax(170px, 0.78fr) minmax(180px, 0.82fr) minmax(190px, 0.8fr) 190px;
+  grid-template-columns: minmax(170px, 0.9fr) minmax(180px, 0.9fr) minmax(190px, 1fr) 190px;
   gap: 12px;
   align-items: stretch;
 }
@@ -161,7 +161,7 @@
   margin-top: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 22px;
+  font-size: 19px;
 }
 
 .instruction-terminal em {
@@ -257,6 +257,9 @@
   border-radius: 14px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.58);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
 }
 
 .asset-card strong {
@@ -276,6 +279,12 @@
 .asset-card.is-ready {
   border-color: rgba(52, 199, 89, 0.32);
   background: rgba(52, 199, 89, 0.08);
+}
+
+.asset-card:hover,
+.asset-card.is-active {
+  border-color: rgba(0, 122, 255, 0.38);
+  background: rgba(0, 122, 255, 0.08);
 }
 
 .asset-card.is-risk {
@@ -305,6 +314,27 @@
 
 .instruction-table tr.is-active {
   background: rgba(0, 166, 166, 0.08);
+}
+
+.asset-detail-grid {
+  margin-top: 10px;
+}
+
+.parameter-table-wrap {
+  margin-top: 10px;
+  max-height: 220px;
+}
+
+.parameter-table {
+  min-width: 760px;
+  table-layout: fixed;
+}
+
+.parameter-table th,
+.parameter-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .instruction-detail-panel {

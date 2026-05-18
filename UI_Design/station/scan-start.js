@@ -406,7 +406,7 @@ function renderLogs() {
         <em>${log.result}</em>
       </div>
     `).join("")
-    : `<div class="integration-item"><span>暂无</span><strong>${active.notes}</strong><em>等待模拟扫码枪或设备信号</em></div>`;
+    : `<div class="integration-item"><span>暂无</span><strong>${active.notes}</strong><em>等待现场扫码回执或设备信号</em></div>`;
 }
 
 function getExpectedCode(item) {
@@ -440,7 +440,7 @@ function getStatusStyle(status) {
 function selectTask(id) {
   state.activeTaskId = id;
   state.detailOpen = true;
-  recordLog(id, "已打开扫码开工任务详情", "终端切换到当前派工单");
+  recordLog(id, "已打开扫码开工任务详情", "后台切换到当前派工单");
   saveState();
   renderAll();
 }
@@ -482,7 +482,7 @@ function startTask(task, message) {
     inputQty: task.inputQty || task.planQty,
     gates,
     firstPiece: gates.quality === "待确认" ? "首件待确认，等待质量员判定" : task.firstPiece,
-    notes: "扫码开工成功，人员、设备、派工和条码已建立过程履历",
+    notes: "已同步现场开工回执，人员、设备、派工和条码已建立过程履历",
   }, message);
 }
 
@@ -505,7 +505,7 @@ function blockTask(task, reason, owner) {
 
 function releaseTask(task) {
   const gates = Object.fromEntries(Object.entries(task.gates).map(([key, value]) => [key, value === "拦截" ? "通过" : value]));
-  updateTask(task.id, { status: "待扫码", gates, notes: "拦截已解除，等待重新模拟扫码开工" }, "开工拦截已解除");
+  updateTask(task.id, { status: "待扫码", gates, notes: "拦截已解除，等待现场重新扫码回执" }, "开工拦截已解除");
 }
 
 function appendHistory(task, patch) {
@@ -594,16 +594,16 @@ function bindEvents() {
       blockTask(task, "条码不属于当前派工单", "班组长");
       return;
     }
-    startTask(task, "模拟扫码开工成功");
+    startTask(task, "已同步现场扫码开工回执");
     $("#scanCodeInput").value = "";
   });
   $("#simulateDeviceBtn").addEventListener("click", () => {
     const task = getActiveTask();
     appendHistory(task, { action: "设备启动信号", scanType: "模拟设备信号", scanCode: task.equipment, owner: task.operator, result: "设备启动信号已绑定当前派工单" });
-    recordLog(task.id, "已接收模拟设备启动信号", "设备信号与开工记录已关联");
+    recordLog(task.id, "已同步现场设备启动信号", "设备信号与开工记录已关联");
     saveState();
     renderAll();
-    showToast("模拟设备启动信号已记录");
+    showToast("设备启动信号已同步");
   });
   $("#simulateBlockBtn").addEventListener("click", () => blockTask(getActiveTask(), state.blockReason, state.owner));
   $("#switchTaskBtn").addEventListener("click", () => {
@@ -614,10 +614,10 @@ function bindEvents() {
     showToast(`已切换到 ${getActiveTask().dispatchNo}`);
   });
   $("#refreshScanBtn").addEventListener("click", () => {
-    recordLog(getActiveTask().id, "已刷新扫码终端状态", "已重新读取当前工位上下文");
+    recordLog(getActiveTask().id, "已刷新扫码开工监控", "已重新读取现场扫码回执和准入状态");
     saveState();
     renderLogs();
-    showToast("扫码终端已刷新");
+    showToast("扫码开工监控已刷新");
   });
   $("#closeScanDetailBtn").addEventListener("click", () => {
     state.detailOpen = false;
@@ -637,7 +637,7 @@ function bindEvents() {
     renderLogs();
     showToast("扫码准入校验已重新执行");
   });
-  $("#detailStartBtn").addEventListener("click", () => startTask(getActiveTask(), "已从详情确认扫码开工"));
+  $("#detailStartBtn").addEventListener("click", () => startTask(getActiveTask(), "已从详情同步开工回执"));
   $("#firstPieceBtn").addEventListener("click", () => {
     const task = getActiveTask();
     updateTask(task.id, { status: "首件待确认", firstPiece: "首件待确认，等待质量员判定", gates: { ...task.gates, quality: "待确认" } }, "已转入首件确认");
@@ -648,12 +648,12 @@ function bindEvents() {
     tasks = tasks.map((item) => {
       if (item.status !== "已拦截") return item;
       const gates = Object.fromEntries(Object.entries(item.gates).map(([key]) => [key, "通过"]));
-      return { ...item, status: "待扫码", gates, notes: "已模拟处理异常，允许重新扫码开工" };
+      return { ...item, status: "待扫码", gates, notes: "已处理准入异常，允许现场重新扫码" };
     });
-    recordLog(state.activeTaskId, "已模拟放行可开工任务", "拦截项已转为通过");
+    recordLog(state.activeTaskId, "已批量解除准入拦截", "拦截项已转为通过");
     saveState();
     renderAll();
-    showToast("已模拟放行可开工任务");
+    showToast("已批量解除准入拦截");
   });
   $("#resetScanBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -667,7 +667,7 @@ function bindEvents() {
     $("#scanOperationFilter").value = "all";
     $("#scanCodeInput").value = "";
     renderAll();
-    showToast("扫码开工演示已重置");
+    showToast("扫码开工监控演示已重置");
   });
 }
 

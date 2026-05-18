@@ -41,36 +41,36 @@
         <header class="topbar">
           <div>
             <div class="eyebrow">工位作业 / 工艺指导</div>
-            <h1>工位工艺指导终端</h1>
+            <h1>工艺指导下发与执行监控</h1>
           </div>
           <div class="topbar-actions">
-            <button id="batchSignBtn" class="primary-action" type="button">模拟批量签收</button>
+            <button id="batchSignBtn" class="primary-action" type="button">批量下发到工位终端</button>
             <button id="resetInstructionBtn" class="secondary-action" type="button">重置指导演示</button>
             <a class="secondary-link" href="./scan-start.html">扫码开工</a>
             <a class="secondary-link" href="../dispatch/sop-view.html">SOP 查看</a>
             <a class="secondary-link" href="../index.html">返回首页</a>
             <div class="user-chip">
               <span class="avatar">艺</span>
-              <span>工位终端</span>
+              <span>工艺员</span>
             </div>
           </div>
         </header>
 
         <section class="dispatch-metrics" aria-label="工艺指导统计">
           <article>
-            <span>已签收</span>
+            <span>签收完成</span>
             <strong id="metricSigned">0</strong>
-            <em>操作员已确认版本和工步</em>
+            <em>现场终端回传签收</em>
           </article>
           <article>
-            <span>待签收</span>
+            <span>待下发 / 待签收</span>
             <strong id="metricPending">0</strong>
-            <em>开工后需阅读确认</em>
+            <em>需工艺或班组跟进</em>
           </article>
           <article>
-            <span>偏离呼叫</span>
+            <span>偏离待处理</span>
             <strong id="metricDeviation">0</strong>
-            <em>工艺员待处理事项</em>
+            <em>来自工位终端的异常</em>
           </article>
           <article>
             <span>版本拦截</span>
@@ -90,9 +90,10 @@
                 状态
                 <select id="instructionStatusFilter">
                   <option value="all">全部状态</option>
-                  <option value="待签收">待签收</option>
-                  <option value="已签收">已签收</option>
-                  <option value="偏离待确认">偏离待确认</option>
+                  <option value="待下发">待下发</option>
+                  <option value="已下发">已下发</option>
+                  <option value="签收完成">签收完成</option>
+                  <option value="偏离待处理">偏离待处理</option>
                   <option value="版本拦截">版本拦截</option>
                 </select>
               </label>
@@ -128,38 +129,38 @@
               <div class="instruction-focus">
                 <section class="instruction-terminal-panel">
                   <div class="section-title">
-                    <h3>当前工位指导</h3>
+                    <h3>下发与终端接收状态</h3>
                     <span id="terminalTitle">ASM-WS-03</span>
                   </div>
                   <div class="instruction-terminal">
                     <div class="terminal-status">
-                      <span>当前派工</span>
+                      <span>派工单 / 工序</span>
                       <strong id="terminalDispatch">D-004</strong>
                       <em id="terminalTask">整机装配 · ASM-WS-03</em>
                     </div>
                     <div class="terminal-status">
-                      <span>当前操作者</span>
+                      <span>现场签收人</span>
                       <strong id="terminalOperator">赵杰 · E1003</strong>
                       <em id="terminalShift">A1 班 · 白班</em>
                     </div>
                     <div class="terminal-status">
-                      <span>当前工步</span>
+                      <span>终端状态</span>
                       <strong id="terminalStep">步骤 01</strong>
                       <em id="terminalStepHint">装配前确认</em>
                     </div>
-                    <div class="instruction-terminal-actions" aria-label="模拟工位终端动作">
-                      <button id="signInstructionBtn" type="button">模拟工牌签收指导</button>
-                      <button id="completeStepBtn" type="button">模拟 HMI 完成本工步</button>
-                      <button id="deviationBtn" type="button">模拟工艺偏离呼叫</button>
-                      <button id="refreshVersionBtn" type="button">模拟终端刷新版本</button>
+                    <div class="instruction-terminal-actions" aria-label="后台工艺指导管理动作">
+                      <button id="signInstructionBtn" type="button">下发到工位终端</button>
+                      <button id="completeStepBtn" type="button">同步签收回执</button>
+                      <button id="deviationBtn" type="button">登记偏离处理</button>
+                      <button id="refreshVersionBtn" type="button">重新同步版本</button>
                     </div>
                   </div>
                 </section>
 
                 <section class="step-panel">
                   <div class="section-title">
-                    <h3>作业工步与防错点</h3>
-                    <span>按工位终端顺序展示，不替代真实设备控制</span>
+                    <h3>工步清单与防错要求</h3>
+                    <span>后台预览现场终端展示内容、参数和质量控制点</span>
                   </div>
                   <div id="stepList" class="step-list"></div>
                 </section>
@@ -178,7 +179,7 @@
               <section class="dispatch-table-panel">
                 <div class="section-title">
                   <h3>质量与追溯入口</h3>
-                  <span>首件、过程检验、参数采集和报工继续承接</span>
+                  <span>确认工艺版本已进入后续首件、过程采集和报工追溯</span>
                 </div>
                 <div id="traceCards" class="trace-cards"></div>
               </section>
@@ -186,8 +187,8 @@
 
             <section class="dispatch-table-panel">
               <div class="section-title">
-                <h3>工艺指导履历</h3>
-                <button id="refreshInstructionBtn" type="button">刷新终端</button>
+                <h3>下发、签收与偏离履历</h3>
+                <button id="refreshInstructionBtn" type="button">刷新监控</button>
               </div>
               <div class="operation-table-wrap">
                 <table class="instruction-table">
@@ -211,7 +212,7 @@
           <aside id="instructionDetailPanel" class="order-detail-panel instruction-detail-panel">
             <div class="detail-head">
               <div>
-                <span id="detailStatus">待签收</span>
+                <span id="detailStatus">待下发</span>
                 <h2 id="detailDispatch">D-004</h2>
                 <p id="detailSubtitle">整机装配 · ASM-WS-03</p>
               </div>
@@ -230,7 +231,31 @@
 
             <section class="detail-section">
               <div class="section-title">
-                <h3>现场异常处置</h3>
+                <h3 id="assetDetailTitle">资料详情</h3>
+                <span id="assetDetailMeta">选择资料卡片查看</span>
+              </div>
+              <div id="assetDetailGrid" class="detail-grid asset-detail-grid"></div>
+              <div id="parameterTableWrap" class="operation-table-wrap parameter-table-wrap" hidden>
+                <table class="parameter-table">
+                  <thead>
+                    <tr>
+                      <th>参数项</th>
+                      <th>目标值</th>
+                      <th>下限</th>
+                      <th>上限</th>
+                      <th>单位</th>
+                      <th>采集来源</th>
+                      <th>校验</th>
+                    </tr>
+                  </thead>
+                  <tbody id="parameterTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>偏离处理</h3>
               </div>
               <div class="reason-grid">
                 <label>
@@ -253,10 +278,10 @@
                 </label>
               </div>
               <div class="action-grid dispatch-actions">
-                <button id="detailSignBtn" type="button">确认签收</button>
-                <button id="detailStepBtn" type="button">完成当前工步</button>
-                <button id="detailDeviationBtn" class="danger-action" type="button">发起偏离呼叫</button>
-                <button id="releaseDeviationBtn" type="button">解除偏离</button>
+                <button id="detailSignBtn" type="button">下发到终端</button>
+                <button id="detailStepBtn" type="button">同步签收回执</button>
+                <button id="detailDeviationBtn" class="danger-action" type="button">登记偏离处理</button>
+                <button id="releaseDeviationBtn" type="button">关闭偏离</button>
               </div>
             </section>
 

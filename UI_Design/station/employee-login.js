@@ -670,19 +670,19 @@ function bindEvents() {
   $("#batchLoginBtn").addEventListener("click", () => {
     const targets = employees.filter((item) => item.status !== "已登录" && Object.values(item.gates).every((gate) => gate === "通过"));
     if (!targets.length) {
-      showToast("没有可一键绑定的推荐人员");
+      showToast("没有可同步绑定回执的推荐人员");
       return;
     }
     targets.forEach((item) => {
       item.status = "已登录";
       item.loginTime = nowTime();
       item.lastSeen = nowTime();
-      recordLog(item.id, `已通过${state.authMethod}推荐绑定到工位`);
+      recordLog(item.id, `已同步${state.authMethod}现场绑定回执`);
     });
     state.activeEmployeeId = targets[0].id;
     saveState();
     renderAll();
-    showToast(`已绑定 ${targets.length} 名人员到工位`);
+    showToast(`已同步 ${targets.length} 名人员绑定回执`);
   });
   $("#scanLoginBtn").addEventListener("click", () => {
     const code = $("#scanInput").value.trim().toUpperCase();
@@ -693,7 +693,7 @@ function bindEvents() {
     }
     state.activeEmployeeId = employee.id;
     state.terminalStation = employee.station;
-    loginEmployee(employee, `已通过${state.authMethod}确认身份并绑定工位`);
+    loginEmployee(employee, `已同步${state.authMethod}现场身份绑定回执`);
     $("#scanInput").value = "";
   });
   document.querySelectorAll("[data-auth-method]").forEach((button) => {
@@ -712,12 +712,12 @@ function bindEvents() {
     renderTerminal();
     showToast(`已切换到 ${state.terminalStation}`);
   });
-  $("#logoutActiveBtn").addEventListener("click", () => exitEmployee(getActiveEmployee(), state.exitReason, `当前人员已因${state.exitReason}退出工位`));
+  $("#logoutActiveBtn").addEventListener("click", () => exitEmployee(getActiveEmployee(), state.exitReason, `已登记现场退出回执：${state.exitReason}`));
   $("#faultExitBtn").addEventListener("click", () => {
     const active = getActiveEmployee();
     state.exitReason = "设备停机";
     appendHistory(active, { action: "设备故障代退出", reason: "设备停机", handoverTo: "班组长", result: "已代退出，关联设备异常待处理" });
-    appendEquipmentEvent(active, { status: "停机", event: "模拟设备故障触发代退出", owner: "班组长", result: "人员已代退出，设备异常待处理" });
+    appendEquipmentEvent(active, { status: "停机", event: "设备故障触发代退出回执", owner: "班组长", result: "人员已代退出，设备异常待处理" });
     updateEmployee(active.id, { status: "离线", lastSeen: nowTime(), loginTime: "" }, "已执行设备故障代退出");
   });
   $("#makeupRecordBtn").addEventListener("click", () => {
@@ -729,10 +729,10 @@ function bindEvents() {
     showToast("上下工位补录已记录");
   });
   $("#refreshLoginBtn").addEventListener("click", () => {
-    recordLog(getActiveEmployee().id, "已刷新工位终端状态");
+    recordLog(getActiveEmployee().id, "已刷新人员到岗监控");
     saveState();
     renderLogs();
-    showToast("工位终端已刷新");
+    showToast("人员到岗监控已刷新");
   });
   $("#closeLoginDetailBtn").addEventListener("click", () => {
     state.detailOpen = false;
@@ -752,13 +752,13 @@ function bindEvents() {
     renderLogs();
     showToast("身份校验已重新执行");
   });
-  $("#loginBtn").addEventListener("click", () => loginEmployee(getActiveEmployee(), "员工身份已确认并绑定当前工位"));
-  $("#logoutBtn").addEventListener("click", () => exitEmployee(getActiveEmployee(), state.exitReason, `员工已因${state.exitReason}解除工位绑定`));
+  $("#loginBtn").addEventListener("click", () => loginEmployee(getActiveEmployee(), "已同步现场身份绑定回执"));
+  $("#logoutBtn").addEventListener("click", () => exitEmployee(getActiveEmployee(), state.exitReason, `已登记现场退出回执：${state.exitReason}`));
   $("#qualifyBtn").addEventListener("click", () => passQualification(getActiveEmployee(), "人员资质已复核通过"));
   $("#replaceBtn").addEventListener("click", () => {
     const active = getActiveEmployee();
     appendHistory(active, { action: "换人到岗", reason: "换人支援", handoverTo: getHandoverName(), result: "待新人员身份确认" });
-    updateEmployee(active.id, { status: "待登录", loginTime: "", lastSeen: "换人待到岗" }, "已发起换人到岗");
+    updateEmployee(active.id, { status: "待登录", loginTime: "", lastSeen: "换人待到岗" }, "已登记换人到岗");
   });
   $("#handoverBtn").addEventListener("click", () => {
     const active = getActiveEmployee();
@@ -771,7 +771,7 @@ function bindEvents() {
   $("#lockBtn").addEventListener("click", () => {
     const active = getActiveEmployee();
     appendHistory(active, { action: "锁定工位", reason: "异常锁定", handoverTo: "班组长", result: "禁止开工，需复核" });
-    updateEmployee(active.id, { status: "资质异常", locked: true }, "已锁定当前工位身份确认");
+    updateEmployee(active.id, { status: "资质异常", locked: true }, "已锁定当前工位开工准入");
   });
   $("#resetLoginBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -786,7 +786,7 @@ function bindEvents() {
     $("#loginTeamFilter").value = "all";
     $("#scanInput").value = "";
     renderAll();
-    showToast("工位身份确认演示已重置");
+    showToast("人员到岗监控演示已重置");
   });
 }
 
