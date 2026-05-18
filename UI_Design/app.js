@@ -260,6 +260,22 @@ function applyMenuEntry(moduleId, entry) {
     window.location.href = "./station/work-instruction.html";
     return;
   }
+  if (moduleId === "station" && entry === "投料确认") {
+    window.location.href = "./station/feeding-confirmation.html";
+    return;
+  }
+  if (moduleId === "station" && entry === "过程记录") {
+    window.location.href = "./station/process-record.html";
+    return;
+  }
+  if (moduleId === "station" && entry === "工序报工") {
+    window.location.href = "./station/operation-report.html";
+    return;
+  }
+  if (moduleId === "station" && entry === "交接班") {
+    window.location.href = "./station/shift-handover.html";
+    return;
+  }
   const actions = {
     生产总览: () => {
       state.line = "全部产线";

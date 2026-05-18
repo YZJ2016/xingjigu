@@ -141,6 +141,7 @@ let state = {
   line: "all",
   operation: "all",
   detailOpen: true,
+  taskDrawerOpen: true,
   scanMode: "模拟派工单码",
   blockReason: "条码不属于当前派工单",
   owner: "班组长",
@@ -199,6 +200,7 @@ function renderFrameMenu() {
       else if (moduleId === "station" && entry === "投料确认") window.location.href = "./feeding-confirmation.html";
       else if (moduleId === "station" && entry === "过程记录") window.location.href = "./process-record.html";
       else if (moduleId === "station" && entry === "工序报工") window.location.href = "./operation-report.html";
+      else if (moduleId === "station" && entry === "交接班") window.location.href = "./shift-handover.html";
       else showToast(`${entry} 页面待建设`);
     });
   });
@@ -238,7 +240,7 @@ function getVisibleTasks() {
 }
 
 function renderAll() {
-  renderDetailPanelState();
+  renderPanelState();
   renderMetrics();
   renderTaskList();
   renderTerminal();
@@ -249,11 +251,15 @@ function renderAll() {
   renderLogs();
 }
 
-function renderDetailPanelState() {
-  const isOpen = state.detailOpen !== false;
-  $(".scan-layout").classList.toggle("is-detail-closed", !isOpen);
-  $("#scanDetailPanel").hidden = !isOpen;
-  $("#showScanDetailBtn").hidden = isOpen;
+function renderPanelState() {
+  const detailOpen = state.detailOpen !== false;
+  const taskDrawerOpen = state.taskDrawerOpen !== false;
+  $(".scan-layout").classList.toggle("is-detail-closed", !detailOpen);
+  $(".scan-layout").classList.toggle("is-task-drawer-closed", !taskDrawerOpen);
+  $("#scanSideRail").hidden = !taskDrawerOpen;
+  $("#scanDetailPanel").hidden = !detailOpen || !taskDrawerOpen;
+  $("#showScanDetailBtn").hidden = detailOpen || !taskDrawerOpen;
+  $("#showScanTaskDrawerBtn").hidden = taskDrawerOpen;
 }
 
 function renderMetrics() {
@@ -443,6 +449,7 @@ function getStatusStyle(status) {
 function selectTask(id) {
   state.activeTaskId = id;
   state.detailOpen = true;
+  state.taskDrawerOpen = true;
   recordLog(id, "已打开扫码开工任务详情", "后台切换到当前派工单");
   saveState();
   renderAll();
@@ -625,14 +632,26 @@ function bindEvents() {
   $("#closeScanDetailBtn").addEventListener("click", () => {
     state.detailOpen = false;
     saveState();
-    renderDetailPanelState();
+    renderPanelState();
     showToast("详情面板已关闭");
   });
   $("#showScanDetailBtn").addEventListener("click", () => {
     state.detailOpen = true;
     saveState();
-    renderDetailPanelState();
+    renderPanelState();
     showToast("详情面板已打开");
+  });
+  $("#closeScanTaskDrawerBtn").addEventListener("click", () => {
+    state.taskDrawerOpen = false;
+    saveState();
+    renderPanelState();
+    showToast("开工回执任务抽屉已隐藏");
+  });
+  $("#showScanTaskDrawerBtn").addEventListener("click", () => {
+    state.taskDrawerOpen = true;
+    saveState();
+    renderPanelState();
+    showToast("开工回执任务抽屉已打开");
   });
   $("#recheckScanBtn").addEventListener("click", () => {
     recordLog(getActiveTask().id, "已重新执行扫码开工准入校验", getGateText(getActiveTask()));
@@ -663,7 +682,7 @@ function bindEvents() {
     tasks = structuredClone(initialTasks);
     history = structuredClone(initialHistory);
     logs = [];
-    state = { activeTaskId: "ST-004", search: "", status: "all", line: "all", operation: "all", detailOpen: true, scanMode: "模拟派工单码", blockReason: "条码不属于当前派工单", owner: "班组长" };
+    state = { activeTaskId: "ST-004", search: "", status: "all", line: "all", operation: "all", detailOpen: true, taskDrawerOpen: true, scanMode: "模拟派工单码", blockReason: "条码不属于当前派工单", owner: "班组长" };
     $("#scanSearch").value = "";
     $("#scanStatusFilter").value = "all";
     $("#scanLineFilter").value = "all";

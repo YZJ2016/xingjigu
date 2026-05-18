@@ -28,6 +28,7 @@
 - 工位作业 / 投料确认独立终端页面
 - 工位作业 / 过程记录独立终端页面
 - 工位作业 / 工序报工独立终端页面
+- 工位作业 / 交接班独立终端页面
 - 生产订单新增、编辑、删除、分页、搜索、筛选与联动影响管理
 - 订单评审准入校验、会签标记、评审通过、退回补资料与转排程联动
 - 生产排程待排订单、7 天产线甘特图、已确认计划、工序计划、约束确认与派工准备联动
@@ -48,6 +49,7 @@
 - 投料确认任务队列、模拟扫码枪/PDA 投料回传、BOM/批次/IQC/线边库位/用量校验、错料错批拦截、用料差异和批次追溯联动
 - 过程记录任务队列、模拟设备 PLC/工位 HMI/测试台/人工录入回传、参数规格校验、SPC 预警、过程拦截和 SN/批次追溯联动
 - 工序报工任务队列、模拟现场报工回传、完工数量/不良数量/报废数量/实际工时校验、报工拦截、ERP 回传和 WIP/质量/用料/追溯联动
+- 交接班任务队列、模拟工牌/NFC 双人确认、WIP/异常/设备/质量事项交接、未闭环事项移交和交接履历联动
 - 生产订单池
 - 产线负荷
 - 当前选中订单闭环进度
@@ -133,6 +135,9 @@ UI_Design/
     operation-report.html
     operation-report.css
     operation-report.js
+    shift-handover.html
+    shift-handover.css
+    shift-handover.js
 ```
 
 ## 打开方式
@@ -261,6 +266,12 @@ UI_Design/station/process-record.html
 
 ```text
 UI_Design/station/operation-report.html
+```
+
+交接班工位终端：
+
+```text
+UI_Design/station/shift-handover.html
 ```
 
 也可以在 `UI_Design` 目录启动任意静态服务后访问首页。

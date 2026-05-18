@@ -204,6 +204,7 @@ let state = {
   line: "all",
   source: "all",
   detailOpen: true,
+  taskDrawerOpen: true,
   processSource: "设备 PLC",
   reason: "参数超过规格上限",
   owner: "工艺员",
@@ -262,6 +263,7 @@ function renderFrameMenu() {
       else if (moduleId === "station" && entry === "投料确认") window.location.href = "./feeding-confirmation.html";
       else if (moduleId === "station" && entry === "过程记录") window.location.href = "./process-record.html";
       else if (moduleId === "station" && entry === "工序报工") window.location.href = "./operation-report.html";
+      else if (moduleId === "station" && entry === "交接班") window.location.href = "./shift-handover.html";
       else showToast(`${entry} 页面待建设`);
     });
   });
@@ -301,7 +303,7 @@ function getVisibleRecords() {
 }
 
 function renderAll() {
-  renderDetailPanelState();
+  renderPanelState();
   renderMetrics();
   renderTaskList();
   renderTerminal();
@@ -313,11 +315,15 @@ function renderAll() {
   renderLogs();
 }
 
-function renderDetailPanelState() {
-  const isOpen = state.detailOpen !== false;
-  $(".process-layout").classList.toggle("is-detail-closed", !isOpen);
-  $("#processDetailPanel").hidden = !isOpen;
-  $("#showProcessDetailBtn").hidden = isOpen;
+function renderPanelState() {
+  const detailOpen = state.detailOpen !== false;
+  const taskDrawerOpen = state.taskDrawerOpen !== false;
+  $(".process-layout").classList.toggle("is-detail-closed", !detailOpen);
+  $(".process-layout").classList.toggle("is-task-drawer-closed", !taskDrawerOpen);
+  $("#processSideRail").hidden = !taskDrawerOpen;
+  $("#processDetailPanel").hidden = !detailOpen || !taskDrawerOpen;
+  $("#showProcessDetailBtn").hidden = detailOpen || !taskDrawerOpen;
+  $("#showProcessTaskDrawerBtn").hidden = taskDrawerOpen;
 }
 
 function renderMetrics() {
@@ -526,6 +532,7 @@ function getStatusStyle(status) {
 function selectRecord(id) {
   state.activeRecordId = id;
   state.detailOpen = true;
+  state.taskDrawerOpen = true;
   recordLog(id, "已打开过程记录详情", "后台切换到当前工位采集任务");
   saveState();
   renderAll();
@@ -734,14 +741,26 @@ function bindEvents() {
   $("#closeProcessDetailBtn").addEventListener("click", () => {
     state.detailOpen = false;
     saveState();
-    renderDetailPanelState();
+    renderPanelState();
     showToast("详情面板已关闭");
   });
   $("#showProcessDetailBtn").addEventListener("click", () => {
     state.detailOpen = true;
     saveState();
-    renderDetailPanelState();
+    renderPanelState();
     showToast("详情面板已打开");
+  });
+  $("#closeProcessTaskDrawerBtn").addEventListener("click", () => {
+    state.taskDrawerOpen = false;
+    saveState();
+    renderPanelState();
+    showToast("过程采集任务抽屉已隐藏");
+  });
+  $("#showProcessTaskDrawerBtn").addEventListener("click", () => {
+    state.taskDrawerOpen = true;
+    saveState();
+    renderPanelState();
+    showToast("过程采集任务抽屉已打开");
   });
   $("#recheckProcessBtn").addEventListener("click", () => {
     recordLog(getActiveRecord().id, "已重新执行过程采集校验", getGateText(getActiveRecord()));
@@ -775,7 +794,7 @@ function bindEvents() {
     records = structuredClone(initialRecords);
     history = structuredClone(initialHistory);
     logs = [];
-    state = { activeRecordId: "PR-004-TQ", search: "", status: "all", line: "all", source: "all", detailOpen: true, processSource: "设备 PLC", reason: "参数超过规格上限", owner: "工艺员" };
+    state = { activeRecordId: "PR-004-TQ", search: "", status: "all", line: "all", source: "all", detailOpen: true, taskDrawerOpen: true, processSource: "设备 PLC", reason: "参数超过规格上限", owner: "工艺员" };
     $("#processSearch").value = "";
     $("#processStatusFilter").value = "all";
     $("#processLineFilter").value = "all";

@@ -170,7 +170,10 @@
               <section class="dispatch-table-panel">
                 <div class="section-title">
                   <h3>参数规格与采集值</h3>
-                  <button id="showProcessDetailBtn" type="button" hidden>显示详情</button>
+                  <div class="section-actions">
+                    <button id="showProcessTaskDrawerBtn" type="button" hidden>显示过程采集任务</button>
+                    <button id="showProcessDetailBtn" type="button" hidden>显示详情</button>
+                  </div>
                 </div>
                 <div id="parameterCards" class="parameter-cards"></div>
               </section>
@@ -208,13 +211,14 @@
             </section>
           </div>
 
-          <aside class="process-side-rail">
+          <aside id="processSideRail" class="process-side-rail">
             <section class="process-lane">
               <div class="section-title">
                 <div>
                   <h3>过程采集任务</h3>
                   <p>选择采集任务后在左侧查看参数回传、SPC 和追溯绑定</p>
                 </div>
+                <button id="closeProcessTaskDrawerBtn" class="icon-button" type="button" aria-label="隐藏过程采集任务抽屉">×</button>
               </div>
               <div id="processTaskList" class="process-task-list"></div>
             </section>

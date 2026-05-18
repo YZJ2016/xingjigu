@@ -56,6 +56,7 @@ let state = {
   line: "all",
   team: "all",
   detailOpen: true,
+  taskDrawerOpen: true,
   terminalStation: "ASM-WS-03",
   authMethod: "模拟员工码",
   exitReason: "换班交接",
@@ -120,6 +121,7 @@ function renderFrameMenu() {
       else if (moduleId === "station" && entry === "投料确认") window.location.href = "./feeding-confirmation.html";
       else if (moduleId === "station" && entry === "过程记录") window.location.href = "./process-record.html";
       else if (moduleId === "station" && entry === "工序报工") window.location.href = "./operation-report.html";
+      else if (moduleId === "station" && entry === "交接班") window.location.href = "./shift-handover.html";
       else showToast(`${entry} 页面待建设`);
     });
   });
@@ -161,7 +163,7 @@ function getVisibleEmployees() {
 
 function renderAll() {
   syncDerivedStatuses();
-  renderDetailPanelState();
+  renderPanelState();
   renderMetrics();
   renderLoginList();
   renderTerminal();
@@ -174,11 +176,15 @@ function renderAll() {
   renderLogs();
 }
 
-function renderDetailPanelState() {
-  const isOpen = state.detailOpen !== false;
-  $(".login-layout").classList.toggle("is-detail-closed", !isOpen);
-  $("#loginDetailPanel").hidden = !isOpen;
-  $("#showLoginDetailBtn").hidden = isOpen;
+function renderPanelState() {
+  const detailOpen = state.detailOpen !== false;
+  const taskDrawerOpen = state.taskDrawerOpen !== false;
+  $(".login-layout").classList.toggle("is-detail-closed", !detailOpen);
+  $(".login-layout").classList.toggle("is-task-drawer-closed", !taskDrawerOpen);
+  $("#loginSideRail").hidden = !taskDrawerOpen;
+  $("#loginDetailPanel").hidden = !detailOpen || !taskDrawerOpen;
+  $("#showLoginDetailBtn").hidden = detailOpen || !taskDrawerOpen;
+  $("#showLoginTaskDrawerBtn").hidden = taskDrawerOpen;
 }
 
 function renderMetrics() {
@@ -273,6 +279,7 @@ function selectStation(station) {
   state.terminalStation = station;
   if (selected) state.activeEmployeeId = selected.id;
   state.detailOpen = true;
+  state.taskDrawerOpen = true;
   saveState();
   renderAll();
   showToast(`已切换到 ${station} 工位视角`);
@@ -480,6 +487,7 @@ function getGateDesc(label, status, item) {
 function selectEmployee(id) {
   state.activeEmployeeId = id;
   state.detailOpen = true;
+  state.taskDrawerOpen = true;
   state.terminalStation = getActiveEmployee().station;
   recordLog(id, "已打开工位身份确认详情");
   saveState();
@@ -740,14 +748,26 @@ function bindEvents() {
   $("#closeLoginDetailBtn").addEventListener("click", () => {
     state.detailOpen = false;
     saveState();
-    renderDetailPanelState();
+    renderPanelState();
     showToast("详情面板已关闭");
   });
   $("#showLoginDetailBtn").addEventListener("click", () => {
     state.detailOpen = true;
     saveState();
-    renderDetailPanelState();
+    renderPanelState();
     showToast("详情面板已打开");
+  });
+  $("#closeLoginTaskDrawerBtn").addEventListener("click", () => {
+    state.taskDrawerOpen = false;
+    saveState();
+    renderPanelState();
+    showToast("人员到岗任务抽屉已隐藏");
+  });
+  $("#showLoginTaskDrawerBtn").addEventListener("click", () => {
+    state.taskDrawerOpen = true;
+    saveState();
+    renderPanelState();
+    showToast("人员到岗任务抽屉已打开");
   });
   $("#recheckLoginBtn").addEventListener("click", () => {
     recordLog(getActiveEmployee().id, "已重新执行身份校验");
@@ -782,7 +802,7 @@ function bindEvents() {
     history = structuredClone(initialHistory);
     equipmentEvents = structuredClone(initialEquipmentEvents);
     logs = [];
-    state = { activeEmployeeId: "E1003", search: "", status: "all", line: "all", team: "all", detailOpen: true, terminalStation: "ASM-WS-03", authMethod: "模拟员工码", exitReason: "换班交接", handoverTo: "E1042", intervalType: "employee", intervalEmployeeId: "E1017", intervalEquipment: "SMT-WS-02", intervalStart: "08:00", intervalEnd: "12:00" };
+    state = { activeEmployeeId: "E1003", search: "", status: "all", line: "all", team: "all", detailOpen: true, taskDrawerOpen: true, terminalStation: "ASM-WS-03", authMethod: "模拟员工码", exitReason: "换班交接", handoverTo: "E1042", intervalType: "employee", intervalEmployeeId: "E1017", intervalEquipment: "SMT-WS-02", intervalStart: "08:00", intervalEnd: "12:00" };
     $("#loginSearch").value = "";
     $("#loginStatusFilter").value = "all";
     $("#loginLineFilter").value = "all";

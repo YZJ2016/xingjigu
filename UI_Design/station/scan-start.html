@@ -169,6 +169,7 @@
               <div class="section-title">
                 <h3>开工回执与拦截履历</h3>
                 <div class="section-actions">
+                  <button id="showScanTaskDrawerBtn" type="button" hidden>显示开工回执任务</button>
                   <button id="showScanDetailBtn" type="button" hidden>显示详情</button>
                   <button id="refreshScanBtn" type="button">刷新监控</button>
                 </div>
@@ -200,77 +201,78 @@
             </section>
           </div>
 
-          <aside class="scan-side-rail">
+          <aside id="scanSideRail" class="scan-side-rail">
             <section class="scan-lane">
               <div class="section-title">
                 <div>
                   <h3>开工回执任务</h3>
                   <p>按工位查看待扫码、生产中和拦截状态</p>
                 </div>
+                <button id="closeScanTaskDrawerBtn" class="icon-button" type="button" aria-label="隐藏开工回执任务抽屉">×</button>
               </div>
               <div id="scanTaskList" class="scan-task-list"></div>
             </section>
 
             <section id="scanDetailPanel" class="order-detail-panel scan-detail-panel">
-            <div class="detail-head">
-              <div>
-                <span id="detailStatus">待扫码</span>
-                <h2 id="detailDispatch">D-004</h2>
-                <p id="detailSubtitle">整机装配 · ASM-WS-03</p>
+              <div class="detail-head">
+                <div>
+                  <span id="detailStatus">待扫码</span>
+                  <h2 id="detailDispatch">D-004</h2>
+                  <p id="detailSubtitle">整机装配 · ASM-WS-03</p>
+                </div>
+                <button id="closeScanDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
               </div>
-              <button id="closeScanDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
-            </div>
 
-            <div id="detailGrid" class="detail-grid"></div>
+              <div id="detailGrid" class="detail-grid"></div>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>准入校验</h3>
-                <button id="recheckScanBtn" type="button">重新校验</button>
-              </div>
-              <div id="gateList" class="login-gate-list"></div>
-            </section>
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>准入校验</h3>
+                  <button id="recheckScanBtn" type="button">重新校验</button>
+                </div>
+                <div id="gateList" class="login-gate-list"></div>
+              </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>后台处置</h3>
-              </div>
-              <div class="reason-grid">
-                <label>
-                  拦截原因
-                  <select id="blockReasonSelect">
-                    <option value="条码不属于当前派工单">条码不属于当前派工单</option>
-                    <option value="人员未绑定工位">人员未绑定工位</option>
-                    <option value="物料批次未齐套">物料批次未齐套</option>
-                    <option value="设备未就绪">设备未就绪</option>
-                    <option value="首件计划缺失">首件计划缺失</option>
-                  </select>
-                </label>
-                <label>
-                  异常责任人
-                  <select id="ownerSelect">
-                    <option value="班组长">班组长</option>
-                    <option value="工艺员">工艺员</option>
-                    <option value="质量员">质量员</option>
-                    <option value="设备员">设备员</option>
-                    <option value="物料员">物料员</option>
-                  </select>
-                </label>
-              </div>
-              <div class="action-grid dispatch-actions">
-                <button id="detailStartBtn" type="button">同步开工回执</button>
-                <button id="firstPieceBtn" type="button">转首件确认</button>
-                <button id="detailBlockBtn" class="danger-action" type="button">拦截开工</button>
-                <button id="releaseBlockBtn" type="button">解除拦截</button>
-              </div>
-            </section>
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>后台处置</h3>
+                </div>
+                <div class="reason-grid">
+                  <label>
+                    拦截原因
+                    <select id="blockReasonSelect">
+                      <option value="条码不属于当前派工单">条码不属于当前派工单</option>
+                      <option value="人员未绑定工位">人员未绑定工位</option>
+                      <option value="物料批次未齐套">物料批次未齐套</option>
+                      <option value="设备未就绪">设备未就绪</option>
+                      <option value="首件计划缺失">首件计划缺失</option>
+                    </select>
+                  </label>
+                  <label>
+                    异常责任人
+                    <select id="ownerSelect">
+                      <option value="班组长">班组长</option>
+                      <option value="工艺员">工艺员</option>
+                      <option value="质量员">质量员</option>
+                      <option value="设备员">设备员</option>
+                      <option value="物料员">物料员</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="action-grid dispatch-actions">
+                  <button id="detailStartBtn" type="button">同步开工回执</button>
+                  <button id="firstPieceBtn" type="button">转首件确认</button>
+                  <button id="detailBlockBtn" class="danger-action" type="button">拦截开工</button>
+                  <button id="releaseBlockBtn" type="button">解除拦截</button>
+                </div>
+              </section>
 
-            <section class="detail-section">
-              <div class="section-title">
-                <h3>终端消息</h3>
-              </div>
-              <div id="scanLogList" class="integration-list"></div>
-            </section>
+              <section class="detail-section">
+                <div class="section-title">
+                  <h3>终端消息</h3>
+                </div>
+                <div id="scanLogList" class="integration-list"></div>
+              </section>
             </section>
           </aside>
         </section>

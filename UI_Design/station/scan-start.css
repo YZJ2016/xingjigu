@@ -21,6 +21,11 @@
   grid-template-columns: minmax(760px, 1fr) 380px;
 }
 
+.scan-terminal-layout.is-task-drawer-closed,
+.scan-terminal-layout.is-task-drawer-closed.is-detail-closed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .scan-left,
 .scan-focus {
   display: grid;
@@ -45,6 +50,10 @@
   display: grid;
   gap: 14px;
   min-width: 0;
+}
+
+.scan-side-rail[hidden] {
+  display: none !important;
 }
 
 .station-terminal-panel--primary {
@@ -75,6 +84,14 @@
   background: var(--surface);
   box-shadow: none;
   backdrop-filter: blur(24px) saturate(180%);
+}
+
+.scan-lane .section-title {
+  align-items: flex-start;
+}
+
+.scan-lane .icon-button {
+  flex: 0 0 auto;
 }
 
 .scan-task-list {
@@ -366,6 +383,8 @@
   .scan-layout,
   .scan-terminal-layout,
   .scan-terminal-layout.is-detail-closed,
+  .scan-terminal-layout.is-task-drawer-closed,
+  .scan-terminal-layout.is-task-drawer-closed.is-detail-closed,
   .scan-board,
   .scan-terminal {
     grid-template-columns: 1fr;

@@ -176,6 +176,7 @@
               <div class="section-title">
                 <h3>本班上下工位履历</h3>
                 <div class="section-actions">
+                  <button id="showLoginTaskDrawerBtn" type="button" hidden>显示人员到岗任务</button>
                   <button id="showLoginDetailBtn" type="button" hidden>显示详情</button>
                   <button id="refreshLoginBtn" type="button">刷新监控</button>
                 </div>
@@ -234,13 +235,14 @@
             </section>
           </div>
 
-          <aside class="login-side-rail">
+          <aside id="loginSideRail" class="login-side-rail">
             <section class="login-lane">
               <div class="section-title">
                 <div>
                   <h3>人员到岗与工位绑定</h3>
                   <p>选择人员后在左侧查看现场身份回执和工位覆盖</p>
                 </div>
+                <button id="closeLoginTaskDrawerBtn" class="icon-button" type="button" aria-label="隐藏人员到岗与工位绑定抽屉">×</button>
               </div>
               <div id="loginList" class="login-list"></div>
             </section>

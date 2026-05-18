@@ -229,6 +229,7 @@ function renderFrameMenu() {
       else if (moduleId === "station" && entry === "投料确认") window.location.href = "./feeding-confirmation.html";
       else if (moduleId === "station" && entry === "过程记录") window.location.href = "./process-record.html";
       else if (moduleId === "station" && entry === "工序报工") window.location.href = "./operation-report.html";
+      else if (moduleId === "station" && entry === "交接班") window.location.href = "./shift-handover.html";
       else showToast(`${entry} 页面待建设`);
     });
   });

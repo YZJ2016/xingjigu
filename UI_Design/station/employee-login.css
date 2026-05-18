@@ -21,6 +21,11 @@
   grid-template-columns: minmax(760px, 1fr) 380px;
 }
 
+.login-identity-layout.is-task-drawer-closed,
+.login-identity-layout.is-task-drawer-closed.is-detail-closed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .login-left,
 .login-focus {
   display: grid;
@@ -45,6 +50,10 @@
   display: grid;
   gap: 14px;
   min-width: 0;
+}
+
+.login-side-rail[hidden] {
+  display: none !important;
 }
 
 .login-side-rail .login-list {
@@ -76,6 +85,10 @@
   background: var(--surface);
   box-shadow: none;
   backdrop-filter: blur(24px) saturate(180%);
+}
+
+.login-lane .icon-button {
+  flex: 0 0 auto;
 }
 
 .login-list {
@@ -532,6 +545,8 @@
   .login-layout,
   .login-identity-layout,
   .login-identity-layout.is-detail-closed,
+  .login-identity-layout.is-task-drawer-closed,
+  .login-identity-layout.is-task-drawer-closed.is-detail-closed,
   .login-board,
   .terminal-card {
     grid-template-columns: 1fr;
