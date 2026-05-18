@@ -207,13 +207,29 @@
   min-width: 142px;
 }
 
+.terminal-actions--grouped {
+  min-width: 178px;
+  gap: 10px;
+}
+
+.terminal-actions--grouped > div {
+  display: grid;
+  gap: 7px;
+}
+
+.terminal-actions--grouped span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
 .terminal-actions button,
 .login-table button,
 .login-detail-panel .section-title button {
-  height: 32px;
+  min-height: 32px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 0 10px;
+  padding: 6px 10px;
   background: rgba(255, 255, 255, 0.76);
   color: var(--blue);
   font-size: 12px;
@@ -223,7 +239,7 @@
 
 .coverage-board {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -232,6 +248,14 @@
   border-radius: 14px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.58);
+  text-align: left;
+  cursor: pointer;
+}
+
+.coverage-card:hover,
+.coverage-card.is-active {
+  border-color: rgba(0, 166, 166, 0.42);
+  background: rgba(0, 166, 166, 0.08);
 }
 
 .coverage-card.is-ready {
@@ -260,6 +284,25 @@
   margin-top: 7px;
 }
 
+.station-card__meta,
+.station-card__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.station-card__meta span,
+.station-card__foot span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 7px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 820;
+}
+
 .login-table {
   min-width: 1220px;
   table-layout: fixed;
@@ -277,6 +320,101 @@
 
 .login-table tr.is-active {
   background: rgba(0, 166, 166, 0.08);
+}
+
+.interval-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.interval-toolbar {
+  display: grid;
+  grid-template-columns: 130px minmax(160px, 1fr) minmax(160px, 1fr) 120px 120px;
+  gap: 10px;
+}
+
+.interval-toolbar label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.interval-toolbar select,
+.interval-toolbar input {
+  width: 100%;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+}
+
+.interval-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.interval-summary article,
+.interval-result {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.interval-summary span,
+.interval-summary em,
+.interval-result span,
+.interval-result em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 820;
+}
+
+.interval-summary strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 18px;
+}
+
+.interval-summary em {
+  display: block;
+  margin-top: 5px;
+}
+
+.interval-result-list {
+  display: grid;
+  gap: 8px;
+}
+
+.interval-result {
+  display: grid;
+  grid-template-columns: 92px minmax(160px, 1fr) minmax(180px, 1.1fr) minmax(170px, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.interval-result strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.interval-result.is-risk {
+  border-color: rgba(255, 159, 10, 0.3);
+  background: rgba(255, 159, 10, 0.08);
+}
+
+.interval-result.is-blocked {
+  border-color: rgba(255, 59, 48, 0.3);
+  background: rgba(255, 59, 48, 0.08);
 }
 
 .login-detail-panel {
@@ -371,7 +509,10 @@
 @media (max-width: 980px) {
   .login-toolbar,
   .coverage-board,
-  .reason-grid {
+  .reason-grid,
+  .interval-toolbar,
+  .interval-summary,
+  .interval-result {
     grid-template-columns: 1fr;
   }
 }

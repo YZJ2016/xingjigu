@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 工艺指导</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../orders/production-orders.css" />
+    <link rel="stylesheet" href="../dispatch/dispatch-orders.css" />
+    <link rel="stylesheet" href="./employee-login.css" />
+    <link rel="stylesheet" href="./scan-start.css" />
+    <link rel="stylesheet" href="./work-instruction.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="instructionModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A / Line-B / Line-C</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main instruction-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">工位作业 / 工艺指导</div>
+            <h1>工位工艺指导终端</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="batchSignBtn" class="primary-action" type="button">模拟批量签收</button>
+            <button id="resetInstructionBtn" class="secondary-action" type="button">重置指导演示</button>
+            <a class="secondary-link" href="./scan-start.html">扫码开工</a>
+            <a class="secondary-link" href="../dispatch/sop-view.html">SOP 查看</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">艺</span>
+              <span>工位终端</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="dispatch-metrics" aria-label="工艺指导统计">
+          <article>
+            <span>已签收</span>
+            <strong id="metricSigned">0</strong>
+            <em>操作员已确认版本和工步</em>
+          </article>
+          <article>
+            <span>待签收</span>
+            <strong id="metricPending">0</strong>
+            <em>开工后需阅读确认</em>
+          </article>
+          <article>
+            <span>偏离呼叫</span>
+            <strong id="metricDeviation">0</strong>
+            <em>工艺员待处理事项</em>
+          </article>
+          <article>
+            <span>版本拦截</span>
+            <strong id="metricBlocked">0</strong>
+            <em>图纸、参数或 SOP 未匹配</em>
+          </article>
+        </section>
+
+        <section class="instruction-layout">
+          <div class="instruction-left">
+            <div class="toolbar instruction-toolbar">
+              <div class="search-box">
+                <label for="instructionSearch">搜索</label>
+                <input id="instructionSearch" type="search" placeholder="派工单、产品、工序、工位、SOP、操作员" />
+              </div>
+              <label>
+                状态
+                <select id="instructionStatusFilter">
+                  <option value="all">全部状态</option>
+                  <option value="待签收">待签收</option>
+                  <option value="已签收">已签收</option>
+                  <option value="偏离待确认">偏离待确认</option>
+                  <option value="版本拦截">版本拦截</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="instructionLineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+              <label>
+                工序
+                <select id="instructionOperationFilter">
+                  <option value="all">全部工序</option>
+                  <option value="DIP 插件">DIP 插件</option>
+                  <option value="整机装配">整机装配</option>
+                  <option value="功能测试">功能测试</option>
+                  <option value="包装入库">包装入库</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="instruction-board">
+              <div class="instruction-lane">
+                <div class="section-title">
+                  <h3>工位指导任务</h3>
+                </div>
+                <div id="instructionTaskList" class="instruction-task-list"></div>
+              </div>
+
+              <div class="instruction-focus">
+                <section class="instruction-terminal-panel">
+                  <div class="section-title">
+                    <h3>当前工位指导</h3>
+                    <span id="terminalTitle">ASM-WS-03</span>
+                  </div>
+                  <div class="instruction-terminal">
+                    <div class="terminal-status">
+                      <span>当前派工</span>
+                      <strong id="terminalDispatch">D-004</strong>
+                      <em id="terminalTask">整机装配 · ASM-WS-03</em>
+                    </div>
+                    <div class="terminal-status">
+                      <span>当前操作者</span>
+                      <strong id="terminalOperator">赵杰 · E1003</strong>
+                      <em id="terminalShift">A1 班 · 白班</em>
+                    </div>
+                    <div class="terminal-status">
+                      <span>当前工步</span>
+                      <strong id="terminalStep">步骤 01</strong>
+                      <em id="terminalStepHint">装配前确认</em>
+                    </div>
+                    <div class="instruction-terminal-actions" aria-label="模拟工位终端动作">
+                      <button id="signInstructionBtn" type="button">模拟工牌签收指导</button>
+                      <button id="completeStepBtn" type="button">模拟 HMI 完成本工步</button>
+                      <button id="deviationBtn" type="button">模拟工艺偏离呼叫</button>
+                      <button id="refreshVersionBtn" type="button">模拟终端刷新版本</button>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="step-panel">
+                  <div class="section-title">
+                    <h3>作业工步与防错点</h3>
+                    <span>按工位终端顺序展示，不替代真实设备控制</span>
+                  </div>
+                  <div id="stepList" class="step-list"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="instruction-support-grid">
+              <section class="dispatch-table-panel">
+                <div class="section-title">
+                  <h3>资料与参数</h3>
+                  <button id="showInstructionDetailBtn" type="button" hidden>显示详情</button>
+                </div>
+                <div id="assetCards" class="asset-cards"></div>
+              </section>
+
+              <section class="dispatch-table-panel">
+                <div class="section-title">
+                  <h3>质量与追溯入口</h3>
+                  <span>首件、过程检验、参数采集和报工继续承接</span>
+                </div>
+                <div id="traceCards" class="trace-cards"></div>
+              </section>
+            </section>
+
+            <section class="dispatch-table-panel">
+              <div class="section-title">
+                <h3>工艺指导履历</h3>
+                <button id="refreshInstructionBtn" type="button">刷新终端</button>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="instruction-table">
+                  <thead>
+                    <tr>
+                      <th>时间</th>
+                      <th>动作</th>
+                      <th>派工 / 工序</th>
+                      <th>工位 / 设备</th>
+                      <th>责任人</th>
+                      <th>版本</th>
+                      <th>结果</th>
+                    </tr>
+                  </thead>
+                  <tbody id="instructionHistoryBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside id="instructionDetailPanel" class="order-detail-panel instruction-detail-panel">
+            <div class="detail-head">
+              <div>
+                <span id="detailStatus">待签收</span>
+                <h2 id="detailDispatch">D-004</h2>
+                <p id="detailSubtitle">整机装配 · ASM-WS-03</p>
+              </div>
+              <button id="closeInstructionDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
+            </div>
+
+            <div id="detailGrid" class="detail-grid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>版本准入</h3>
+                <button id="recheckInstructionBtn" type="button">重新校验</button>
+              </div>
+              <div id="versionGateList" class="login-gate-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>现场异常处置</h3>
+              </div>
+              <div class="reason-grid">
+                <label>
+                  偏离原因
+                  <select id="deviationReasonSelect">
+                    <option value="物料外观与指导图不一致">物料外观与指导图不一致</option>
+                    <option value="电批扭矩程序未匹配">电批扭矩程序未匹配</option>
+                    <option value="图纸版本与派工单不一致">图纸版本与派工单不一致</option>
+                    <option value="检验频次需工艺员确认">检验频次需工艺员确认</option>
+                  </select>
+                </label>
+                <label>
+                  责任人
+                  <select id="ownerSelect">
+                    <option value="工艺员">工艺员</option>
+                    <option value="班组长">班组长</option>
+                    <option value="质量员">质量员</option>
+                    <option value="设备员">设备员</option>
+                  </select>
+                </label>
+              </div>
+              <div class="action-grid dispatch-actions">
+                <button id="detailSignBtn" type="button">确认签收</button>
+                <button id="detailStepBtn" type="button">完成当前工步</button>
+                <button id="detailDeviationBtn" class="danger-action" type="button">发起偏离呼叫</button>
+                <button id="releaseDeviationBtn" type="button">解除偏离</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>终端消息</h3>
+              </div>
+              <div id="instructionLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./work-instruction.js"></script>
+  </body>
+</html>

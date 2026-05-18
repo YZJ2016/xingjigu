@@ -43,7 +43,7 @@
           </div>
           <div class="topbar-actions">
             <button id="batchLoginBtn" class="primary-action" type="button">推荐人员一键绑定</button>
-            <button id="resetLoginBtn" class="secondary-action" type="button">重置登录演示</button>
+            <button id="resetLoginBtn" class="secondary-action" type="button">重置身份演示</button>
             <a class="secondary-link" href="../dispatch/start-check.html">开工检查</a>
             <a class="secondary-link" href="../index.html">返回首页</a>
             <div class="user-chip">
@@ -116,7 +116,7 @@
             <section class="login-board">
               <div class="login-lane">
                 <div class="section-title">
-                  <h3>待到岗人员</h3>
+                  <h3>人员到岗与工位绑定</h3>
                 </div>
                 <div id="loginList" class="login-list"></div>
               </div>
@@ -138,28 +138,39 @@
                       <strong id="terminalBindingStatus">等待人员确认</strong>
                       <em>绑定后允许开工、投料、过程记录和报工</em>
                     </div>
-                    <div class="scan-box" aria-label="扫码输入">
-                      <span>身份介质</span>
+                    <div class="scan-box" aria-label="模拟扫码输入">
+                      <span>模拟身份介质</span>
                       <input id="scanInput" type="text" placeholder="模拟扫描员工码，例如 E1003" />
-                      <div class="auth-methods" aria-label="现场身份确认方式">
-                        <button type="button" data-auth-method="员工码">员工码</button>
-                        <button type="button" data-auth-method="工牌刷卡">工牌刷卡</button>
-                        <button type="button" data-auth-method="NFC">NFC</button>
-                        <button type="button" data-auth-method="设备账号">设备账号</button>
+                      <div class="auth-methods" aria-label="模拟现场身份确认方式">
+                        <button type="button" data-auth-method="模拟员工码">模拟员工码</button>
+                        <button type="button" data-auth-method="模拟工牌刷卡">模拟工牌刷卡</button>
+                        <button type="button" data-auth-method="模拟NFC">模拟NFC</button>
+                        <button type="button" data-auth-method="模拟设备账号">模拟设备账号</button>
                       </div>
                     </div>
-                    <div class="terminal-actions">
-                      <button id="scanLoginBtn" type="button">确认绑定</button>
-                      <button id="switchStationBtn" type="button">切换工位</button>
-                      <button id="logoutActiveBtn" type="button">当前人员退出</button>
+                    <div class="terminal-actions terminal-actions--grouped">
+                      <div>
+                        <span>现场动作</span>
+                        <button id="scanLoginBtn" type="button">模拟确认身份 / 绑定工位</button>
+                        <button id="logoutActiveBtn" type="button">退出 / 解除绑定</button>
+                      </div>
+                      <div>
+                        <span>工位视角</span>
+                        <button id="switchStationBtn" type="button">切换查看工位</button>
+                      </div>
+                      <div>
+                        <span>异常补偿</span>
+                        <button id="faultExitBtn" type="button">模拟设备故障代退出</button>
+                        <button id="makeupRecordBtn" type="button">补录上下工位</button>
+                      </div>
                     </div>
                   </div>
                 </section>
 
                 <section class="coverage-panel">
                   <div class="section-title">
-                    <h3>人员与工位覆盖</h3>
-                    <span>身份确认后进入开工准入</span>
+                    <h3>工位绑定视角</h3>
+                    <span>按工位反查人员、履历和准入状态</span>
                   </div>
                   <div id="coverageBoard" class="coverage-board"></div>
                 </section>
@@ -192,12 +203,46 @@
                 </table>
               </div>
             </section>
+
+            <section class="dispatch-table-panel interval-panel">
+              <div class="section-title">
+                <h3>时间区间追溯</h3>
+                <span>按人员或设备查看上下工位、停机和补偿记录</span>
+              </div>
+              <div class="interval-toolbar">
+                <label>
+                  查询对象
+                  <select id="intervalTypeSelect">
+                    <option value="employee">人员</option>
+                    <option value="equipment">设备 / 工位</option>
+                  </select>
+                </label>
+                <label>
+                  人员
+                  <select id="intervalEmployeeSelect"></select>
+                </label>
+                <label>
+                  设备 / 工位
+                  <select id="intervalEquipmentSelect"></select>
+                </label>
+                <label>
+                  开始时间
+                  <input id="intervalStartInput" type="time" value="08:00" />
+                </label>
+                <label>
+                  结束时间
+                  <input id="intervalEndInput" type="time" value="12:00" />
+                </label>
+              </div>
+              <div id="intervalSummary" class="interval-summary"></div>
+              <div id="intervalResultList" class="interval-result-list"></div>
+            </section>
           </div>
 
           <aside id="loginDetailPanel" class="order-detail-panel login-detail-panel">
             <div class="detail-head">
               <div>
-                <span id="detailStatus">待登录</span>
+                <span id="detailStatus">待确认</span>
                 <h2 id="detailName">赵杰</h2>
                 <p id="detailTitle">E1003 · ASM-WS-03</p>
               </div>

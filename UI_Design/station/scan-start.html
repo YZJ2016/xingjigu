@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 扫码开工</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../orders/production-orders.css" />
+    <link rel="stylesheet" href="../dispatch/dispatch-orders.css" />
+    <link rel="stylesheet" href="./employee-login.css" />
+    <link rel="stylesheet" href="./scan-start.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单">
+        <div class="brand">
+          <div class="brand-mark">X</div>
+          <div>
+            <div class="brand-name">星技谷 MES</div>
+            <div class="brand-subtitle">生产运营中枢</div>
+          </div>
+        </div>
+
+        <div class="menu-heading">业务导航</div>
+        <nav id="scanModuleMenu" class="module-menu"></nav>
+
+        <div class="sidebar-footer">
+          <div class="factory-card">
+            <div class="factory-card__label">当前工厂</div>
+            <div class="factory-card__name">华东一厂 · 电子装配车间</div>
+            <div class="factory-card__meta">
+              <span>Line-A / Line-B / Line-C</span>
+              <span>白班 08:00-20:00</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main scan-main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">工位作业 / 扫码开工</div>
+            <h1>扫码开工终端</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="batchReadyBtn" class="primary-action" type="button">模拟放行可开工</button>
+            <button id="resetScanBtn" class="secondary-action" type="button">重置扫码演示</button>
+            <a class="secondary-link" href="./employee-login.html">员工登录</a>
+            <a class="secondary-link" href="../dispatch/start-check.html">开工检查</a>
+            <a class="secondary-link" href="../index.html">返回首页</a>
+            <div class="user-chip">
+              <span class="avatar">扫</span>
+              <span>工位终端</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="dispatch-metrics" aria-label="扫码开工统计">
+          <article>
+            <span>已开工</span>
+            <strong id="metricStarted">0</strong>
+            <em>本班已建立生产履历</em>
+          </article>
+          <article>
+            <span>待扫码</span>
+            <strong id="metricWaiting">0</strong>
+            <em>人员到岗且等待开工</em>
+          </article>
+          <article>
+            <span>已拦截</span>
+            <strong id="metricBlocked">0</strong>
+            <em>准入、条码或资源异常</em>
+          </article>
+          <article>
+            <span>首件待确认</span>
+            <strong id="metricFirstPiece">0</strong>
+            <em>开工后需质量确认</em>
+          </article>
+        </section>
+
+        <section class="scan-layout">
+          <div class="scan-left">
+            <div class="toolbar scan-toolbar">
+              <div class="search-box">
+                <label for="scanSearch">搜索</label>
+                <input id="scanSearch" type="search" placeholder="派工单、工单、序列号、批次、工位、操作员" />
+              </div>
+              <label>
+                状态
+                <select id="scanStatusFilter">
+                  <option value="all">全部状态</option>
+                  <option value="待扫码">待扫码</option>
+                  <option value="生产中">生产中</option>
+                  <option value="已拦截">已拦截</option>
+                  <option value="首件待确认">首件待确认</option>
+                </select>
+              </label>
+              <label>
+                产线
+                <select id="scanLineFilter">
+                  <option value="all">全部产线</option>
+                  <option value="Line-A">Line-A</option>
+                  <option value="Line-B">Line-B</option>
+                  <option value="Line-C">Line-C</option>
+                </select>
+              </label>
+              <label>
+                工序
+                <select id="scanOperationFilter">
+                  <option value="all">全部工序</option>
+                  <option value="DIP 插件">DIP 插件</option>
+                  <option value="整机装配">整机装配</option>
+                  <option value="功能测试">功能测试</option>
+                  <option value="包装入库">包装入库</option>
+                </select>
+              </label>
+            </div>
+
+            <section class="scan-board">
+              <div class="scan-lane">
+                <div class="section-title">
+                  <h3>待扫码开工任务</h3>
+                </div>
+                <div id="scanTaskList" class="scan-task-list"></div>
+              </div>
+
+              <div class="scan-focus">
+                <section class="station-terminal-panel">
+                  <div class="section-title">
+                    <h3>工位扫码终端</h3>
+                    <span id="terminalTitle">ASM-WS-03</span>
+                  </div>
+                  <div class="scan-terminal">
+                    <div class="terminal-status">
+                      <span>当前工位</span>
+                      <strong id="terminalStation">ASM-WS-03</strong>
+                      <em id="terminalTask">D-004 · 整机装配</em>
+                    </div>
+                    <div class="terminal-status">
+                      <span>当前操作员</span>
+                      <strong id="terminalOperator">赵杰 · E1003</strong>
+                      <em id="terminalShift">A1 班 · 白班</em>
+                    </div>
+                    <div class="scan-input-panel" aria-label="模拟扫码开工输入">
+                      <span>模拟扫码枪输入</span>
+                      <input id="scanCodeInput" type="text" placeholder="模拟扫描派工单/批次/产品码，例如 D-004" />
+                      <div class="scan-mode-tabs" aria-label="模拟扫码对象">
+                        <button type="button" data-scan-mode="模拟派工单码">模拟派工单码</button>
+                        <button type="button" data-scan-mode="模拟工单码">模拟工单码</button>
+                        <button type="button" data-scan-mode="模拟产品序列号">模拟产品序列号</button>
+                        <button type="button" data-scan-mode="模拟批次条码">模拟批次条码</button>
+                      </div>
+                    </div>
+                    <div class="scan-terminal-actions">
+                      <button id="scanStartBtn" type="button">模拟扫码开工</button>
+                      <button id="simulateDeviceBtn" type="button">模拟设备启动信号</button>
+                      <button id="simulateBlockBtn" type="button">模拟条码不匹配拦截</button>
+                      <button id="switchTaskBtn" type="button">切换工位任务</button>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="gate-flow-panel">
+                  <div class="section-title">
+                    <h3>开工准入链路</h3>
+                    <span>身份 · 派工 · 物料 · 设备 · 质量</span>
+                  </div>
+                  <div id="gateFlow" class="gate-flow"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="dispatch-table-panel">
+              <div class="section-title">
+                <h3>扫码开工履历</h3>
+                <div class="section-actions">
+                  <button id="showScanDetailBtn" type="button" hidden>显示详情</button>
+                  <button id="refreshScanBtn" type="button">刷新终端</button>
+                </div>
+              </div>
+              <div class="operation-table-wrap">
+                <table class="scan-table">
+                  <thead>
+                    <tr>
+                      <th>时间</th>
+                      <th>动作</th>
+                      <th>扫码对象</th>
+                      <th>工位 / 设备</th>
+                      <th>派工单 / 工序</th>
+                      <th>责任人</th>
+                      <th>结果</th>
+                    </tr>
+                  </thead>
+                  <tbody id="scanHistoryBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="dispatch-table-panel trace-panel">
+              <div class="section-title">
+                <h3>开工后追溯占位</h3>
+                <span>为投料确认、过程记录、首件检验和工序报工保留关联入口</span>
+              </div>
+              <div id="traceCards" class="trace-cards"></div>
+            </section>
+          </div>
+
+          <aside id="scanDetailPanel" class="order-detail-panel scan-detail-panel">
+            <div class="detail-head">
+              <div>
+                <span id="detailStatus">待扫码</span>
+                <h2 id="detailDispatch">D-004</h2>
+                <p id="detailSubtitle">整机装配 · ASM-WS-03</p>
+              </div>
+              <button id="closeScanDetailBtn" class="icon-button" type="button" aria-label="关闭详情面板">×</button>
+            </div>
+
+            <div id="detailGrid" class="detail-grid"></div>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>准入校验</h3>
+                <button id="recheckScanBtn" type="button">重新校验</button>
+              </div>
+              <div id="gateList" class="login-gate-list"></div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>现场动作</h3>
+              </div>
+              <div class="reason-grid">
+                <label>
+                  拦截原因
+                  <select id="blockReasonSelect">
+                    <option value="条码不属于当前派工单">条码不属于当前派工单</option>
+                    <option value="人员未绑定工位">人员未绑定工位</option>
+                    <option value="物料批次未齐套">物料批次未齐套</option>
+                    <option value="设备未就绪">设备未就绪</option>
+                    <option value="首件计划缺失">首件计划缺失</option>
+                  </select>
+                </label>
+                <label>
+                  异常责任人
+                  <select id="ownerSelect">
+                    <option value="班组长">班组长</option>
+                    <option value="工艺员">工艺员</option>
+                    <option value="质量员">质量员</option>
+                    <option value="设备员">设备员</option>
+                    <option value="物料员">物料员</option>
+                  </select>
+                </label>
+              </div>
+              <div class="action-grid dispatch-actions">
+                <button id="detailStartBtn" type="button">确认开工</button>
+                <button id="firstPieceBtn" type="button">转首件确认</button>
+                <button id="detailBlockBtn" class="danger-action" type="button">拦截开工</button>
+                <button id="releaseBlockBtn" type="button">解除拦截</button>
+              </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>终端消息</h3>
+              </div>
+              <div id="scanLogList" class="integration-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="./scan-start.js"></script>
+  </body>
+</html>

@@ -94,6 +94,8 @@ function renderFrameMenu() {
       else if (moduleId === "dispatch" && entry === "SOP 查看") window.location.href = "../dispatch/sop-view.html";
       else if (moduleId === "dispatch" && entry === "开工检查") window.location.href = "../dispatch/start-check.html";
       else if (moduleId === "station" && entry === "员工登录") window.location.href = "../station/employee-login.html";
+      else if (moduleId === "station" && entry === "扫码开工") window.location.href = "../station/scan-start.html";
+      else if (moduleId === "station" && entry === "工艺指导") window.location.href = "../station/work-instruction.html";
       else showToast(`${entry} 页面待建设`);
     });
   });

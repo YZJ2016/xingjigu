@@ -252,6 +252,14 @@ function applyMenuEntry(moduleId, entry) {
     window.location.href = "./station/employee-login.html";
     return;
   }
+  if (moduleId === "station" && entry === "扫码开工") {
+    window.location.href = "./station/scan-start.html";
+    return;
+  }
+  if (moduleId === "station" && entry === "工艺指导") {
+    window.location.href = "./station/work-instruction.html";
+    return;
+  }
   const actions = {
     生产总览: () => {
       state.line = "全部产线";

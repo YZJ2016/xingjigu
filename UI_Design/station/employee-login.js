@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xingjigu_mes_employee_login_v2";
+const STORAGE_KEY = "xingjigu_mes_employee_login_v3";
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -30,12 +30,24 @@ const initialEmployees = [
 const initialHistory = [
   { id: "H-001", employeeId: "E1011", employeeName: "钱佳", action: "绑定工位", station: "DIP-WS-01", line: "Line-A", team: "A1 班", dispatchNo: "D-002", operation: "DIP 插件", orderId: "MO-202606-0001", time: "08:02", reason: "班前到岗", handoverTo: "无", result: "允许开工" },
   { id: "H-002", employeeId: "E1017", employeeName: "李敏", action: "绑定工位", station: "SMT-WS-02", line: "Line-B", team: "B1 班", dispatchNo: "D-021", operation: "SMT 贴片", orderId: "MO-202606-0002", time: "07:58", reason: "班前到岗", handoverTo: "无", result: "允许开工" },
+  { id: "H-005", employeeId: "E1017", employeeName: "李敏", action: "首件等待", station: "SMT-WS-02", line: "Line-B", team: "B1 班", dispatchNo: "D-021", operation: "SMT 贴片", orderId: "MO-202606-0002", time: "09:20", reason: "AOI 首件待判", handoverTo: "质量员", result: "暂停批量生产" },
+  { id: "H-006", employeeId: "E1011", employeeName: "钱佳", action: "退出工位", station: "DIP-WS-01", line: "Line-A", team: "A1 班", dispatchNo: "D-002", operation: "DIP 插件", orderId: "MO-202606-0001", time: "11:35", reason: "任务完成", handoverTo: "无", result: "工序待报工确认" },
   { id: "H-003", employeeId: "E1042", employeeName: "陈伟", action: "退出工位", station: "ASM-WS-03", line: "Line-A", team: "A1 班", dispatchNo: "D-004", operation: "整机装配", orderId: "MO-202606-0001", time: "昨日 19:44", reason: "换班交接", handoverTo: "赵杰", result: "待接班确认" },
   { id: "H-004", employeeId: "E1024", employeeName: "周强", action: "拦截绑定", station: "AGING-02", line: "Line-C", team: "C1 班", dispatchNo: "D-031", operation: "老化测试", orderId: "MO-202606-0003", time: "08:11", reason: "参数资质过期", handoverTo: "班组长", result: "禁止开工" },
 ];
 
+const initialEquipmentEvents = [
+  { id: "EQ-001", station: "ASM-WS-03", equipment: "电批 EC-ASM-03", line: "Line-A", time: "08:00", status: "待机", event: "班前点检通过", owner: "赵杰", result: "允许绑定人员" },
+  { id: "EQ-002", station: "ASM-WS-03", equipment: "电批 EC-ASM-03", line: "Line-A", time: "10:18", status: "运行", event: "扭矩程序 P-ASM-16 已加载", owner: "赵杰", result: "参数可追溯" },
+  { id: "EQ-003", station: "SMT-WS-02", equipment: "贴片机 SMT-02", line: "Line-B", time: "08:05", status: "运行", event: "贴片任务 D-021 开始", owner: "李敏", result: "产出计数开启" },
+  { id: "EQ-004", station: "SMT-WS-02", equipment: "AOI-02", line: "Line-B", time: "09:20", status: "等待", event: "首件 AOI 待判", owner: "质量员", result: "批量生产暂停" },
+  { id: "EQ-005", station: "AGING-02", equipment: "老化柜 AGING-02", line: "Line-C", time: "08:11", status: "拦截", event: "老化参数资质过期", owner: "周强", result: "禁止开工" },
+  { id: "EQ-006", station: "DIP-WS-01", equipment: "防错夹具 JIG-DIP-04", line: "Line-A", time: "11:35", status: "待机", event: "DIP 任务完成，等待报工", owner: "钱佳", result: "工位可释放" },
+];
+
 let employees = structuredClone(initialEmployees);
 let history = structuredClone(initialHistory);
+let equipmentEvents = structuredClone(initialEquipmentEvents);
 let logs = [];
 let state = {
   activeEmployeeId: "E1003",
@@ -45,9 +57,14 @@ let state = {
   team: "all",
   detailOpen: true,
   terminalStation: "ASM-WS-03",
-  authMethod: "员工码",
+  authMethod: "模拟员工码",
   exitReason: "换班交接",
   handoverTo: "E1042",
+  intervalType: "employee",
+  intervalEmployeeId: "E1017",
+  intervalEquipment: "SMT-WS-02",
+  intervalStart: "08:00",
+  intervalEnd: "12:00",
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -98,6 +115,8 @@ function renderFrameMenu() {
       else if (moduleId === "dispatch" && entry === "SOP 查看") window.location.href = "../dispatch/sop-view.html";
       else if (moduleId === "dispatch" && entry === "开工检查") window.location.href = "../dispatch/start-check.html";
       else if (moduleId === "station" && entry === "员工登录") window.location.href = "./employee-login.html";
+      else if (moduleId === "station" && entry === "扫码开工") window.location.href = "./scan-start.html";
+      else if (moduleId === "station" && entry === "工艺指导") window.location.href = "./work-instruction.html";
       else showToast(`${entry} 页面待建设`);
     });
   });
@@ -109,6 +128,7 @@ function loadState() {
     if (!saved) return;
     employees = saved.employees || employees;
     history = saved.history || history;
+    equipmentEvents = saved.equipmentEvents || equipmentEvents;
     logs = saved.logs || logs;
     state = { ...state, ...(saved.loginState || {}) };
   } catch (error) {
@@ -117,7 +137,7 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ employees, history, logs, loginState: state }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ employees, history, equipmentEvents, logs, loginState: state }));
 }
 
 function getActiveEmployee() {
@@ -145,6 +165,8 @@ function renderAll() {
   renderCoverage();
   renderHandoverOptions();
   renderLoginTable();
+  renderIntervalControls();
+  renderIntervalTrace();
   renderDetail();
   renderLogs();
 }
@@ -185,7 +207,7 @@ function renderLoginList() {
         <span>${getGateText(item)}</span>
       </div>
     </button>
-  `).join("") : `<div class="integration-item"><span>暂无</span><strong>当前筛选条件下没有员工登录任务</strong><em>请调整筛选条件</em></div>`;
+  `).join("") : `<div class="integration-item"><span>暂无</span><strong>当前筛选条件下没有待确认人员</strong><em>请调整筛选条件</em></div>`;
 
   $("#loginList").querySelectorAll("[data-id]").forEach((card) => {
     card.addEventListener("click", () => selectEmployee(card.dataset.id));
@@ -211,19 +233,46 @@ function renderCoverage() {
   $("#coverageBoard").innerHTML = stations.map((station) => {
     const scoped = employees.filter((item) => item.station === station);
     const online = scoped.filter((item) => item.status === "已登录");
+    const pending = scoped.filter((item) => item.status === "待登录" || item.status === "离线");
     const risk = scoped.find((item) => item.status === "资质异常");
+    const latest = history.find((item) => item.station === station);
+    const primary = online[0] || risk || pending[0] || scoped[0];
     const cls = risk ? "is-blocked" : online.length ? "is-ready" : "is-risk";
     return `
-      <article class="coverage-card ${cls}">
+      <button class="coverage-card station-card ${cls}${station === state.terminalStation ? " is-active" : ""}" type="button" data-station="${station}">
         <div class="coverage-card__top">
           <span>${station}</span>
-          <span>${online.length}/${scoped.length}</span>
+          <span>${online.length}/${scoped.length} 已绑定</span>
         </div>
-        <strong>${online.length ? online.map((item) => item.name).join("、") : "等待人员登录"}</strong>
-        <em>${risk ? risk.qualification : scoped[0].operation}</em>
-      </article>
+        <strong>${online.length ? online.map((item) => item.name).join("、") : "等待人员确认"}</strong>
+        <div class="station-card__meta">
+          <span>${primary.line}</span>
+          <span>${primary.dispatchNo}</span>
+          <span>${primary.operation}</span>
+        </div>
+        <div class="station-card__foot">
+          <span>待确认 ${pending.length}</span>
+          <span>${risk ? risk.qualification : "准入待开工"}</span>
+        </div>
+        <em>${latest ? `${latest.action} · ${latest.reason} · ${latest.time}` : "暂无上下工位履历"}</em>
+      </button>
     `;
   }).join("");
+
+  $("#coverageBoard").querySelectorAll("[data-station]").forEach((card) => {
+    card.addEventListener("click", () => selectStation(card.dataset.station));
+  });
+}
+
+function selectStation(station) {
+  const scoped = employees.filter((item) => item.station === station);
+  const selected = scoped.find((item) => item.status === "已登录") || scoped.find((item) => item.status === "资质异常") || scoped[0];
+  state.terminalStation = station;
+  if (selected) state.activeEmployeeId = selected.id;
+  state.detailOpen = true;
+  saveState();
+  renderAll();
+  showToast(`已切换到 ${station} 工位视角`);
 }
 
 function renderLoginTable() {
@@ -259,6 +308,74 @@ function renderHandoverOptions() {
   $("#handoverToSelect").innerHTML = [`<option value="">无交接对象</option>`, ...(options.length ? options : fallback)].join("");
   $("#exitReasonSelect").value = state.exitReason || "换班交接";
   $("#handoverToSelect").value = state.handoverTo || "";
+}
+
+function renderIntervalControls() {
+  $("#intervalTypeSelect").value = state.intervalType || "employee";
+  $("#intervalEmployeeSelect").innerHTML = employees.map((item) => `<option value="${item.id}">${item.name} · ${item.id}</option>`).join("");
+  $("#intervalEquipmentSelect").innerHTML = [...new Set(equipmentEvents.map((item) => item.station))]
+    .map((station) => {
+      const event = equipmentEvents.find((item) => item.station === station);
+      return `<option value="${station}">${station} · ${event.equipment}</option>`;
+    })
+    .join("");
+  $("#intervalEmployeeSelect").value = state.intervalEmployeeId || getActiveEmployee().id;
+  $("#intervalEquipmentSelect").value = state.intervalEquipment || state.terminalStation;
+  $("#intervalStartInput").value = state.intervalStart || "08:00";
+  $("#intervalEndInput").value = state.intervalEnd || "12:00";
+}
+
+function renderIntervalTrace() {
+  const start = timeToMinutes(state.intervalStart || "08:00");
+  const end = timeToMinutes(state.intervalEnd || "12:00");
+  const inRange = (item) => {
+    const value = timeToMinutes(item.time);
+    return value >= start && value <= end;
+  };
+  const isEmployee = state.intervalType !== "equipment";
+  const records = isEmployee
+    ? history.filter((item) => item.employeeId === state.intervalEmployeeId && inRange(item))
+    : equipmentEvents.filter((item) => item.station === state.intervalEquipment && inRange(item));
+  const riskCount = records.filter((item) => /异常|故障|拦截|暂停|等待|过期/.test(`${item.action || ""}${item.status || ""}${item.reason || ""}${item.result || ""}`)).length;
+  const subject = isEmployee
+    ? employees.find((item) => item.id === state.intervalEmployeeId)
+    : equipmentEvents.find((item) => item.station === state.intervalEquipment);
+
+  $("#intervalSummary").innerHTML = [
+    ["查询对象", isEmployee ? `${subject?.name || ""} · ${state.intervalEmployeeId}` : `${state.intervalEquipment} · ${subject?.equipment || ""}`, isEmployee ? "人员上下工位履历" : "设备/工位状态履历"],
+    ["时间区间", `${state.intervalStart} - ${state.intervalEnd}`, "本班演示时间"],
+    ["记录数", records.length, "区间内命中记录"],
+    ["异常/等待", riskCount, "需班组长关注"],
+  ].map(([label, value, hint]) => `
+    <article>
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <em>${hint}</em>
+    </article>
+  `).join("");
+
+  $("#intervalResultList").innerHTML = records.length ? records.map((item) => {
+    const blocked = /故障|拦截|过期|禁止/.test(`${item.action || ""}${item.status || ""}${item.reason || ""}${item.result || ""}`);
+    const risk = /等待|暂停|异常/.test(`${item.action || ""}${item.status || ""}${item.reason || ""}${item.result || ""}`);
+    if (isEmployee) {
+      return `
+        <article class="interval-result ${blocked ? "is-blocked" : risk ? "is-risk" : ""}">
+          <span>${item.time}</span>
+          <strong>${item.action}</strong>
+          <span>${item.station} · ${item.dispatchNo} · ${item.operation}</span>
+          <em>${item.reason} · ${item.result}</em>
+        </article>
+      `;
+    }
+    return `
+      <article class="interval-result ${blocked ? "is-blocked" : risk ? "is-risk" : ""}">
+        <span>${item.time}</span>
+        <strong>${item.status} · ${item.equipment}</strong>
+        <span>${item.station} · ${item.line} · ${item.owner}</span>
+        <em>${item.event} · ${item.result}</em>
+      </article>
+    `;
+  }).join("") : `<div class="integration-item"><span>暂无</span><strong>当前时间区间没有记录</strong><em>请调整人员、设备或时间范围</em></div>`;
 }
 
 function renderDetail() {
@@ -394,6 +511,11 @@ function loginEmployee(employee, message) {
     handoverTo: "无",
     result: "身份通过，允许进入开工准入",
   });
+  appendEquipmentEvent(employee, {
+    status: "运行",
+    event: `${employee.name} 已绑定工位`,
+    result: "人员身份与工位上下文已建立",
+  });
   saveState();
   renderAll();
 }
@@ -432,6 +554,23 @@ function appendHistory(employee, patch) {
   ].slice(0, 80);
 }
 
+function appendEquipmentEvent(employee, patch) {
+  equipmentEvents = [
+    {
+      id: `EQ-${Date.now()}`,
+      station: employee.station,
+      equipment: patch.equipment || `${employee.station} 终端`,
+      line: employee.line,
+      time: patch.time || nowTime(),
+      status: patch.status || "运行",
+      event: patch.event,
+      owner: patch.owner || employee.name,
+      result: patch.result || "已记录",
+    },
+    ...equipmentEvents,
+  ].slice(0, 80);
+}
+
 function getHandoverName() {
   const id = state.handoverTo || "";
   if (!id) return "无";
@@ -446,11 +585,22 @@ function exitEmployee(employee, reason, message) {
     handoverTo: reason === "任务完成" || reason === "临时离岗" ? "无" : getHandoverName(),
     result: reason === "任务完成" ? "工序待报工确认" : reason === "换班交接" ? "等待接班确认" : "已解除工位绑定",
   });
+  appendEquipmentEvent(employee, {
+    status: reason === "设备停机" ? "停机" : "待机",
+    event: `${employee.name} 因${reason}退出工位`,
+    result: reason === "设备停机" ? "设备异常待处理" : "工位人员绑定已解除",
+  });
   updateEmployee(employee.id, { status: "离线", lastSeen: nowTime(), loginTime: "" }, message);
 }
 
 function nowTime() {
   return new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+function timeToMinutes(value) {
+  const match = String(value || "").match(/(\d{1,2}):(\d{2})/);
+  if (!match) return -1;
+  return Number(match[1]) * 60 + Number(match[2]);
 }
 
 function showToast(message) {
@@ -491,6 +641,31 @@ function bindEvents() {
   $("#handoverToSelect").addEventListener("change", (event) => {
     state.handoverTo = event.target.value;
     saveState();
+  });
+  $("#intervalTypeSelect").addEventListener("change", (event) => {
+    state.intervalType = event.target.value;
+    saveState();
+    renderIntervalTrace();
+  });
+  $("#intervalEmployeeSelect").addEventListener("change", (event) => {
+    state.intervalEmployeeId = event.target.value;
+    saveState();
+    renderIntervalTrace();
+  });
+  $("#intervalEquipmentSelect").addEventListener("change", (event) => {
+    state.intervalEquipment = event.target.value;
+    saveState();
+    renderIntervalTrace();
+  });
+  $("#intervalStartInput").addEventListener("change", (event) => {
+    state.intervalStart = event.target.value;
+    saveState();
+    renderIntervalTrace();
+  });
+  $("#intervalEndInput").addEventListener("change", (event) => {
+    state.intervalEnd = event.target.value;
+    saveState();
+    renderIntervalTrace();
   });
   $("#batchLoginBtn").addEventListener("click", () => {
     const targets = employees.filter((item) => item.status !== "已登录" && Object.values(item.gates).every((gate) => gate === "通过"));
@@ -538,6 +713,21 @@ function bindEvents() {
     showToast(`已切换到 ${state.terminalStation}`);
   });
   $("#logoutActiveBtn").addEventListener("click", () => exitEmployee(getActiveEmployee(), state.exitReason, `当前人员已因${state.exitReason}退出工位`));
+  $("#faultExitBtn").addEventListener("click", () => {
+    const active = getActiveEmployee();
+    state.exitReason = "设备停机";
+    appendHistory(active, { action: "设备故障代退出", reason: "设备停机", handoverTo: "班组长", result: "已代退出，关联设备异常待处理" });
+    appendEquipmentEvent(active, { status: "停机", event: "模拟设备故障触发代退出", owner: "班组长", result: "人员已代退出，设备异常待处理" });
+    updateEmployee(active.id, { status: "离线", lastSeen: nowTime(), loginTime: "" }, "已执行设备故障代退出");
+  });
+  $("#makeupRecordBtn").addEventListener("click", () => {
+    const active = getActiveEmployee();
+    appendHistory(active, { action: "补录上下工位", reason: state.exitReason, handoverTo: getHandoverName(), result: "补录记录已留痕，待班组长复核" });
+    recordLog(active.id, "已补录上下工位记录");
+    saveState();
+    renderAll();
+    showToast("上下工位补录已记录");
+  });
   $("#refreshLoginBtn").addEventListener("click", () => {
     recordLog(getActiveEmployee().id, "已刷新工位终端状态");
     saveState();
@@ -587,8 +777,9 @@ function bindEvents() {
     localStorage.removeItem(STORAGE_KEY);
     employees = structuredClone(initialEmployees);
     history = structuredClone(initialHistory);
+    equipmentEvents = structuredClone(initialEquipmentEvents);
     logs = [];
-    state = { activeEmployeeId: "E1003", search: "", status: "all", line: "all", team: "all", detailOpen: true, terminalStation: "ASM-WS-03", authMethod: "员工码", exitReason: "换班交接", handoverTo: "E1042" };
+    state = { activeEmployeeId: "E1003", search: "", status: "all", line: "all", team: "all", detailOpen: true, terminalStation: "ASM-WS-03", authMethod: "模拟员工码", exitReason: "换班交接", handoverTo: "E1042", intervalType: "employee", intervalEmployeeId: "E1017", intervalEquipment: "SMT-WS-02", intervalStart: "08:00", intervalEnd: "12:00" };
     $("#loginSearch").value = "";
     $("#loginStatusFilter").value = "all";
     $("#loginLineFilter").value = "all";

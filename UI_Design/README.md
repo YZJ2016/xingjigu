@@ -23,6 +23,8 @@
 - 派工与生产任务 / SOP 查看独立工作台
 - 派工与生产任务 / 开工检查独立工作台
 - 工位作业 / 员工登录独立终端页面
+- 工位作业 / 扫码开工独立终端页面
+- 工位作业 / 工艺指导独立终端页面
 - 生产订单新增、编辑、删除、分页、搜索、筛选与联动影响管理
 - 订单评审准入校验、会签标记、评审通过、退回补资料与转排程联动
 - 生产排程待排订单、7 天产线甘特图、已确认计划、工序计划、约束确认与派工准备联动
@@ -38,6 +40,8 @@
 - SOP 清单、终端预览、关键参数、版本校验、附件点检和签收/发布/变更/终端同步联动
 - 开工检查待开工任务、准入门概览、资源状态、检查明细和确认/放行/催料/首件/设备复位/拦截联动
 - 员工登录队列、工位终端扫码、人员资质校验、在线覆盖、登录/退出/换人/交接/锁定联动
+- 扫码开工任务队列、模拟扫码枪输入、开工准入链路、设备启动信号、条码拦截、首件触发和追溯占位联动
+- 工艺指导任务队列、工位终端工步、防错点、版本签收、模拟 HMI 工步完成、工艺偏离呼叫和履历联动
 - 生产订单池
 - 产线负荷
 - 当前选中订单闭环进度
@@ -108,6 +112,12 @@ UI_Design/
     employee-login.html
     employee-login.css
     employee-login.js
+    scan-start.html
+    scan-start.css
+    scan-start.js
+    work-instruction.html
+    work-instruction.css
+    work-instruction.js
 ```
 
 ## 打开方式
@@ -206,6 +216,18 @@ UI_Design/dispatch/start-check.html
 
 ```text
 UI_Design/station/employee-login.html
+```
+
+扫码开工工位终端：
+
+```text
+UI_Design/station/scan-start.html
+```
+
+工艺指导工位终端：
+
+```text
+UI_Design/station/work-instruction.html
 ```
 
 也可以在 `UI_Design` 目录启动任意静态服务后访问首页。
