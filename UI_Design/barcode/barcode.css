@@ -71,11 +71,318 @@
   font-weight: 680;
 }
 
+.barcode-focus {
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 20px;
+  padding: 16px;
+  background: var(--surface);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+.focus-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.focus-head h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.focus-head p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.focus-head > strong {
+  max-width: 38%;
+  color: var(--teal);
+  font-size: 15px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.batch-flow,
+.finished-gates,
+.printer-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.batch-flow article,
+.finished-gates article,
+.printer-board article,
+.serial-board article,
+.package-tree article,
+.reprint-board article,
+.material-lanes section,
+.focus-strip button {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.batch-flow article,
+.finished-gates article,
+.printer-board article {
+  position: relative;
+  min-height: 118px;
+  padding: 13px;
+}
+
+.batch-flow article:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -9px;
+  width: 16px;
+  height: 2px;
+  background: rgba(0, 166, 166, 0.32);
+}
+
+.batch-flow article.is-current,
+.printer-board article.is-active,
+.serial-board article.is-active,
+.package-tree article.is-active,
+.reprint-board article.is-active {
+  border-color: rgba(0, 166, 166, 0.36);
+  background: rgba(0, 166, 166, 0.08);
+}
+
+.batch-flow span,
+.finished-gates span,
+.printer-board span,
+.serial-board span,
+.package-tree span,
+.reprint-board span,
+.material-lanes h3,
+.focus-strip span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.batch-flow strong,
+.finished-gates strong,
+.printer-board strong,
+.serial-board strong,
+.package-tree strong,
+.reprint-board strong,
+.focus-strip strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.batch-flow em,
+.finished-gates em,
+.printer-board em,
+.serial-board em {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.focus-strip {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.focus-strip button {
+  min-width: 260px;
+  padding: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.focus-strip button.is-active {
+  border-color: rgba(0, 122, 255, 0.34);
+  background: rgba(0, 122, 255, 0.08);
+}
+
+.focus-strip .pill {
+  margin-top: 8px;
+}
+
+.serial-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.serial-board article,
+.package-tree article,
+.reprint-board article,
+.printer-board article {
+  cursor: pointer;
+}
+
+.serial-board article {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+}
+
+.serial-board article > div:first-child,
+.reprint-board article > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(142, 142, 147, 0.16);
+}
+
+.progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal), var(--green));
+}
+
+.material-lanes {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr 1fr;
+  gap: 10px;
+}
+
+.material-lanes section {
+  min-height: 220px;
+  padding: 12px;
+}
+
+.material-lanes h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.material-lanes p {
+  margin: 5px 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.material-lanes .focus-strip button,
+.material-lanes button {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 8px;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.empty-lane {
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.finished-gates {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.finished-gates article.is-blocked {
+  border-color: rgba(255, 59, 48, 0.28);
+  background: rgba(255, 59, 48, 0.07);
+}
+
+.package-tree {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.package-tree article {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+}
+
+.package-tree article > div {
+  display: grid;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 3px solid rgba(0, 166, 166, 0.28);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 740;
+}
+
+.package-tree b,
+.package-tree i {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.package-tree i {
+  font-style: normal;
+}
+
+.printer-board article {
+  display: grid;
+  gap: 8px;
+}
+
+.reprint-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.reprint-board article {
+  padding: 13px;
+}
+
+.reprint-board ol {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.reprint-board li + li {
+  margin-top: 5px;
+}
+
 .barcode-layout {
   display: grid;
   grid-template-columns: minmax(760px, 1fr) 420px;
   gap: 14px;
   align-items: start;
+}
+
+.barcode-main[data-barcode-page="printing"] .barcode-layout,
+.barcode-main[data-barcode-page="reprint"] .barcode-layout {
+  grid-template-columns: minmax(680px, 1fr) 380px;
 }
 
 .barcode-left {
@@ -351,15 +658,53 @@
     grid-template-columns: 1fr;
   }
 
+  .barcode-main[data-barcode-page="printing"] .barcode-layout,
+  .barcode-main[data-barcode-page="reprint"] .barcode-layout {
+    grid-template-columns: 1fr;
+  }
+
   .barcode-side {
     position: static;
+  }
+
+  .batch-flow,
+  .package-tree,
+  .printer-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .batch-flow article:not(:last-child)::after {
+    display: none;
   }
 }
 
 @media (max-width: 920px) {
   .barcode-metrics,
   .barcode-card-grid,
-  .barcode-toolbar {
+  .barcode-toolbar,
+  .serial-board,
+  .material-lanes,
+  .finished-gates,
+  .reprint-board {
+    grid-template-columns: 1fr;
+  }
+
+  .barcode-focus {
+    padding: 12px;
+  }
+
+  .focus-head {
+    display: grid;
+  }
+
+  .focus-head > strong {
+    max-width: none;
+    text-align: left;
+  }
+
+  .batch-flow,
+  .package-tree,
+  .printer-board {
     grid-template-columns: 1fr;
   }
 }

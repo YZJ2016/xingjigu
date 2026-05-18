@@ -265,6 +265,7 @@ function statusStyle(status) {
 function renderPageChrome() {
   const def = getDefinition();
   document.title = `星技谷 MES | ${pageConfig.title}`;
+  $(".barcode-main").dataset.barcodePage = pageConfig.id;
   $("#pageEyebrow").textContent = pageConfig.eyebrow;
   $("#pageTitle").textContent = `${pageConfig.title}工作台`;
   $("#pageSubtitle").textContent = def.subtitle;
@@ -278,6 +279,7 @@ function renderPageChrome() {
   $("#statusFilter").innerHTML = `<option value="all">全部状态</option>${[...new Set(rows.map((item) => item.status))].map((status) => `<option value="${status}">${status}</option>`).join("")}`;
   $("#lineFilter").innerHTML = `<option value="all">全部产线</option>${[...new Set(rows.map((item) => item.line))].map((line) => `<option value="${line}">${line}</option>`).join("")}`;
   $("#tableHead").innerHTML = `<tr>${def.columns.map((col) => `<th>${col}</th>`).join("")}</tr>`;
+  ensureFocusPanel();
 }
 
 function renderMetrics() {
@@ -296,6 +298,177 @@ function renderMetrics() {
       <em>${index === 3 ? "需审批、作废或异常闭环" : "随筛选条件实时变化"}</em>
     </article>
   `).join("");
+}
+
+function ensureFocusPanel() {
+  if ($("#barcodeFocusPanel")) return;
+  $("#barcodeMetrics").insertAdjacentHTML("afterend", `<section id="barcodeFocusPanel" class="barcode-focus"></section>`);
+}
+
+function renderFocusPanel() {
+  ensureFocusPanel();
+  const active = getActive();
+  const visible = getVisibleRows();
+  const renderers = {
+    batch: renderBatchFocus,
+    serial: renderSerialFocus,
+    material: renderMaterialFocus,
+    finished: renderFinishedFocus,
+    package: renderPackageFocus,
+    printing: renderPrintingFocus,
+    reprint: renderReprintFocus,
+  };
+  $("#barcodeFocusPanel").className = `barcode-focus barcode-focus--${pageConfig.id}`;
+  $("#barcodeFocusPanel").innerHTML = renderers[pageConfig.id](active, visible);
+  $("#barcodeFocusPanel").querySelectorAll("[data-focus-id]").forEach((item) => {
+    item.addEventListener("click", () => {
+      state.activeId = item.dataset.focusId;
+      state.detailOpen = true;
+      saveState();
+      renderAll();
+    });
+  });
+}
+
+function renderBatchFocus(active, visible) {
+  const steps = [
+    ["派工下达", active.dispatch, "任务下达到条码中心"],
+    ["编码规则", active.template, "批次与 SN 规则已引用"],
+    ["批次档案", active.id, active.status],
+    ["下游使用", active.next, "开工、投料、过程记录引用"],
+  ];
+  return `
+    <div class="focus-head"><div><h2>批次生成链路</h2><p>突出派工、规则、批次档案和下游追溯的前置关系。</p></div>${pill(active.status)}</div>
+    <div class="batch-flow">${steps.map(([label, value, hint], index) => `
+      <article class="${index === 2 ? "is-current" : ""}">
+        <span>${label}</span><strong>${value}</strong><em>${hint}</em>
+      </article>
+    `).join("")}</div>
+    <div class="focus-strip">${visible.map((item) => focusChip(item, `${item.product} · ${item.operation}`)).join("")}</div>
+  `;
+}
+
+function renderSerialFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>SN 绑定进度</h2><p>突出 SN 从生成、工位绑定、质量隔离到包装追溯的状态差异。</p></div><strong>${active.range}</strong></div>
+    <div class="serial-board">${visible.map((item) => {
+      const progress = getSerialProgress(item);
+      return `
+        <article data-focus-id="${item.id}" class="${item.id === active.id ? "is-active" : ""}">
+          <div><span>${item.product}</span>${pill(item.status)}</div>
+          <strong>${item.id}</strong>
+          <div class="progress"><i style="width:${progress}%"></i></div>
+          <em>${item.risk}</em>
+        </article>
+      `;
+    }).join("")}</div>
+  `;
+}
+
+function renderMaterialFocus(active, visible) {
+  const lanes = [
+    ["可投状态", "ready", "投料前允许扫码校验"],
+    ["待处理", "pending", "需要配送、核销或补料"],
+    ["冻结拦截", "blocked", "禁止投料并进入异常闭环"],
+  ];
+  return `
+    <div class="focus-head"><div><h2>线边物料防错</h2><p>突出 WMS、IQC、线边签收与投料防错之间的状态门。</p></div><strong>${active.line}</strong></div>
+    <div class="material-lanes">${lanes.map(([title, lane, hint]) => `
+      <section><h3>${title}</h3><p>${hint}</p>${visible.filter((item) => getMaterialLane(item) === lane).map((item) => focusChip(item, `${item.range} · ${item.qty}`)).join("") || "<div class=\"empty-lane\">暂无记录</div>"}</section>
+    `).join("")}</div>
+  `;
+}
+
+function getMaterialLane(item) {
+  if (/冻结|隔离|异常|拦截/.test(item.status)) return "blocked";
+  if (/待|余料|低水位/.test(`${item.status} ${item.risk}`)) return "pending";
+  return "ready";
+}
+
+function renderFinishedFocus(active, visible) {
+  const gates = [
+    ["FQC 放行", "检验结论", "质量未放行禁止打印客户标签"],
+    ["客户模板", "模板版本", "客户格式和变量需审批生效"],
+    ["包装入库", "箱码托盘码", "标签随包装层级进入入库追溯"],
+  ];
+  return `
+    <div class="focus-head"><div><h2>成品标签放行门</h2><p>突出质量放行、客户模板、包装入库三道控制门。</p></div>${pill(active.status)}</div>
+    <div class="finished-gates">${gates.map(([title, label, hint], index) => `
+      <article class="${index === 0 && /待|隔离/.test(active.status) ? "is-blocked" : ""}">
+        <span>${title}</span><strong>${index === 0 ? active.source : index === 1 ? active.template : active.next}</strong><em>${label} · ${hint}</em>
+      </article>
+    `).join("")}</div>
+    <div class="focus-strip">${visible.map((item) => focusChip(item, `${item.range} · ${item.source}`)).join("")}</div>
+  `;
+}
+
+function renderPackageFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>包装层级绑定</h2><p>突出 SN、箱码、托盘码到出货批次的层级追溯关系。</p></div><strong>${active.codeType}</strong></div>
+    <div class="package-tree">${visible.map((item) => `
+      <article data-focus-id="${item.id}" class="${item.id === active.id ? "is-active" : ""}">
+        <span>${item.codeType}</span><strong>${item.id}</strong>
+        <div><b>${item.range}</b><i>${item.next}</i></div>
+        ${pill(item.status)}
+      </article>
+    `).join("")}</div>
+  `;
+}
+
+function renderPrintingFocus(active, visible) {
+  const printers = ["Zebra-A01", "Zebra-M02", "Zebra-C03", "Zebra-B01"];
+  return `
+    <div class="focus-head"><div><h2>打印队列监控</h2><p>突出打印机、模板版本、首打补打和异常回执。</p></div><strong>${active.source}</strong></div>
+    <div class="printer-board">${printers.map((printer) => {
+      const job = visible.find((item) => item.template.includes(printer));
+      return `
+        <article ${job ? `data-focus-id="${job.id}"` : ""} class="${job && job.id === active.id ? "is-active" : ""}">
+          <span>${printer}</span>
+          <strong>${job ? job.codeType : "暂无任务"}</strong>
+          <em>${job ? `${job.id} · ${job.qty} 份` : "等待标签服务下发"}</em>
+          ${job ? pill(job.status) : "<span class=\"pill pill--blue\">空闲</span>"}
+        </article>
+      `;
+    }).join("")}</div>
+  `;
+}
+
+function renderReprintFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>补打审批闭环</h2><p>突出申请原因、权限校验、审批结论、新旧标签关系和审计留痕。</p></div>${pill(active.status)}</div>
+    <div class="reprint-board">${visible.map((item) => `
+      <article data-focus-id="${item.id}" class="${item.id === active.id ? "is-active" : ""}">
+        <div><span>${item.id}</span>${pill(item.status)}</div>
+        <strong>${item.source}</strong>
+        <ol>
+          <li>原标签：${item.range}</li>
+          <li>风险校验：${item.risk}</li>
+          <li>后续动作：${item.next}</li>
+        </ol>
+      </article>
+    `).join("")}</div>
+  `;
+}
+
+function focusChip(item, hint) {
+  return `
+    <button type="button" data-focus-id="${item.id}" class="${item.id === state.activeId ? "is-active" : ""}">
+      <span>${item.id}</span><strong>${hint}</strong>${pill(item.status)}
+    </button>
+  `;
+}
+
+function getSerialProgress(item) {
+  const matched = item.risk.match(/已绑定\s*(\d+)\s*个.*待绑定\s*(\d+)\s*个/);
+  if (matched) {
+    const done = Number(matched[1]);
+    const todo = Number(matched[2]);
+    return Math.round((done / (done + todo)) * 100);
+  }
+  if (/已绑定/.test(item.status)) return 100;
+  if (/待/.test(item.status)) return 18;
+  if (/隔离|作废/.test(item.status)) return 8;
+  return 50;
 }
 
 function renderTable() {
@@ -410,6 +583,7 @@ function renderLogs() {
 
 function renderAll() {
   renderMetrics();
+  renderFocusPanel();
   renderTable();
   renderCards();
   renderDetail();
