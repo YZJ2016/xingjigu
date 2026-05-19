@@ -1,5 +1,5 @@
 const pageConfig = window.BARCODE_PAGE || { id: "batch", title: "生产批次", eyebrow: "条码与标签 / 生产批次" };
-const STORAGE_KEY = `xingjigu_mes_barcode_${pageConfig.id}_v1`;
+const STORAGE_KEY = `xingjigu_mes_barcode_${pageConfig.id}_v2`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -154,6 +154,8 @@ const initialRows = {
   ],
 };
 
+Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.barcode || {});
+
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
 let logs = [];
@@ -233,10 +235,21 @@ function loadState() {
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  mergeFlowRows();
 }
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, state }));
+}
+
+function mergeFlowRows() {
+  const flowRows = window.MES_BUSINESS_FLOW?.getBarcodeRows?.(pageConfig.id) || [];
+  if (!flowRows.length) return;
+  const existing = new Map(rows.map((item) => [item.id, item]));
+  flowRows.forEach((item) => {
+    if (!existing.has(item.id)) rows.push(item);
+  });
+  if (!rows.some((item) => item.id === state.activeId)) state.activeId = rows[0]?.id || "";
 }
 
 function getDefinition() {
@@ -550,7 +563,10 @@ function renderDetail() {
     ["风险说明", active.risk],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   $("#timelineList").innerHTML = buildTimeline(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
-  $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("") + renderManualActions(active);
+  $("#actionList").querySelectorAll("[data-manual-action]").forEach((button) => {
+    button.addEventListener("click", () => runManualAction(button.dataset.manualAction));
+  });
   renderLogs();
 }
 
@@ -576,12 +592,71 @@ function buildActions(active) {
 }
 
 function renderLogs() {
-  $("#logList").innerHTML = logs.length ? logs.slice(0, 5).map((log) => `
-    <div><span>${log.time}</span><strong>${log.text}</strong></div>
+  $("#logList").innerHTML = logs.length ? logs.slice(0, 8).map((log) => `
+    <div><span>${log.time}</span><strong>${log.text}</strong>${log.beforeAfter ? `<em>${log.beforeAfter}</em>` : ""}</div>
   `).join("") : `<div><span>暂无</span><strong>当前页面尚未产生模拟回执或人工处置记录</strong></div>`;
 }
 
+function renderManualActions(active) {
+  return `
+    <div class="manual-audit">
+      <span>标签审计链</span>
+      <strong>条码和追溯数据不允许无痕删除；补打、作废、冻结、解绑必须留存新旧关系</strong>
+      <div class="manual-action-row">
+        ${getManualActions(active).map((action) => `<button type="button" class="${action.danger ? "danger-action" : ""}" data-manual-action="${action.key}">${action.label}</button>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function getManualActions() {
+  const map = {
+    batch: [{ key: "newBatch", label: "新建批次" }, { key: "split", label: "拆分/合并" }, { key: "freeze", label: "冻结/解冻", danger: true }, { key: "void", label: "作废未使用批次", danger: true }],
+    serial: [{ key: "generateSn", label: "生成 SN" }, { key: "importSn", label: "导入 SN" }, { key: "isolate", label: "隔离异常 SN", danger: true }, { key: "void", label: "作废未使用 SN", danger: true }],
+    material: [{ key: "newLabel", label: "新建标签任务" }, { key: "template", label: "编辑模板引用" }, { key: "reprint", label: "重打申请", danger: true }, { key: "freeze", label: "冻结异常标签", danger: true }],
+    finished: [{ key: "newLabel", label: "新建标签任务" }, { key: "firstPrint", label: "首打" }, { key: "reprint", label: "补打申请", danger: true }, { key: "void", label: "作废标签", danger: true }],
+    package: [{ key: "newPackCode", label: "新建箱托任务" }, { key: "rule", label: "编辑装箱规则" }, { key: "unbind", label: "解绑未入库箱码", danger: true }, { key: "void", label: "作废异常箱托码", danger: true }],
+    printing: [{ key: "newPrint", label: "新建打印任务" }, { key: "pause", label: "暂停/恢复" }, { key: "retry", label: "重试" }, { key: "closeFail", label: "关闭失败任务", danger: true }],
+    reprint: [{ key: "newReprint", label: "新建补打申请" }, { key: "submit", label: "提交审批" }, { key: "approve", label: "批准/驳回", danger: true }, { key: "print", label: "补打并作废旧标", danger: true }],
+  };
+  return [...(map[pageConfig.id] || []), { key: "history", label: "查看履历" }];
+}
+
+function runManualAction(key) {
+  const active = getActive();
+  if (!active) return;
+  const action = getManualActions().find((item) => item.key === key) || { label: key };
+  if (action.danger && !confirmDanger(action.label, active.id)) return;
+  const before = `${active.status} / ${active.next}`;
+  const statusMap = {
+    newBatch: "批次草稿", split: "拆分待审", freeze: "冻结审批中", void: "作废待审",
+    generateSn: "SN已生成", importSn: "导入待校验", isolate: "隔离中", newLabel: "任务草稿",
+    template: "模板待审", reprint: "补打审批中", firstPrint: "首打待签收", newPackCode: "箱托任务草稿",
+    rule: "规则待审", unbind: "解绑待审", newPrint: "打印任务草稿", pause: "已暂停", retry: "重试中",
+    closeFail: "失败关闭待复核", newReprint: "补打草稿", submit: "待审批", approve: "审批完成", print: "已补打",
+    history: active.status,
+  };
+  active.status = statusMap[key] || active.status;
+  active.next = `${action.label}已登记：新旧标签关系、审批人、原因、责任人和时间戳已留痕`;
+  const beforeAfter = `前：${before}；后：${active.status} / ${active.next}`;
+  window.MES_BUSINESS_FLOW?.applyBarcodeAction?.(active, `manual-${key}`, {
+    status: active.status,
+    owner: active.owner,
+    result: active.next,
+    beforeAfter,
+  });
+  appendLog(`${active.id} ${action.label}已登记`, beforeAfter);
+  saveState();
+  renderAll();
+  showToast(`${action.label}已留痕`);
+}
+
+function confirmDanger(label, id) {
+  return window.confirm(`${label}属于补打、作废、冻结、解绑或关闭类危险动作，需二次确认并写入审计。确认处理 ${id}？`);
+}
+
 function renderAll() {
+  mergeFlowRows();
   renderMetrics();
   renderFocusPanel();
   renderTable();
@@ -592,6 +667,15 @@ function renderAll() {
 function updateActiveStatus(status, message) {
   const active = getActive();
   if (!active) return;
+  const actionMap = {
+    batch: "batchRelease",
+    serial: "serialBind",
+    material: "materialLabelSign",
+    finished: "finishedLabelPrint",
+    package: "packageBind",
+    printing: "printCallback",
+    reprint: "reprintApprove",
+  };
   active.status = status;
   if (pageConfig.id === "batch" && status.includes("下发")) active.next = "产品序列号";
   if (pageConfig.id === "serial" && status.includes("绑定")) active.next = "过程记录 / FQC";
@@ -600,13 +684,19 @@ function updateActiveStatus(status, message) {
   if (pageConfig.id === "package" && status.includes("绑定")) active.next = "成品入库 / 出货追溯";
   if (pageConfig.id === "printing" && status.includes("打印")) active.next = "现场签收 / 贴标";
   if (pageConfig.id === "reprint" && status.includes("批准")) active.next = "标签打印";
+  window.MES_BUSINESS_FLOW?.applyBarcodeAction?.(active, actionMap[pageConfig.id] || "barcodeReview", {
+    status,
+    owner: active.owner,
+    result: message || active.risk,
+  });
   appendLog(message || `${active.id} 状态更新为 ${status}`);
   saveState();
   renderAll();
 }
 
-function appendLog(text) {
-  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text });
+function appendLog(text, beforeAfter = "") {
+  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text, beforeAfter });
+  logs = logs.slice(0, 20);
 }
 
 function simulateStatus() {
@@ -626,7 +716,7 @@ function simulateStatus() {
 
 function resetPage() {
   localStorage.removeItem(STORAGE_KEY);
-  rows = structuredClone(initialRows[pageConfig.id]);
+  rows = structuredClone(window.MES_BUSINESS_FLOW?.getBarcodeRows?.(pageConfig.id) || initialRows[pageConfig.id]);
   state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
   logs = [];
   $("#searchInput").value = "";
@@ -671,7 +761,13 @@ function bindEvents() {
   $("#simulateBtn").addEventListener("click", simulateStatus);
   $("#primaryActionBtn").addEventListener("click", () => simulateStatus());
   $("#secondaryActionBtn").addEventListener("click", () => {
-    updateActiveStatus(pageConfig.id === "reprint" ? "权限拦截" : "作废待审", `${getActive().id} 已登记标签异常处置，等待责任人闭环`);
+    const active = getActive();
+    updateActiveStatus(pageConfig.id === "reprint" ? "权限拦截" : "作废待审", `${active.id} 已登记标签异常处置，等待责任人闭环`);
+    window.MES_BUSINESS_FLOW?.applyBarcodeAction?.(active, pageConfig.id === "reprint" ? "reprintBlocked" : "labelVoidReview", {
+      status: pageConfig.id === "reprint" ? "权限拦截" : "作废待审",
+      owner: active.owner,
+      result: "标签异常已进入审批/作废审计，不允许无痕删除或直接补打",
+    });
     showToast("异常处置已登记");
   });
   $("#closeDetailBtn").addEventListener("click", () => {
@@ -688,12 +784,18 @@ function bindEvents() {
 
 function init() {
   renderFrameMenu();
+  mergeFlowRows();
   loadState();
   renderPageChrome();
   $("#searchInput").value = state.search;
   $("#statusFilter").value = state.status;
   $("#lineFilter").value = state.line;
   bindEvents();
+  window.addEventListener("mes-flow:changed", () => {
+    mergeFlowRows();
+    renderPageChrome();
+    renderAll();
+  });
   renderAll();
 }
 

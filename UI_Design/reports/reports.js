@@ -1,5 +1,5 @@
 const pageConfig = window.REPORT_PAGE || { id: "daily", title: "生产日报", eyebrow: "报表与看板 / 生产日报" };
-const STORAGE_KEY = `xingjigu_mes_reports_${pageConfig.id}_v1`;
+const STORAGE_KEY = `xingjigu_mes_reports_${pageConfig.id}_v2`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -154,11 +154,20 @@ const initialRows = {
   ],
 };
 
+Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.reports || {});
+
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", line: "all", shift: "all", status: "all", detailOpen: true };
 let logs = [];
 
 const $ = (selector) => document.querySelector(selector);
+
+function hydrateRowsFromBusinessFlow() {
+  const flowRows = window.MES_BUSINESS_FLOW?.getReportRows?.(pageConfig.id) || [];
+  if (!flowRows.length) return;
+  const existing = new Set(rows.map((row) => row.id));
+  rows = [...flowRows.filter((row) => !existing.has(row.id)), ...rows];
+}
 
 function renderAppShell() {
   $("#reportsApp").innerHTML = `
@@ -169,7 +178,7 @@ function renderAppShell() {
         <p>${getDefinition().subtitle}</p>
       </div>
       <div class="topbar-actions">
-        <button id="simulateTopBtn" class="primary-action" type="button">模拟报表刷新</button>
+        <button id="simulateTopBtn" class="primary-action" type="button">${getReportGovernanceAction().primary}</button>
         <button id="resetReportsBtn" class="secondary-action" type="button">重置演示</button>
         <a class="secondary-link" href="./management-cockpit.html">管理驾驶舱</a>
         <a class="secondary-link" href="../index.html">返回首页</a>
@@ -210,7 +219,7 @@ function renderAppShell() {
           <div class="reports-simulation__form">
             <input id="simulationInput" type="text" />
             <button id="simulateBtn" type="button">记录模拟回执</button>
-            <button id="secondaryActionBtn" type="button">登记复核结论</button>
+            <button id="secondaryActionBtn" type="button">${getReportGovernanceAction().secondary}</button>
           </div>
         </section>
       </div>
@@ -420,7 +429,10 @@ function renderDetail() {
     ["业务复核", `${row.owner} 于 ${row.updated} 复核`],
     ["闭环结果", row.next],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
-  $("#actionList").innerHTML = getActions(row).map((action) => `<div><span>${action[0]}</span><strong>${action[1]}</strong></div>`).join("");
+  $("#actionList").innerHTML = getActions(row).map((action) => `<div><span>${action[0]}</span><strong>${action[1]}</strong></div>`).join("") + renderReportManualActions();
+  $("#actionList").querySelectorAll("[data-report-manual]").forEach((button) => {
+    button.addEventListener("click", () => runReportManualAction(button.dataset.reportManual));
+  });
 }
 
 function getActions(row) {
@@ -428,7 +440,91 @@ function getActions(row) {
     ["下钻追溯", row.trace],
     ["异常处置", row.risk],
     ["责任交接", `${row.owner} 负责 ${row.next}`],
+    ["非主干治理", getReportGovernanceAction(row).hint],
   ];
+}
+
+function getReportGovernanceAction(row = getActive()) {
+  const publish = /可发布|已复核|准时|可放行/.test(row?.status || "");
+  const risky = /延期|风险|损耗|瓶颈|NCR|超耗|需复核|红|故障|待归因/.test(`${row?.status || ""} ${row?.risk || ""}`);
+  const map = {
+    daily: { primary: publish ? "发布日报快照" : "模拟日报刷新", secondary: publish ? "撤回日报发布" : "登记日报复核", status: publish ? "已发布" : "复核中", type: "日报发布治理", result: publish ? "生产日报已发布给 BI，口径锁定并保留撤回入口" : "生产日报已登记复核结论，待异常关闭后发布", hint: "支持日报发布、撤回、BI 读取状态和复核签名" },
+    yield: { primary: "锁定良率口径", secondary: risky ? "下钻 NCR/MRB" : "登记质量复核", status: risky ? "NCR下钻中" : "口径已锁定", type: "良率口径治理", result: risky ? "已下钻不良、NCR/MRB 和返工闭环，并反写质量异常" : "良率分析口径已锁定，供经营驾驶舱引用", hint: "支持良率口径锁定、质量异常下钻和复核签名" },
+    delivery: { primary: "锁定交付口径", secondary: risky ? "反写交付风险" : "登记交付复核", status: risky ? "风险已反写" : "口径已锁定", type: "交付风险反写", result: risky ? "延期/入库待同步风险已反写异常中心和订单风险" : "交付达成口径已锁定，等待 BI 读取", hint: "支持交付风险反写计划调整、异常中心和订单风险" },
+    equipment: { primary: "重算 OEE 口径", secondary: risky ? "下钻设备瓶颈" : "登记 OEE 复核", status: risky ? "瓶颈已反写" : "OEE已锁定", type: "OEE下钻治理", result: risky ? "设备瓶颈已反写设备异常和停机复盘" : "OEE 三分项口径已锁定", hint: "支持 OEE 口径锁定、设备瓶颈下钻和 TPM 改善反写" },
+    downtime: { primary: "锁定停机损失", secondary: risky ? "下钻停机归因" : "登记归因复核", status: risky ? "归因中" : "损失已锁定", type: "停机损失治理", result: risky ? "停机损失已下钻到 PLC 日志、班组补录和维修归因" : "停机损失已锁定并进入复盘", hint: "支持停机损失锁定、归因复核和改善闭环" },
+    material: { primary: "锁定损耗口径", secondary: risky ? "反写损耗异常" : "登记核销复核", status: risky ? "损耗异常已反写" : "损耗已锁定", type: "物料损耗治理", result: risky ? "超耗/待核销风险已反写异常中心和物料核销" : "物料损耗口径已锁定，供成本归集", hint: "支持损耗口径锁定、余料核销和成本差异反写" },
+    cockpit: { primary: "发布驾驶舱快照", secondary: risky ? "生成管理协调项" : "登记经营复核", status: risky ? "协调项已生成" : "驾驶舱已发布", type: "经营驾驶舱治理", result: risky ? "跨部门管理协调项已生成，反写交付、质量、设备或物料责任人" : "管理驾驶舱快照已发布给经营层", hint: "支持驾驶舱发布、跨部门协调项和指标下钻" },
+  };
+  return map[pageConfig.id] || { primary: "模拟报表刷新", secondary: "登记复核结论", status: "已复核", type: "报表治理", result: "报表复核已登记", hint: "登记发布、复核、撤回和下钻动作" };
+}
+
+function applyReportGovernanceAction(mode = "secondary") {
+  const row = getActive();
+  if (!row) return;
+  const config = getReportGovernanceAction(row);
+  row.status = config.status;
+  row.statusStyle = /反写|下钻|归因|复核|协调/.test(config.status) ? "orange" : "green";
+  row.updated = new Date().toLocaleString("zh-CN", { hour12: false });
+  row.next = config.result;
+  window.MES_BUSINESS_FLOW?.applyReportAction?.(row, pageConfig.id, mode === "primary" ? config.primary : config.secondary, {
+    status: row.status,
+    result: config.result,
+    owner: row.owner,
+    governanceType: config.type,
+    approvalStatus: row.status,
+  });
+  recordSimulation(`${row.name} 已执行${mode === "primary" ? config.primary : config.secondary}：${row.status}`);
+}
+
+function renderReportManualActions() {
+  return `
+    <div class="manual-audit">
+      <span>报表复核发布</span>
+      <strong>只维护快照、批注、复核、发布、撤回、导出和改善项，不修改报工/入库/检验/设备原始事实</strong>
+      <div class="manual-action-row">
+        ${getReportManualActions().map((action) => `<button type="button" class="${action.danger ? "danger-action" : ""}" data-report-manual="${action.key}">${action.label}</button>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function getReportManualActions() {
+  const map = {
+    daily: [{ key: "snapshot", label: "生成日报" }, { key: "review", label: "复核" }, { key: "publish", label: "发布/撤回", danger: true }, { key: "export", label: "导出" }],
+    yield: [{ key: "saveView", label: "保存筛选" }, { key: "comment", label: "添加批注" }, { key: "improve", label: "生成改善项" }, { key: "export", label: "导出" }],
+    delivery: [{ key: "saveView", label: "保存视图" }, { key: "assign", label: "分派行动" }, { key: "export", label: "导出" }, { key: "warning", label: "转交期预警" }],
+    equipment: [{ key: "comment", label: "添加批注" }, { key: "tpm", label: "生成 TPM 行动" }, { key: "export", label: "导出" }, { key: "repair", label: "转维修/复盘" }],
+    downtime: [{ key: "reviewReason", label: "复核归因" }, { key: "review", label: "生成复盘" }, { key: "export", label: "导出" }],
+    material: [{ key: "reviewLoss", label: "复核超耗" }, { key: "assign", label: "分派改善" }, { key: "export", label: "导出" }, { key: "feeding", label: "转投料/退料" }],
+    cockpit: [{ key: "config", label: "配置关注指标" }, { key: "meeting", label: "生成管理动作" }, { key: "export", label: "导出快照" }, { key: "publish", label: "发布会议版本", danger: true }],
+  };
+  return map[pageConfig.id] || [{ key: "snapshot", label: "生成快照" }, { key: "review", label: "复核" }, { key: "export", label: "导出" }];
+}
+
+function runReportManualAction(key) {
+  const row = getActive();
+  if (!row) return;
+  const action = getReportManualActions().find((item) => item.key === key) || { label: key };
+  if (action.danger && !window.confirm(`${action.label}会改变发布/撤回状态但不改原始业务事实。确认处理 ${row.id}？`)) return;
+  const statusMap = {
+    snapshot: "快照已生成", review: "已复核", publish: /已发布|驾驶舱已发布/.test(row.status) ? "撤回待审批" : "已发布",
+    export: "已导出", saveView: "视图已保存", comment: "已批注", improve: "改善项已生成", assign: "行动已分派",
+    warning: "交期预警已生成", tpm: "TPM行动已生成", repair: "维修复盘中", reviewReason: "归因已复核",
+    reviewLoss: "超耗已复核", feeding: "投退料复核中", config: "关注已配置", meeting: "管理动作已生成",
+  };
+  row.status = statusMap[key] || row.status;
+  row.statusStyle = /发布|复核|导出|保存|配置/.test(row.status) ? "green" : "orange";
+  row.updated = new Date().toLocaleString("zh-CN", { hour12: false });
+  row.next = `${action.label}已登记：复核结论、快照版本、责任人、批注和改善项留痕；原始事实只读`;
+  window.MES_BUSINESS_FLOW?.applyReportAction?.(row, pageConfig.id, action.label, {
+    status: row.status,
+    result: row.next,
+    owner: row.owner,
+    governanceType: "报表看板复核发布",
+    approvalStatus: row.status,
+  });
+  recordSimulation(`${row.name} ${action.label}已登记：${row.status}`);
 }
 
 function renderLogs() {
@@ -475,18 +571,12 @@ function bindEvents() {
     renderDetail();
   });
   $("#simulateBtn").addEventListener("click", () => recordSimulation($("#simulationInput").value || `${pageConfig.title} 模拟刷新`));
-  $("#simulateTopBtn").addEventListener("click", () => recordSimulation(`${pageConfig.title} 模拟报表刷新完成`));
-  $("#secondaryActionBtn").addEventListener("click", () => {
-    const row = getActive();
-    if (!row) return;
-    row.status = row.statusStyle === "red" ? "复核中" : "已复核";
-    row.statusStyle = row.statusStyle === "red" ? "orange" : "green";
-    row.updated = new Date().toLocaleString("zh-CN", { hour12: false });
-    recordSimulation(`${row.name} 已登记复核结论：${row.status}`);
-  });
+  $("#simulateTopBtn").addEventListener("click", () => applyReportGovernanceAction("primary"));
+  $("#secondaryActionBtn").addEventListener("click", () => applyReportGovernanceAction("secondary"));
   $("#resetReportsBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
     rows = structuredClone(initialRows[pageConfig.id]);
+    hydrateRowsFromBusinessFlow();
     state = { activeId: rows[0]?.id || "", search: "", line: "all", shift: "all", status: "all", detailOpen: true };
     logs = [];
     renderFilters();
@@ -496,6 +586,13 @@ function bindEvents() {
 
 function recordSimulation(text) {
   const row = getActive();
+  if (row) {
+    window.MES_BUSINESS_FLOW?.applyReportAction?.(row, pageConfig.id, "模拟报表刷新", {
+      status: row.status,
+      result: text,
+      owner: row.owner,
+    });
+  }
   logs.unshift({ time: new Date().toLocaleString("zh-CN", { hour12: false }), text: `${text}；当前对象：${row ? row.id : "未选择"}` });
   logs = logs.slice(0, 8);
   saveState();
@@ -510,6 +607,7 @@ function flashLog(text) {
 }
 
 loadState();
+hydrateRowsFromBusinessFlow();
 renderMenu();
 renderAppShell();
 renderFilters();

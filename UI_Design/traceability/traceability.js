@@ -1,5 +1,5 @@
 const pageConfig = window.TRACE_PAGE || { id: "product", title: "产品追溯", eyebrow: "追溯查询 / 产品追溯" };
-const STORAGE_KEY = `xingjigu_mes_trace_${pageConfig.id}_v1`;
+const STORAGE_KEY = `xingjigu_mes_trace_${pageConfig.id}_v2`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -84,10 +84,19 @@ const initialRows = {
   ],
 };
 
+Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.traceability || {});
+
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
 let logs = [];
 const $ = (selector) => document.querySelector(selector);
+
+function hydrateRowsFromBusinessFlow() {
+  const flowRows = window.MES_BUSINESS_FLOW?.getTraceRows?.(pageConfig.id) || [];
+  if (!flowRows.length) return;
+  const existing = new Set(rows.map((item) => item.id));
+  rows = [...flowRows.filter((item) => !existing.has(item.id)), ...rows];
+}
 
 function renderFrameMenu() {
   $("#traceModuleMenu").innerHTML = modules.map((module) => {
@@ -167,6 +176,8 @@ function renderPageChrome() {
   $("#chainTitle").textContent = def.chainTitle;
   $("#simulationTitle").textContent = def.simulationTitle;
   $("#simulationHint").textContent = def.simulationHint;
+  $("#secondaryTraceBtn").textContent = getTraceGovernanceAction().button;
+  $("#primaryTraceBtn").textContent = pageConfig.id === "customer" ? "发布报告快照" : "生成追溯快照";
   $("#simulationInput").placeholder = `${def.simulationTitle}，例如 ${rows[0]?.id || "SN"} / ${rows[0]?.order || "工单号"}`;
   $("#statusFilter").innerHTML = `<option value="all">全部状态</option>${[...new Set(rows.map((item) => item.status))].map((status) => `<option value="${status}">${status}</option>`).join("")}`;
   $("#lineFilter").innerHTML = `<option value="all">全部产线</option>${[...new Set(rows.map((item) => item.line))].map((line) => `<option value="${line}">${line}</option>`).join("")}`;
@@ -241,7 +252,10 @@ function renderDetail() {
     ["责任人", active.owner],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   $("#evidenceList").innerHTML = buildEvidence(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
-  $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("") + renderTraceActions(active);
+  $("#actionList").querySelectorAll("[data-trace-manual]").forEach((button) => {
+    button.addEventListener("click", () => runTraceManualAction(button.dataset.traceManual));
+  });
   renderLogs();
 }
 
@@ -259,11 +273,99 @@ function buildActions(active) {
     ["后台动作", "查询、圈定、归档、复核和报告审批"],
     ["现场边界", "不替代扫码、投料、检验、设备控制或仓储实物作业"],
     ["闭环结果", active.action],
+    ["非主干维护", getTraceGovernanceAction(active).hint],
   ];
 }
 
+function getTraceGovernanceAction(active = getActive()) {
+  if (pageConfig.id === "customer") {
+    if (/已发布/.test(active?.status || "")) {
+      return { button: "撤回报告版本", status: "撤回待审批", type: "客户报告撤回", result: "客户追溯报告版本已撤回待审批，保留对外提供记录和撤回原因", hint: "支持客户报告审批、发布、撤回、版本快照和对外提供记录" };
+    }
+    return { button: "提交报告审批", status: "审批中", type: "客户报告审批", result: "客户追溯报告已提交审批，需包含查询快照、影响范围、处置结论和责任签核", hint: "支持客户报告审批、发布、撤回、版本快照和对外提供记录" };
+  }
+  if (/冻结|隔离|异常|NCR|禁止/.test(`${active?.status || ""} ${active?.action || ""}`)) {
+    return { button: "生成冻结建议", status: "冻结建议", type: "影响范围冻结建议", result: "已按追溯影响范围生成库存冻结建议，并反写异常中心等待质量/仓储复核", hint: "支持追溯影响范围反写库存冻结、异常中心和客户报告" };
+  }
+  return { button: "登记影响复核", status: "影响复核中", type: "影响范围复核", result: "已登记同批、同箱、同工序、同设备影响范围复核任务", hint: "支持查询条件留痕、影响范围复核和证据链版本快照" };
+}
+
+function applyTraceGovernanceAction() {
+  const active = getActive();
+  if (!active) return;
+  const config = getTraceGovernanceAction(active);
+  active.status = config.status;
+  active.action = config.result;
+  window.MES_BUSINESS_FLOW?.applyTraceAction?.(active, pageConfig.id, config.button, {
+    status: config.status,
+    result: config.result,
+    owner: active.owner,
+    governanceType: config.type,
+    approvalStatus: config.status,
+  });
+  appendLog(`${active.id} 已执行${config.button}：${config.result}`);
+  saveState();
+  renderPageChrome();
+  renderAll();
+  showToast(`${config.button}已登记`);
+}
+
 function renderLogs() {
-  $("#logList").innerHTML = logs.length ? logs.slice(0, 5).map((log) => `<div><span>${log.time}</span><strong>${log.text}</strong></div>`).join("") : `<div><span>暂无</span><strong>当前页面尚未产生模拟查询触发或复核记录</strong></div>`;
+  $("#logList").innerHTML = logs.length ? logs.slice(0, 8).map((log) => `<div><span>${log.time}</span><strong>${log.text}</strong>${log.snapshot ? `<em>${log.snapshot}</em>` : ""}</div>`).join("") : `<div><span>暂无</span><strong>当前页面尚未产生模拟查询触发或复核记录</strong></div>`;
+}
+
+function renderTraceActions() {
+  return `
+    <div class="manual-audit">
+      <span>追溯查询维护</span>
+      <strong>只保存查询、快照、导出、关注和转单，不修改原始履历证据</strong>
+      <div class="manual-action-row">
+        ${getTraceManualActions().map((action) => `<button type="button" class="${action.danger ? "danger-action" : ""}" data-trace-manual="${action.key}">${action.label}</button>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function getTraceManualActions() {
+  const map = {
+    product: [{ key: "saveQuery", label: "保存查询" }, { key: "snapshot", label: "生成快照" }, { key: "export", label: "导出报告" }, { key: "exception", label: "转异常" }],
+    batch: [{ key: "snapshot", label: "保存快照" }, { key: "scope", label: "圈定范围" }, { key: "recall", label: "生成召回建议" }, { key: "freeze", label: "转库存冻结", danger: true }],
+    material: [{ key: "saveQuery", label: "保存查询" }, { key: "export", label: "导出去向" }, { key: "quality", label: "转质量问题" }, { key: "freeze", label: "转库存冻结", danger: true }],
+    production: [{ key: "export", label: "导出履历" }, { key: "markNode", label: "标记异常节点" }, { key: "review", label: "转处理复盘" }],
+    inspection: [{ key: "export", label: "导出证据" }, { key: "recheck", label: "标记复检点" }, { key: "ncr", label: "关联 NCR/MRB" }],
+    equipment: [{ key: "export", label: "导出履历" }, { key: "qualityCause", label: "标记质量追因" }, { key: "repair", label: "转维修/复盘" }],
+    customer: [{ key: "newReport", label: "新建报告" }, { key: "submit", label: "提交审批" }, { key: "publish", label: "发布/撤回", danger: true }, { key: "archive", label: "归档", danger: true }],
+  };
+  return map[pageConfig.id] || [{ key: "snapshot", label: "生成快照" }];
+}
+
+function runTraceManualAction(key) {
+  const active = getActive();
+  if (!active) return;
+  const action = getTraceManualActions().find((item) => item.key === key) || { label: key };
+  if (action.danger && !window.confirm(`${action.label}会生成冻结/发布/归档类审计记录，不改原始追溯履历。确认处理 ${active.id}？`)) return;
+  const statusMap = {
+    saveQuery: "查询已保存", snapshot: "快照已生成", export: "已导出", exception: "已转异常", scope: "影响范围已圈定",
+    recall: "召回建议草稿", freeze: "冻结建议", quality: "质量问题草稿", markNode: "异常节点已标记", review: "复盘草稿",
+    recheck: "复检点已标记", ncr: "NCR关联中", qualityCause: "质量追因中", repair: "维修复盘中",
+    newReport: "报告草稿", submit: "审批中", publish: /已发布/.test(active.status) ? "撤回待审批" : "已发布", archive: "已归档",
+  };
+  active.status = statusMap[key] || active.status;
+  active.action = `${action.label}已登记：保存查询条件、证据快照、责任人、时间戳和关联单据，原始履历只读`;
+  const snapshot = `${pageConfig.title} ${active.id} · ${new Date().toLocaleString("zh-CN", { hour12: false })}`;
+  window.MES_BUSINESS_FLOW?.applyTraceAction?.(active, pageConfig.id, action.label, {
+    status: active.status,
+    result: active.action,
+    owner: active.owner,
+    governanceType: "追溯查询复核",
+    approvalStatus: active.status,
+    snapshot,
+  });
+  appendLog(`${active.id} ${action.label}已登记`, snapshot);
+  saveState();
+  renderPageChrome();
+  renderAll();
+  showToast(`${action.label}已留痕`);
 }
 
 function renderAll() {
@@ -273,14 +375,20 @@ function renderAll() {
   renderDetail();
 }
 
-function appendLog(text) {
-  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text });
+function appendLog(text, snapshot = "") {
+  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text, snapshot });
+  logs = logs.slice(0, 20);
 }
 
 function updateActiveStatus(status, message) {
   const active = getActive();
   if (!active) return;
   active.status = status;
+  window.MES_BUSINESS_FLOW?.applyTraceAction?.(active, pageConfig.id, message || "追溯查询", {
+    status,
+    result: active.action,
+    owner: active.owner,
+  });
   appendLog(message || `${active.id} 状态更新为 ${status}`);
   saveState();
   renderPageChrome();
@@ -296,6 +404,7 @@ function simulateQuery() {
 function resetPage() {
   localStorage.removeItem(STORAGE_KEY);
   rows = structuredClone(initialRows[pageConfig.id]);
+  hydrateRowsFromBusinessFlow();
   state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
   logs = [];
   $("#searchInput").value = "";
@@ -338,8 +447,15 @@ function bindEvents() {
   });
   $("#resetTraceBtn").addEventListener("click", resetPage);
   $("#simulateBtn").addEventListener("click", simulateQuery);
-  $("#primaryTraceBtn").addEventListener("click", () => updateActiveStatus("证据完整", `${getActive().id} 已生成追溯快照并写入查询日志`));
-  $("#secondaryTraceBtn").addEventListener("click", () => updateActiveStatus("待复核", `${getActive().id} 已登记影响范围复核任务`));
+  $("#primaryTraceBtn").addEventListener("click", () => {
+    const active = getActive();
+    const status = pageConfig.id === "customer" ? "已发布" : "证据完整";
+    const message = pageConfig.id === "customer"
+      ? `${active.id} 已发布客户追溯报告快照，保留审批版本和对外提供记录`
+      : `${active.id} 已生成追溯快照并写入查询日志`;
+    updateActiveStatus(status, message);
+  });
+  $("#secondaryTraceBtn").addEventListener("click", applyTraceGovernanceAction);
   $("#closeDetailBtn").addEventListener("click", () => {
     state.detailOpen = false;
     saveState();
@@ -355,6 +471,7 @@ function bindEvents() {
 function init() {
   renderFrameMenu();
   loadState();
+  hydrateRowsFromBusinessFlow();
   renderPageChrome();
   $("#searchInput").value = state.search;
   $("#statusFilter").value = state.status;

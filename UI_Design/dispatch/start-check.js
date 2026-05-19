@@ -434,6 +434,8 @@ function updateCheck(id, patch, message) {
   const index = checks.findIndex((item) => item.id === id);
   if (index < 0) return;
   checks[index] = { ...checks[index], ...patch };
+  if (patch.status === "已放行" || patch.status === "可开工") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(checks[index].orderId, "release", { owner: checks[index].owner || "车间主任" });
+  if (patch.status === "已拦截") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(checks[index].orderId, "hold", { owner: checks[index].owner || "车间主任", reason: message });
   state.activeCheckId = id;
   recordLog(id, message);
   saveState();

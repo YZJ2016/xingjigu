@@ -504,6 +504,16 @@ function updateHandover(id, patch, message) {
   const index = handovers.findIndex((item) => item.id === id);
   if (index < 0) return;
   handovers[index] = { ...handovers[index], ...patch };
+  const next = handovers[index];
+  const action = patch.status === "异常移交" ? "handoverRisk" : patch.status === "已闭环" ? "handoverClose" : "handoverConfirm";
+  window.MES_BUSINESS_FLOW?.applyStationAction?.(next.orderId, action, {
+    dispatchId: next.dispatchNo,
+    station: next.station,
+    equipment: next.equipment,
+    status: next.status,
+    owner: `${next.outOperator} / ${next.inOperator}`,
+    result: message,
+  });
   state.activeHandoverId = id;
   recordLog(id, message, "状态已保存到本机演示数据");
   saveState();

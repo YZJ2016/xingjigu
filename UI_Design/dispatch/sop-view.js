@@ -434,6 +434,9 @@ function updateSop(id, patch, message) {
   const index = sops.findIndex((item) => item.id === id);
   if (index < 0) return;
   sops[index] = { ...sops[index], ...patch };
+  if (patch.status === "已发布" || patch.terminal?.includes("已同步") || patch.signStatus === "已签收") {
+    window.MES_BUSINESS_FLOW?.applyDispatchAction?.(sops[index].orderId, "generate", { owner: sops[index].owner || "工艺员" });
+  }
   state.activeSopId = id;
   recordLog(id, message);
   saveState();

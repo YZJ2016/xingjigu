@@ -71,6 +71,148 @@
   font-weight: 680;
 }
 
+.equipment-focus {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 159, 10, 0.24);
+  border-radius: 18px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(255, 159, 10, 0.1), rgba(88, 86, 214, 0.06));
+}
+
+.equipment-focus__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.equipment-focus__head span,
+.equipment-state-map > span,
+.equipment-calendar > span,
+.equipment-risk-stack > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.equipment-focus__head h2 {
+  margin: 4px 0;
+  color: var(--ink);
+  font-size: 20px;
+}
+
+.equipment-focus__head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.equipment-focus__head strong {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 159, 10, 0.28);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--orange);
+  font-size: 12px;
+}
+
+.equipment-focus__grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 1.1fr;
+  gap: 10px;
+}
+
+.equipment-state-map,
+.equipment-calendar,
+.equipment-risk-stack {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.equipment-state-map__row,
+.equipment-calendar div,
+.equipment-risk-stack div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 9px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.equipment-state-map__row {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.equipment-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--blue);
+}
+
+.equipment-dot--danger {
+  background: var(--red);
+}
+
+.equipment-dot--warning {
+  background: var(--orange);
+}
+
+.equipment-dot--success {
+  background: var(--green);
+}
+
+.equipment-state-map strong,
+.equipment-calendar strong,
+.equipment-risk-stack strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.equipment-state-map em,
+.equipment-state-map small,
+.equipment-calendar em,
+.equipment-calendar small,
+.equipment-risk-stack em,
+.equipment-risk-stack small {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 720;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.equipment-state-map__row em {
+  margin: 0;
+  color: var(--orange);
+}
+
+.equipment-state-map__row small {
+  grid-column: 2 / 4;
+}
+
 .equipment-layout {
   display: grid;
   grid-template-columns: minmax(760px, 1fr) 420px;
@@ -325,6 +467,78 @@
   gap: 8px;
 }
 
+.maintenance-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.maintenance-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.maintenance-flow button,
+.empty-action button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: white;
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.maintenance-flow button:first-child {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: white;
+}
+
+.maintenance-flow button.danger-action {
+  background: rgba(255, 59, 48, 0.1);
+  border-color: rgba(255, 59, 48, 0.28);
+  color: var(--red);
+}
+
+.maintenance-flow button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.maintenance-record,
+.maintenance-log {
+  display: grid;
+  gap: 8px;
+}
+
+.maintenance-record div,
+.maintenance-log div,
+.empty-action {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.35fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.maintenance-record span,
+.maintenance-log span,
+.empty-action {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.maintenance-record strong,
+.maintenance-log strong {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .quick-links a {
   display: inline-flex;
   align-items: center;
@@ -370,7 +584,18 @@
 @media (max-width: 920px) {
   .equipment-metrics,
   .equipment-card-grid,
+  .equipment-focus__grid,
   .equipment-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .equipment-focus__head {
+    display: grid;
+  }
+
+  .maintenance-record div,
+  .maintenance-log div,
+  .empty-action {
     grid-template-columns: 1fr;
   }
 }

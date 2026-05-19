@@ -577,6 +577,16 @@ function updateInstruction(id, patch, message) {
   const index = instructions.findIndex((item) => item.id === id);
   if (index < 0) return;
   instructions[index] = { ...instructions[index], ...patch };
+  const next = instructions[index];
+  const action = patch.status === "签收完成" ? "instructionSign" : patch.status === "偏离待处理" ? "instructionDeviation" : patch.status === "已下发" ? "instructionDeliver" : "instructionReview";
+  window.MES_BUSINESS_FLOW?.applyStationAction?.(next.orderId, action, {
+    dispatchId: next.dispatchNo,
+    station: next.station,
+    equipment: next.equipment,
+    status: next.status,
+    owner: next.operator || state.owner || "工艺员",
+    result: next.deviation || message,
+  });
   state.activeInstructionId = id;
   recordLog(id, message, "状态已保存到本机演示数据");
   saveState();

@@ -161,14 +161,276 @@ const initialRows = {
   ],
 };
 
+const maintenanceDefinitions = {
+  accounts: { createLabel: "新增人员", noun: "人员账号" },
+  roles: {
+    createLabel: "新增角色",
+    noun: "角色权限",
+    idPrefix: "ROLE-NEW",
+    statusOptions: ["已生效", "待会签", "越权拦截", "停用"],
+    sourceOptions: ["RBAC 模型", "审批 + 电子签名", "RBAC + 数据权限", "IT 授权 + 审批流"],
+    defaults: {
+      status: "待会签",
+      source: "RBAC 模型",
+      owner: "权限管理员 赵岚",
+      trace: "sys_role_permission / draft",
+      check: "新增角色待权限管理员复核，关键按钮暂不生效",
+      risk: "未发布前不影响现有用户权限，禁止绕过审批和电子签名",
+      next: "完成数据范围、按钮权限和授权用户复核后发布",
+    },
+    fields: ["角色编码", "角色名称 / 场景", "授权对象", "权限来源", "数据范围", "状态", "权限校验", "责任人", "审计引用", "授权边界", "下一步闭环"],
+    primary: { label: "会签发布", status: "已生效", check: "权限会签通过，菜单、按钮、数据范围和电子签名边界已发布", next: "进入月度权限复核，越权访问继续写入审计记录" },
+    disable: { offLabel: "停用角色", onLabel: "启用角色", offStatus: "停用", onStatus: "待会签", offCheck: "角色已停用，新授权不再生效，历史操作记录保留", onCheck: "角色已重新启用申请，需完成会签后发布" },
+  },
+  approvals: {
+    createLabel: "新增流程",
+    noun: "审批流程",
+    idPrefix: "FLOW-NEW",
+    statusOptions: ["运行中", "已发布", "待发布", "超时节点", "停用"],
+    sourceOptions: ["基础资料变更", "检验任务结果", "库存冻结单", "integration_message", "后台流程配置"],
+    defaults: {
+      status: "待发布",
+      source: "后台流程配置",
+      owner: "流程管理员 许航",
+      trace: "approval_template / draft",
+      check: "新增审批流待节点责任人和电子签名规则复核",
+      risk: "未发布前不影响现行业务放行路径，不替代审批人签核",
+      next: "完成节点、会签、超时升级和签名要求后发布",
+    },
+    fields: ["流程编码", "审批流 / 业务", "触发条件", "触发来源", "审批节点", "状态", "签名要求", "责任人", "关联单据", "放行风险", "下一步闭环"],
+    primary: { label: "发布流程", status: "已发布", check: "审批节点、会签规则、电子签名和超时升级已校验通过", next: "发布后由业务单据触发，不替代审批人签核" },
+    disable: { offLabel: "停用流程", onLabel: "启用流程", offStatus: "停用", onStatus: "待发布", offCheck: "审批流版本已停用，运行中单据保留原流程履历", onCheck: "审批流已重新启用申请，需试运行校验后发布" },
+  },
+  messages: {
+    createLabel: "新增规则",
+    noun: "消息提醒",
+    idPrefix: "MSG-NEW",
+    statusOptions: ["已启用", "待复核", "超时升级", "停用"],
+    sourceOptions: ["缺料预警 + 齐套检查", "PLC/SCADA 报警", "FAI/IPQC/FQC 不合格", "dead_letter_message", "后台消息规则"],
+    defaults: {
+      status: "待复核",
+      source: "后台消息规则",
+      owner: "消息管理员 叶青",
+      trace: "notification_rule / draft",
+      check: "新增提醒规则待渠道、接收角色和 SLA 复核",
+      risk: "提醒只推动责任人处理，不代表业务异常已关闭",
+      next: "完成模板、渠道、接收角色和升级策略后启用",
+    },
+    fields: ["规则编码", "提醒规则", "触发来源", "规则来源", "接收角色 / 渠道", "状态", "最近触发", "责任人", "投递引用", "触达边界", "下一步闭环"],
+    primary: { label: "启用规则", status: "已启用", check: "提醒模板、接收角色、渠道和 SLA 升级已复核通过", next: "继续跟踪投递回执，提醒不替代异常处理" },
+    disable: { offLabel: "停用规则", onLabel: "启用规则", offStatus: "停用", onStatus: "待复核", offCheck: "提醒规则已停用，历史投递回执保留", onCheck: "提醒规则已重新启用申请，需测试投递后生效" },
+  },
+  sync: {
+    createLabel: "新增接口配置",
+    noun: "单据同步",
+    idPrefix: "IF-NEW",
+    statusOptions: ["正常", "重试中", "有差异", "死信待补偿", "停用"],
+    sourceOptions: ["ERP 工单下达", "PLM 发布消息", "成品入库单", "工序完工 + 入库确认", "后台接口配置"],
+    defaults: {
+      status: "重试中",
+      source: "后台接口配置",
+      owner: "接口管理员 陶然",
+      trace: "integration_message / draft",
+      check: "新增接口配置待映射、幂等键、重试策略和对账口径复核",
+      risk: "未启用前不向 ERP/WMS/PLM/QMS 写入任何外部账务或主数据",
+      next: "完成模拟联调、审批和对账校验后启用",
+    },
+    fields: ["接口编码", "接口 / 单据", "来源到目标", "触发来源", "触发业务 / 映射", "状态", "最近消息", "责任人", "消息引用", "补偿边界", "下一步闭环"],
+    primary: { label: "申请补偿", status: "死信待补偿", check: "已生成接口补偿申请，等待审批流和业务责任人复核", next: "审批通过后仅重推消息，不直接修改 ERP/WMS 账务" },
+    disable: { offLabel: "停用接口", onLabel: "启用接口", offStatus: "停用", onStatus: "重试中", offCheck: "接口已停用，未完成消息保留在补偿池并进入对账", onCheck: "接口已重新启用申请，需模拟对账通过后恢复投递" },
+  },
+  backup: {
+    createLabel: "新增备份策略",
+    noun: "备份策略",
+    idPrefix: "BK-NEW",
+    statusOptions: ["最近成功", "归档中", "已生效", "待演练", "停用"],
+    sourceOptions: ["在线库 + 日志备份", "时序库 + 对象存储", "audit_log + field_change_log", "integration_message + dead_letter", "后台备份策略"],
+    defaults: {
+      status: "待演练",
+      source: "后台备份策略",
+      owner: "运维管理员 何澈",
+      trace: "backup_policy / draft",
+      check: "新增备份策略待 RPO/RTO、保留周期、恢复演练和告警阈值复核",
+      risk: "演示页面只记录策略与演练结论，不直接访问生产数据库",
+      next: "完成恢复演练计划审批后发布策略",
+    },
+    fields: ["策略编码", "备份对象", "数据来源", "策略来源", "策略 / RPO", "状态", "最近结果", "责任人", "作业引用", "恢复风险", "下一步闭环"],
+    primary: { label: "发起演练", status: "待演练", check: "恢复演练申请已生成，需运维窗口和业务责任人共同确认", next: "演练完成后记录 RTO、抽样校验和回退结论" },
+    disable: { offLabel: "停用策略", onLabel: "启用策略", offStatus: "停用", onStatus: "待演练", offCheck: "备份策略已停用，历史备份和归档任务保留", onCheck: "备份策略已重新启用申请，需恢复演练后生效" },
+  },
+};
+
+const governanceDefinitions = {
+  accounts: {
+    title: "身份准入治理",
+    guard: "账号锁定、离职停用、终端令牌重置和电子签名范围变更都会约束开工、检验、入库、补偿等关键动作",
+    actions: ["权限复核", "锁定准入", "移交待办"],
+    matrix: [
+      { id: "GOV-ACC-LOGIN", control: "后台与工位终端登录准入", module: "工位作业 / 派工与生产任务", rule: "HR 在职 + 班组排班 + 工牌/NFC 绑定", approver: "系统管理员 许航", status: "已启用", evidence: "login_policy ACC-LOGIN-V3", next: "模拟准入测试" },
+      { id: "GOV-ACC-SIGN", control: "电子签名资格复核", module: "质量放行 / 库存冻结 / 接口补偿", rule: "岗位资质 + 二次认证 + 有效期", approver: "质量负责人 周雅", status: "待复核", evidence: "signature_scope QA-FQC-018", next: "提交审批复核" },
+      { id: "GOV-ACC-HANDOVER", control: "离职停用待办移交", module: "审批 / 消息 / 操作记录", rule: "停用前移交未闭环审批、异常和待办", approver: "权限管理员 赵岚", status: "已启用", evidence: "handover_policy HR-OFFBOARD", next: "月度抽样" },
+    ],
+  },
+  roles: {
+    title: "权限边界治理",
+    guard: "角色发布后才影响菜单、按钮、数据范围和接口权限；越权访问写入操作记录并反向提示审批配置",
+    actions: ["会签发布", "权限模拟校验", "越权拦截复核"],
+    matrix: [
+      { id: "GOV-RBAC-FREEZE", control: "库存冻结/解冻按钮权限", module: "完工与入库 / 质量检验", rule: "仓储发起，质量审批，计划知会", approver: "权限管理员 赵岚", status: "待会签", evidence: "button_scope STOCK-FREEZE", next: "提交会签发布" },
+      { id: "GOV-RBAC-REPRINT", control: "追溯标签补打权限", module: "条码与标签 / 补打申请", rule: "条码管理员申请，质量复核，新旧标签关系必填", approver: "质量负责人 周雅", status: "已生效", evidence: "button_scope LABEL-REPRINT", next: "模拟越权校验" },
+      { id: "GOV-RBAC-COMP", control: "接口补偿操作权限", module: "单据同步 / 操作记录", rule: "接口管理员 + IT 复核 + 审批任务", approver: "IT 运维 何澈", status: "越权拦截", evidence: "permission_check DENY-240620", next: "绑定 MFA 后复核" },
+    ],
+  },
+  approvals: {
+    title: "审批放行治理",
+    guard: "主数据发布、质量放行、库存冻结、标签补打、接口补偿和数据恢复必须经过审批与电子签名",
+    actions: ["发布流程", "超时升级", "签名校验"],
+    matrix: [
+      { id: "GOV-APR-MDM", control: "主数据发布审批模板", module: "基础资料 / 开工检查", rule: "工艺、质量、计划依次签核，发布执行快照", approver: "流程管理员 许航", status: "运行中", evidence: "approval_template MDM-PUBLISH", next: "版本影响评估" },
+      { id: "GOV-APR-STOCK", control: "冻结/解冻审批模板", module: "库存冻结 / 追溯查询", rule: "仓储提交，质量复判，计划确认排程影响", approver: "仓储主管 王宁", status: "待发布", evidence: "approval_template STOCK-FREEZE-V2", next: "试运行发布" },
+      { id: "GOV-APR-RESTORE", control: "恢复演练审批模板", module: "数据备份 / 单据同步", rule: "运维窗口 + 业务抽样 + 回退结论", approver: "IT 运维 何澈", status: "待复核", evidence: "approval_template RESTORE-DRILL", next: "签名校验" },
+    ],
+  },
+  sync: {
+    title: "接口一致性治理",
+    guard: "ERP/WMS/PLM/QMS/BI 同步只管理消息、重试、死信、补偿和对账，不直接修改外部系统账务事实",
+    actions: ["申请补偿", "模拟重推", "关闭对账差异"],
+    matrix: [
+      { id: "GOV-IF-WMS", control: "WMS 入库回执对账", module: "成品入库 / 单据同步", rule: "箱托层级一致后才允许 ERP 入库回传", approver: "仓储主管 王宁", status: "有差异", evidence: "interface_reconcile REC-0620-03", next: "关闭对账差异" },
+      { id: "GOV-IF-ERP", control: "ERP 完工回传补偿", module: "工序完工 / ERP 工单关闭", rule: "死信补偿需审批，重推消息不改 ERP 账务", approver: "接口管理员 陶然", status: "死信待补偿", evidence: "dead_letter DLM-893", next: "申请补偿" },
+      { id: "GOV-IF-PLM", control: "PLM 工艺附件同步", module: "基础资料 / SOP 查看", rule: "附件哈希校验通过后下发工位终端", approver: "工艺工程师 林澈", status: "重试中", evidence: "retry_count 2 / next 10:25", next: "模拟重推" },
+    ],
+  },
+  messages: {
+    title: "消息升级治理",
+    guard: "提醒规则只推动责任人处理，不能把消息送达视为异常、审批、维修或入库已经闭环",
+    actions: ["启用规则", "测试发送", "升级责任人"],
+    matrix: [
+      { id: "GOV-MSG-SHORT", control: "缺料预警升级矩阵", module: "齐套检查 / 缺料处理", rule: "30 分钟未接单升级物料主管和计划员", approver: "消息管理员 叶青", status: "已启用", evidence: "notification_rule MAT-SHORT", next: "模拟测试发送" },
+      { id: "GOV-MSG-EQ", control: "设备红色报警通知", module: "设备故障 / 电子看板", rule: "PLC/SCADA 红色报警推维修员、车间主任、电子看板", approver: "设备主管 袁立", status: "已启用", evidence: "alarm_rule EQ-DOWN", next: "升级责任人" },
+      { id: "GOV-MSG-QA", control: "质量拦截提醒模板", module: "首件 / FQC / 库存冻结", rule: "质量不合格触发班组、计划、仓储协同提醒", approver: "质量负责人 周雅", status: "待复核", evidence: "message_template QA-HOLD-V2", next: "启用规则" },
+    ],
+  },
+  logs: {
+    title: "审计证据治理",
+    guard: "操作记录只能查询、筛选、导出申请、归档和标记稽核样本，不允许编辑或删除原始审计记录",
+    actions: ["标记稽核样本", "申请导出", "归档任务"],
+    matrix: [
+      { id: "GOV-AUD-SIGN", control: "电子签名审计样本", module: "质量放行 / 返工评审", rule: "签名前后值、签名设备、账号和时间戳不可篡改", approver: "审计员 赵岚", status: "已生效", evidence: "audit_sample SIG-8891", next: "标记稽核样本" },
+      { id: "GOV-AUD-EXPORT", control: "客户稽核导出申请", module: "追溯报告 / 操作记录", rule: "导出需审批，包含查询条件和报告版本快照", approver: "质量负责人 周雅", status: "待审批", evidence: "export_request AUD-EXPORT", next: "申请导出" },
+      { id: "GOV-AUD-ARCHIVE", control: "审计日志合规归档", module: "操作记录 / 数据备份", rule: "保留 10 年，不允许页面编辑或删除原始记录", approver: "IT 运维 何澈", status: "归档中", evidence: "archive_policy AUDIT-10Y", next: "归档任务" },
+    ],
+  },
+  backup: {
+    title: "备份恢复治理",
+    guard: "备份策略和恢复演练只登记 RPO/RTO、抽样校验和责任闭环，不在演示页直接访问生产数据库",
+    actions: ["发起演练", "确认恢复结果", "告警配置"],
+    matrix: [
+      { id: "GOV-BK-ONLINE", control: "在线业务库备份策略", module: "订单 / 派工 / 质量 / 入库", rule: "全量每日 02:00，日志 15 分钟，RPO 15 分钟", approver: "运维管理员 何澈", status: "最近成功", evidence: "backup_job BK-ONLINE-0620", next: "周日恢复演练" },
+      { id: "GOV-BK-TSDB", control: "设备时序数据归档", module: "过程监控 / 设备履历", rule: "热数据 90 天，冷归档 5 年，抽样可查询", approver: "设备数据员 周启", status: "归档中", evidence: "archive_task TS-0620", next: "告警配置" },
+      { id: "GOV-BK-DRILL", control: "ERP 回传链路恢复演练", module: "单据同步 / 报表与看板", rule: "演练 RTO 2 小时，必须记录抽样和回退结论", approver: "IT 运维 何澈", status: "待演练", evidence: "drill_plan DR-ERP-0624", next: "发起演练" },
+    ],
+  },
+};
+
 let rows = structuredClone(initialRows[pageConfig.id]);
-let state = { activeId: rows[0]?.id || "", search: "", status: "all", source: "all", detailOpen: true };
+let state = { activeId: rows[0]?.id || "", search: "", status: "all", source: "all", detailOpen: true, matrixId: "" };
 let logs = [];
 
 const $ = (selector) => document.querySelector(selector);
 
 function getDefinition() {
   return pageDefinitions[pageConfig.id];
+}
+
+function isAccountsPage() {
+  return pageConfig.id === "accounts";
+}
+
+function isMaintenancePage() {
+  return Boolean(maintenanceDefinitions[pageConfig.id]);
+}
+
+function getMaintenanceDefinition() {
+  return maintenanceDefinitions[pageConfig.id] || null;
+}
+
+function getGovernanceDefinition() {
+  return governanceDefinitions[pageConfig.id] || governanceDefinitions.accounts;
+}
+
+function getGovernanceMatrix() {
+  return getGovernanceDefinition().matrix || [];
+}
+
+function getActiveMatrixItem() {
+  const matrix = getGovernanceMatrix();
+  return matrix.find((item) => item.id === state.matrixId) || matrix[0] || null;
+}
+
+function getGovernanceEvents() {
+  return window.MES_BUSINESS_FLOW?.read?.().governanceEvents || [];
+}
+
+function getGovernanceStats() {
+  const events = getGovernanceEvents();
+  const pageEvents = events.filter((event) => event.pageId === pageConfig.id);
+  const approvals = events.filter((event) => /审批|会签|签名|放行|补偿|冻结|解冻|补打|恢复/.test(`${event.action} ${event.status} ${event.result}`)).length;
+  const risky = events.filter((event) => /锁定|停用|作废|撤回|死信|差异|失败|越权|演练/.test(`${event.action} ${event.status} ${event.result}`)).length;
+  return { total: events.length, page: pageEvents.length, approvals, risky };
+}
+
+function writeGovernanceEvent(action, row = getActiveRow(), payload = {}) {
+  if (!window.MES_BUSINESS_FLOW?.applyGovernanceAction || !row) return null;
+  return window.MES_BUSINESS_FLOW.applyGovernanceAction(row, pageConfig.id, action, {
+    status: row.status,
+    owner: row.owner,
+    result: payload.result || row.check,
+    impact: payload.impact || row.risk,
+    approvalStatus: payload.approvalStatus || "",
+    auditRef: payload.auditRef || row.trace,
+    ...payload,
+  });
+}
+
+function buildMatrixGovernanceRow(item) {
+  return {
+    id: item.id,
+    name: item.control,
+    status: item.status,
+    source: item.rule,
+    owner: item.approver,
+    trace: item.evidence,
+    risk: `${item.module}：${item.rule}`,
+    scope: item.module,
+    check: `${item.control} · ${item.status}`,
+  };
+}
+
+function getNowText() {
+  return new Date().toLocaleString("zh-CN", { hour12: false });
+}
+
+function getStatusStyle(status) {
+  if (["可登录", "已生效", "已发布", "正常", "已启用", "成功", "最近成功"].includes(status)) return "green";
+  if (["锁定", "离职停用", "越权拦截", "失败拦截", "超时节点", "有差异", "死信待补偿", "待演练"].includes(status)) return "red";
+  return "orange";
+}
+
+function getNextAccountId() {
+  const next = rows.reduce((max, row) => {
+    const match = row.id.match(/^USR-(?:NEW-)?(\d+)$/);
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 100) + 1;
+  return `USR-NEW-${String(next).padStart(3, "0")}`;
+}
+
+function getNextGenericId(prefix) {
+  const next = rows.reduce((max, row) => {
+    const match = row.id.match(/(\d+)$/);
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 100) + 1;
+  return `${prefix}-${String(next).padStart(3, "0")}`;
 }
 
 function renderFrameMenu() {
@@ -232,6 +494,7 @@ function renderAppShell() {
         <p>${getDefinition().subtitle}</p>
       </div>
       <div class="topbar-actions">
+        ${isMaintenancePage() ? `<button id="createMaintenanceBtn" class="primary-action" type="button">${getMaintenanceDefinition().createLabel}</button>` : ""}
         <button id="simulateTopBtn" class="primary-action" type="button">模拟状态回执</button>
         <button id="resetSettingsBtn" class="secondary-action" type="button">重置演示</button>
         <a class="secondary-link" href="./operation-logs.html">操作记录</a>
@@ -246,6 +509,17 @@ function renderAppShell() {
       <label>详情面板<select id="detailFilter"><option value="open">打开</option><option value="closed">收起</option></select></label>
     </section>
     <section id="settingsKpis" class="settings-kpis"></section>
+    <section class="settings-governance" aria-label="跨流程系统治理">
+      <div class="settings-governance__summary">
+        <span>第五轮系统治理</span>
+        <h3>${getGovernanceDefinition().title}</h3>
+        <p>${getGovernanceDefinition().guard}</p>
+      </div>
+      <div id="governanceStats" class="settings-governance__stats"></div>
+      <div class="settings-governance__actions">
+        ${getGovernanceDefinition().actions.map((action) => `<button type="button" data-governance-action="${action}">${action}</button>`).join("")}
+      </div>
+    </section>
     <section class="settings-layout">
       <div class="settings-left">
         <section class="settings-panel">
@@ -265,6 +539,15 @@ function renderAppShell() {
             <div><h3>${getDefinition().cardTitle}</h3><p>保留来源系统、校验结果、责任人、时间戳、单据或追溯引用和下一步闭环动作</p></div>
           </div>
           <div id="settingsCards" class="settings-cards"></div>
+        </section>
+        <section class="settings-panel">
+          <div class="settings-panel__head">
+            <div>
+              <h3>细粒度治理配置矩阵</h3>
+              <p>把按钮权限、审批流模板、消息规则、接口补偿、审计导出和备份演练落到具体业务页面与控制项。</p>
+            </div>
+          </div>
+          <div id="governanceMatrix" class="settings-matrix"></div>
         </section>
         <section class="settings-simulation">
           <div class="settings-simulation__head">
@@ -287,10 +570,115 @@ function renderAppShell() {
         </section>
         <section class="settings-detail"><h3>履历与责任链</h3><div id="timelineList" class="settings-timeline"></div></section>
         <section class="settings-detail"><h3>联动闭环</h3><div id="linkList" class="settings-list"></div></section>
+        <section class="settings-detail"><h3>跨流程治理记录</h3><div id="governanceList" class="settings-list"></div></section>
         <section class="settings-detail"><h3>模拟操作记录</h3><div id="logList" class="settings-list"></div></section>
       </aside>
     </section>
+    ${isAccountsPage() ? renderAccountDialog() : ""}
+    ${!isAccountsPage() && isMaintenancePage() ? renderGenericMaintenanceDialog() : ""}
+    ${renderConfirmDialog()}
     <div id="toast" class="settings-toast" hidden></div>
+  `;
+}
+
+function renderGenericMaintenanceDialog() {
+  const maintenance = getMaintenanceDefinition();
+  const [idLabel, nameLabel, areaLabel, sourceLabel, scopeLabel, statusLabel, checkLabel, ownerLabel, traceLabel, riskLabel, nextLabel] = maintenance.fields;
+  return `
+    <div id="genericDialog" class="settings-modal" hidden>
+      <div class="settings-modal__panel" role="dialog" aria-modal="true" aria-labelledby="genericDialogTitle">
+        <div class="settings-modal__head">
+          <div>
+            <h3 id="genericDialogTitle">${maintenance.createLabel}</h3>
+            <p>${maintenance.noun}由后台维护配置、状态和责任链；审批、电子签名、消息投递等外部或人工动作只记录结果，不在后台代替执行。</p>
+          </div>
+          <button id="closeGenericDialogBtn" class="icon-button" type="button" aria-label="关闭维护弹窗">×</button>
+        </div>
+        <form id="genericForm" class="account-form">
+          <input id="genericEditingId" type="hidden" />
+          <label>${idLabel}<input id="genericIdInput" type="text" required /></label>
+          <label>${nameLabel}<input id="genericNameInput" type="text" required /></label>
+          <label>${areaLabel}<input id="genericAreaInput" type="text" required /></label>
+          <label>${sourceLabel}<select id="genericSourceInput">${maintenance.sourceOptions.map((option) => `<option>${option}</option>`).join("")}</select></label>
+          <label>${scopeLabel}<input id="genericScopeInput" type="text" required /></label>
+          <label>${statusLabel}<select id="genericStatusInput">${maintenance.statusOptions.map((option) => `<option>${option}</option>`).join("")}</select></label>
+          <label>${ownerLabel}<input id="genericOwnerInput" type="text" required /></label>
+          <label>${traceLabel}<input id="genericTraceInput" type="text" required /></label>
+          <label class="account-form__wide">${checkLabel}<input id="genericCheckInput" type="text" required /></label>
+          <label class="account-form__wide">${riskLabel}<input id="genericRiskInput" type="text" required /></label>
+          <label class="account-form__wide">${nextLabel}<input id="genericNextInput" type="text" required /></label>
+          <div class="settings-modal__actions">
+            <button id="cancelGenericDialogBtn" class="secondary-action" type="button">取消</button>
+            <button class="primary-action" type="submit">保存${maintenance.noun}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function renderAccountDialog() {
+  return `
+    <div id="accountDialog" class="settings-modal" hidden>
+      <div class="settings-modal__panel" role="dialog" aria-modal="true" aria-labelledby="accountDialogTitle">
+        <div class="settings-modal__head">
+          <div>
+            <h3 id="accountDialogTitle">新增人员账号</h3>
+            <p>后台维护账号、岗位、班组、数据范围和终端绑定；现场登录仍由工位终端、扫码枪或工牌/NFC 回传。</p>
+          </div>
+          <button id="closeAccountDialogBtn" class="icon-button" type="button" aria-label="关闭人员账号维护弹窗">×</button>
+        </div>
+        <form id="accountForm" class="account-form">
+          <input id="accountEditingId" type="hidden" />
+          <label>账号编号<input id="accountIdInput" name="id" type="text" required /></label>
+          <label>员工姓名与岗位<input id="accountNameInput" name="name" type="text" required placeholder="例如：计划员 陈诺" /></label>
+          <label>部门 / 班组<input id="accountAreaInput" name="area" type="text" required placeholder="例如：计划部 / Line-A 白班" /></label>
+          <label>身份来源<select id="accountSourceInput" name="source">
+            <option>HR 员工主档 + MES 账号</option>
+            <option>HR 在职 + QMS 资质</option>
+            <option>工牌 NFC + 班组排班</option>
+            <option>HR 员工主档 + PDA 设备绑定</option>
+            <option>模拟 HR 新员工同步 + MES 待开通</option>
+          </select></label>
+          <label>终端与数据范围<input id="accountScopeInput" name="scope" type="text" required placeholder="例如：后台工作台 / 订单与计划 / Line-A" /></label>
+          <label>账号状态<select id="accountStatusInput" name="status">
+            <option>可登录</option>
+            <option>需复核</option>
+            <option>锁定</option>
+            <option>离职停用</option>
+          </select></label>
+          <label>责任人<input id="accountOwnerInput" name="owner" type="text" required placeholder="例如：系统管理员 许航" /></label>
+          <label>工牌/NFC/PDA 绑定<input id="accountTraceInput" name="trace" type="text" required placeholder="例如：badge NFC-A099 / PDA-FG-02" /></label>
+          <label class="account-form__wide">准入校验<input id="accountCheckInput" name="check" type="text" required placeholder="例如：新员工待权限复核，暂不允许质量放行签核" /></label>
+          <label class="account-form__wide">业务影响<input id="accountRiskInput" name="risk" type="text" required placeholder="例如：只允许查看本班组任务，不可审批库存冻结" /></label>
+          <label class="account-form__wide">下一步闭环<input id="accountNextInput" name="next" type="text" required placeholder="例如：班组长确认后启用账号并写入操作记录" /></label>
+          <div class="settings-modal__actions">
+            <button id="cancelAccountDialogBtn" class="secondary-action" type="button">取消</button>
+            <button class="primary-action" type="submit">保存账号</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function renderConfirmDialog() {
+  return `
+    <div id="confirmDialog" class="settings-confirm" hidden>
+      <section class="settings-confirm__panel" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <div class="settings-confirm__head">
+          <span id="confirmTone" class="settings-confirm__badge">确认</span>
+          <button id="confirmCloseBtn" class="icon-button" type="button" aria-label="关闭确认弹窗">×</button>
+        </div>
+        <h3 id="confirmTitle">确认操作</h3>
+        <p id="confirmMessage"></p>
+        <div id="confirmMeta" class="settings-confirm__meta"></div>
+        <div class="settings-confirm__actions">
+          <button id="confirmCancelBtn" class="secondary-action" type="button">取消</button>
+          <button id="confirmOkBtn" class="primary-action" type="button">确认</button>
+        </div>
+      </section>
+    </div>
   `;
 }
 
@@ -330,8 +718,60 @@ function renderKpis() {
   `).join("");
 }
 
+function renderGovernanceStats() {
+  const stats = getGovernanceStats();
+  $("#governanceStats").innerHTML = [
+    ["统一治理事件", stats.total],
+    ["本页写入", stats.page],
+    ["审批/签名约束", stats.approvals],
+    ["风险拦截/演练", stats.risky],
+  ].map(([label, value]) => `<article><strong>${value}</strong><span>${label}</span></article>`).join("");
+}
+
+function renderGovernanceMatrix() {
+  const matrix = getGovernanceMatrix();
+  if (!state.matrixId && matrix[0]) state.matrixId = matrix[0].id;
+  $("#governanceMatrix").innerHTML = matrix.map((item) => `
+    <article class="settings-matrix__item ${item.id === state.matrixId ? "is-active" : ""}" data-matrix-id="${item.id}">
+      <div class="settings-matrix__main">
+        <span class="settings-matrix__code">${item.id}</span>
+        <strong>${item.control}</strong>
+        <p>${item.module}</p>
+      </div>
+      <div class="settings-matrix__rule">
+        <span>${item.rule}</span>
+        <small>${item.evidence}</small>
+      </div>
+      <div class="settings-matrix__owner">
+        <span class="pill ${getStatusStyle(item.status)}">${item.status}</span>
+        <small>${item.approver}</small>
+      </div>
+      <div class="settings-matrix__actions">
+        <button type="button" data-settings-matrix-action="${item.next}" data-id="${item.id}">${item.next}</button>
+        <button type="button" data-settings-matrix-action="影响评估" data-id="${item.id}">影响评估</button>
+      </div>
+    </article>
+  `).join("");
+  $("#governanceMatrix").querySelectorAll("[data-matrix-id]").forEach((itemEl) => {
+    itemEl.addEventListener("click", (event) => {
+      if (event.target.closest("[data-settings-matrix-action]")) return;
+      state.matrixId = itemEl.dataset.matrixId;
+      saveState();
+      renderAll();
+    });
+  });
+  $("#governanceMatrix").querySelectorAll("[data-settings-matrix-action]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      applyMatrixGovernanceAction(button.dataset.id, button.dataset.settingsMatrixAction);
+    });
+  });
+}
+
 function renderTable() {
-  $("#tableHead").innerHTML = `<tr>${getDefinition().columns.map((column) => `<th>${column}</th>`).join("")}</tr>`;
+  const columns = [...getDefinition().columns, "治理动作"];
+  $("#tableHead").innerHTML = `<tr>${columns.map((column) => `<th>${column}</th>`).join("")}</tr>`;
   const list = getFilteredRows();
   if (!list.find((row) => row.id === state.activeId)) state.activeId = list[0]?.id || rows[0]?.id || "";
   $("#tableBody").innerHTML = list.map((row) => `
@@ -344,8 +784,9 @@ function renderTable() {
       <td>${row.check}</td>
       <td>${row.owner}</td>
       <td>${row.time}</td>
+      <td>${isMaintenancePage() ? (isAccountsPage() ? renderAccountRowActions(row) : renderGenericRowActions(row)) : renderGovernanceRowActions(row)}</td>
     </tr>
-  `).join("") || `<tr><td colspan="8">暂无匹配记录，请调整筛选条件。</td></tr>`;
+  `).join("") || `<tr><td colspan="${columns.length}">暂无匹配记录，请调整筛选条件。</td></tr>`;
 
   $("#tableBody").querySelectorAll("tr[data-id]").forEach((rowEl) => {
     rowEl.addEventListener("click", () => {
@@ -353,6 +794,84 @@ function renderTable() {
       state.detailOpen = true;
       saveState();
       renderAll();
+    });
+  });
+  if (isAccountsPage()) bindAccountRowActions();
+  if (!isAccountsPage() && isMaintenancePage()) bindGenericRowActions();
+  if (!isMaintenancePage()) bindGovernanceRowActions();
+}
+
+function renderAccountRowActions(row) {
+  const lockLabel = row.status === "锁定" ? "解锁" : "锁定";
+  const activeLabel = row.status === "离职停用" ? "启用" : "离职停用";
+  return `
+    <div class="settings-row-actions">
+      <button type="button" data-account-action="edit" data-id="${row.id}">编辑</button>
+      <button type="button" data-account-action="review" data-id="${row.id}">权限复核</button>
+      <button type="button" data-account-action="lock" data-id="${row.id}">${lockLabel}</button>
+      <button class="danger-action" type="button" data-account-action="disable" data-id="${row.id}">${activeLabel}</button>
+    </div>
+  `;
+}
+
+function bindAccountRowActions() {
+  $("#tableBody").querySelectorAll("[data-account-action]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.activeId = button.dataset.id;
+      const action = button.dataset.accountAction;
+      if (action === "edit") openAccountDialog(button.dataset.id);
+      if (action === "review") reviewAccount(button.dataset.id);
+      if (action === "lock") toggleAccountLock(button.dataset.id);
+      if (action === "disable") toggleAccountDisable(button.dataset.id);
+    });
+  });
+}
+
+function renderGenericRowActions(row) {
+  const maintenance = getMaintenanceDefinition();
+  const activeLabel = row.status === maintenance.disable.offStatus ? maintenance.disable.onLabel : maintenance.disable.offLabel;
+  return `
+    <div class="settings-row-actions">
+      <button type="button" data-generic-action="edit" data-id="${row.id}">编辑</button>
+      <button type="button" data-generic-action="copy" data-id="${row.id}">复制</button>
+      <button type="button" data-generic-action="primary" data-id="${row.id}">${maintenance.primary.label}</button>
+      <button class="danger-action" type="button" data-generic-action="disable" data-id="${row.id}">${activeLabel}</button>
+    </div>
+  `;
+}
+
+function bindGenericRowActions() {
+  $("#tableBody").querySelectorAll("[data-generic-action]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.activeId = button.dataset.id;
+      const action = button.dataset.genericAction;
+      if (action === "edit") openGenericDialog(button.dataset.id);
+      if (action === "copy") copyGenericRow(button.dataset.id);
+      if (action === "primary") applyGenericPrimaryAction(button.dataset.id);
+      if (action === "disable") toggleGenericDisable(button.dataset.id);
+    });
+  });
+}
+
+function renderGovernanceRowActions(row) {
+  const firstAction = getGovernanceDefinition().actions[0] || "登记复核";
+  return `
+    <div class="settings-row-actions">
+      <button type="button" data-governance-row-action="review" data-id="${row.id}">${firstAction}</button>
+      <button type="button" data-governance-row-action="evidence" data-id="${row.id}">查看证据</button>
+    </div>
+  `;
+}
+
+function bindGovernanceRowActions() {
+  $("#tableBody").querySelectorAll("[data-governance-row-action]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.activeId = button.dataset.id;
+      const action = button.dataset.governanceRowAction === "evidence" ? "标记稽核样本" : getGovernanceDefinition().actions[0];
+      applyGovernanceQuickAction(action);
     });
   });
 }
@@ -414,11 +933,26 @@ function renderLogs() {
     : `<article><strong>暂无模拟记录</strong><span>页面会保存模拟回执、复核结果和重置前的演示状态。</span></article>`;
 }
 
+function renderGovernanceList() {
+  const active = getActiveRow();
+  const allEvents = getGovernanceEvents();
+  const events = (pageConfig.id === "logs"
+    ? allEvents
+    : allEvents.filter((event) => event.pageId === pageConfig.id || event.businessObject === active?.id || event.auditRef === active?.trace)
+  ).slice(0, 5);
+  $("#governanceList").innerHTML = events.length
+    ? events.map((event) => `<article><strong>${event.action} · ${event.businessObject}</strong><span>${event.time} · ${event.owner} · ${event.result}</span></article>`).join("")
+    : `<article><strong>等待治理动作</strong><span>新增、编辑、审批、补偿、归档、演练和危险确认会写入 MES_BUSINESS_FLOW.governanceEvents。</span></article>`;
+}
+
 function renderAll() {
   renderKpis();
+  renderGovernanceStats();
+  renderGovernanceMatrix();
   renderTable();
   renderCards();
   renderDetail();
+  renderGovernanceList();
   renderLogs();
 }
 
@@ -453,6 +987,11 @@ function bindEvents() {
     saveState();
     renderAll();
   });
+  if (isAccountsPage()) bindAccountMaintenanceEvents();
+  if (!isAccountsPage() && isMaintenancePage()) bindGenericMaintenanceEvents();
+  document.querySelectorAll("[data-governance-action]").forEach((button) => {
+    button.addEventListener("click", () => applyGovernanceQuickAction(button.dataset.governanceAction));
+  });
   $("#simulateBtn").addEventListener("click", () => addSimulationLog("模拟回执", $("#simulationInput").value || getDefinition().simulationTitle));
   $("#simulateTopBtn").addEventListener("click", () => addSimulationLog("模拟状态回执", getActiveRow().name));
   $("#secondaryActionBtn").addEventListener("click", () => addSimulationLog("复核结果", `${getActiveRow().id} 已登记责任复核`));
@@ -465,13 +1004,420 @@ function bindEvents() {
     renderAll();
     showToast("系统设置演示数据已重置");
   });
+  bindConfirmDialog();
+}
+
+function bindConfirmDialog() {
+  $("#confirmCancelBtn").addEventListener("click", closeConfirmDialog);
+  $("#confirmCloseBtn").addEventListener("click", closeConfirmDialog);
+  $("#confirmDialog").addEventListener("click", (event) => {
+    if (event.target.id === "confirmDialog") closeConfirmDialog();
+  });
+}
+
+function bindAccountMaintenanceEvents() {
+  $("#createMaintenanceBtn").addEventListener("click", () => openAccountDialog());
+  $("#closeAccountDialogBtn").addEventListener("click", closeAccountDialog);
+  $("#cancelAccountDialogBtn").addEventListener("click", closeAccountDialog);
+  $("#accountDialog").addEventListener("click", (event) => {
+    if (event.target.id === "accountDialog") closeAccountDialog();
+  });
+  $("#accountForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveAccountFromForm();
+  });
+}
+
+function bindGenericMaintenanceEvents() {
+  $("#createMaintenanceBtn").addEventListener("click", () => openGenericDialog());
+  $("#closeGenericDialogBtn").addEventListener("click", closeGenericDialog);
+  $("#cancelGenericDialogBtn").addEventListener("click", closeGenericDialog);
+  $("#genericDialog").addEventListener("click", (event) => {
+    if (event.target.id === "genericDialog") closeGenericDialog();
+  });
+  $("#genericForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveGenericFromForm();
+  });
+}
+
+function openAccountDialog(accountId = "") {
+  const account = rows.find((row) => row.id === accountId);
+  $("#accountDialogTitle").textContent = account ? "编辑人员账号" : "新增人员账号";
+  $("#accountEditingId").value = account?.id || "";
+  $("#accountIdInput").value = account?.id || getNextAccountId();
+  $("#accountIdInput").readOnly = Boolean(account);
+  $("#accountNameInput").value = account?.name || "";
+  $("#accountAreaInput").value = account?.area || "";
+  $("#accountSourceInput").value = account?.source || "HR 员工主档 + MES 账号";
+  $("#accountScopeInput").value = account?.scope || "";
+  $("#accountStatusInput").value = account?.status || "需复核";
+  $("#accountOwnerInput").value = account?.owner || "系统管理员 许航";
+  $("#accountTraceInput").value = account?.trace || "sys_user / badge 待绑定";
+  $("#accountCheckInput").value = account?.check || "新增账号待权限复核，暂未开放关键业务签核";
+  $("#accountRiskInput").value = account?.risk || "账号启用前不可执行开工准入、质量放行或库存冻结等关键动作";
+  $("#accountNextInput").value = account?.next || "完成岗位、班组、终端和角色复核后启用";
+  $("#accountDialog").hidden = false;
+  $("#accountNameInput").focus();
+}
+
+function closeAccountDialog() {
+  $("#accountDialog").hidden = true;
+}
+
+function saveAccountFromForm() {
+  const editingId = $("#accountEditingId").value;
+  const id = $("#accountIdInput").value.trim();
+  const existing = rows.find((row) => row.id === id);
+  if (!editingId && existing) {
+    showToast("账号编号已存在，请更换编号");
+    return;
+  }
+  const account = {
+    id,
+    name: $("#accountNameInput").value.trim(),
+    area: $("#accountAreaInput").value.trim(),
+    source: $("#accountSourceInput").value,
+    scope: $("#accountScopeInput").value.trim(),
+    status: $("#accountStatusInput").value,
+    statusStyle: getStatusStyle($("#accountStatusInput").value),
+    check: $("#accountCheckInput").value.trim(),
+    owner: $("#accountOwnerInput").value.trim(),
+    time: getNowText(),
+    trace: $("#accountTraceInput").value.trim(),
+    next: $("#accountNextInput").value.trim(),
+    risk: $("#accountRiskInput").value.trim(),
+  };
+  if (!account.id || !account.name || !account.area || !account.scope || !account.owner) {
+    showToast("请补齐账号、姓名、部门、范围和责任人");
+    return;
+  }
+  if (editingId) {
+    rows = rows.map((row) => row.id === editingId ? account : row);
+    addAuditLog("编辑人员账号", `${account.id} 已更新岗位、范围或终端绑定`);
+    writeGovernanceEvent("编辑人员账号", account, { result: "账号岗位、终端绑定或签名范围已更新，关键动作需重新校验" });
+  } else {
+    rows.unshift(account);
+    addAuditLog("新增人员账号", `${account.id} 已创建，状态为 ${account.status}`);
+    writeGovernanceEvent("新增人员账号", account, { approvalStatus: "待权限复核", result: "新增账号进入权限复核，不替代现场工牌/NFC 登录" });
+  }
+  state.activeId = account.id;
+  state.detailOpen = true;
+  closeAccountDialog();
+  populateFilters();
+  saveState();
+  renderAll();
+  showToast(`${account.id} 已保存`);
+}
+
+function openGenericDialog(rowId = "", options = {}) {
+  const maintenance = getMaintenanceDefinition();
+  const row = rowId ? rows.find((item) => item.id === rowId) : null;
+  const source = options.copyFrom || row;
+  $("#genericDialogTitle").textContent = row ? `编辑${maintenance.noun}` : maintenance.createLabel;
+  $("#genericEditingId").value = row?.id || "";
+  $("#genericIdInput").value = row?.id || options.copyId || getNextGenericId(maintenance.idPrefix);
+  $("#genericIdInput").readOnly = Boolean(row);
+  $("#genericNameInput").value = source?.name ? (options.copyFrom ? `${source.name} 复制` : source.name) : "";
+  $("#genericAreaInput").value = source?.area || "";
+  $("#genericSourceInput").value = source?.source || maintenance.defaults.source;
+  $("#genericScopeInput").value = source?.scope || "";
+  $("#genericStatusInput").value = source?.status || maintenance.defaults.status;
+  $("#genericOwnerInput").value = source?.owner || maintenance.defaults.owner;
+  $("#genericTraceInput").value = source?.trace || maintenance.defaults.trace;
+  $("#genericCheckInput").value = source?.check || maintenance.defaults.check;
+  $("#genericRiskInput").value = source?.risk || maintenance.defaults.risk;
+  $("#genericNextInput").value = source?.next || maintenance.defaults.next;
+  $("#genericDialog").hidden = false;
+  $("#genericNameInput").focus();
+}
+
+function closeGenericDialog() {
+  $("#genericDialog").hidden = true;
+}
+
+function saveGenericFromForm() {
+  const maintenance = getMaintenanceDefinition();
+  const editingId = $("#genericEditingId").value;
+  const id = $("#genericIdInput").value.trim();
+  const existing = rows.find((row) => row.id === id);
+  if (!editingId && existing) {
+    showToast(`${maintenance.noun}编码已存在，请更换编号`);
+    return;
+  }
+  const row = {
+    id,
+    name: $("#genericNameInput").value.trim(),
+    area: $("#genericAreaInput").value.trim(),
+    source: $("#genericSourceInput").value,
+    scope: $("#genericScopeInput").value.trim(),
+    status: $("#genericStatusInput").value,
+    statusStyle: getStatusStyle($("#genericStatusInput").value),
+    check: $("#genericCheckInput").value.trim(),
+    owner: $("#genericOwnerInput").value.trim(),
+    time: getNowText(),
+    trace: $("#genericTraceInput").value.trim(),
+    next: $("#genericNextInput").value.trim(),
+    risk: $("#genericRiskInput").value.trim(),
+  };
+  if (!row.id || !row.name || !row.area || !row.scope || !row.owner) {
+    showToast("请补齐编码、名称、对象、范围和责任人");
+    return;
+  }
+  if (editingId) {
+    rows = rows.map((item) => item.id === editingId ? row : item);
+    addAuditLog(`编辑${maintenance.noun}`, `${row.id} 已更新配置、范围或责任链`);
+    writeGovernanceEvent(`编辑${maintenance.noun}`, row, { result: `${maintenance.noun}配置、范围或责任链已更新` });
+  } else {
+    rows.unshift(row);
+    addAuditLog(`新增${maintenance.noun}`, `${row.id} 已创建，状态为 ${row.status}`);
+    writeGovernanceEvent(`新增${maintenance.noun}`, row, { approvalStatus: row.status.includes("待") ? "待审批/复核" : "", result: `${maintenance.noun}已创建并进入系统治理链路` });
+  }
+  state.activeId = row.id;
+  state.detailOpen = true;
+  closeGenericDialog();
+  populateFilters();
+  saveState();
+  renderAll();
+  showToast(`${row.id} 已保存`);
+}
+
+function copyGenericRow(rowId) {
+  const maintenance = getMaintenanceDefinition();
+  const row = rows.find((item) => item.id === rowId);
+  if (!row) return;
+  openGenericDialog("", { copyFrom: row, copyId: getNextGenericId(maintenance.idPrefix) });
+}
+
+function applyGenericPrimaryAction(rowId) {
+  const maintenance = getMaintenanceDefinition();
+  updateGenericRow(rowId, {
+    status: maintenance.primary.status,
+    statusStyle: getStatusStyle(maintenance.primary.status),
+    check: maintenance.primary.check,
+    next: maintenance.primary.next,
+  }, maintenance.primary.label, `${rowId} 已完成${maintenance.primary.label}`);
+}
+
+function toggleGenericDisable(rowId) {
+  const maintenance = getMaintenanceDefinition();
+  const row = rows.find((item) => item.id === rowId);
+  if (!row) return;
+  if (row.status === maintenance.disable.offStatus) {
+    updateGenericRow(rowId, {
+      status: maintenance.disable.onStatus,
+      statusStyle: getStatusStyle(maintenance.disable.onStatus),
+      check: maintenance.disable.onCheck,
+      next: maintenance.defaults.next,
+    }, maintenance.disable.onLabel, `${rowId} 已重新启用申请`);
+    return;
+  }
+  openConfirmDialog({
+    tone: "red",
+    title: `${maintenance.disable.offLabel} ${row.name}`,
+    message: `${maintenance.disable.offLabel}后不会删除历史审计、审批或投递记录；已被业务引用的配置保留原始履历。`,
+    meta: [`编码：${row.id}`, `当前状态：${row.status}`, `责任人：${row.owner}`],
+    okText: maintenance.disable.offLabel,
+    onConfirm: () => updateGenericRow(rowId, {
+      status: maintenance.disable.offStatus,
+      statusStyle: getStatusStyle(maintenance.disable.offStatus),
+      check: maintenance.disable.offCheck,
+      next: "保留历史履历，后续如需恢复需重新复核",
+    }, maintenance.disable.offLabel, `${rowId} 已停用并保留历史履历`),
+  });
+}
+
+function updateGenericRow(rowId, patch, action, note) {
+  let updatedRow = null;
+  rows = rows.map((row) => {
+    if (row.id !== rowId) return row;
+    updatedRow = { ...row, ...patch, time: getNowText() };
+    return updatedRow;
+  });
+  state.activeId = rowId;
+  state.detailOpen = true;
+  addAuditLog(action, note);
+  writeGovernanceEvent(action, updatedRow, { result: note, approvalStatus: /发布|启用|补偿|演练/.test(action) ? "已进入治理约束" : "" });
+  populateFilters();
+  saveState();
+  renderAll();
+  showToast(`${action}已写入操作记录`);
+}
+
+function applyGovernanceQuickAction(action) {
+  const active = getActiveRow();
+  if (!active) return;
+  const highRisk = /锁定|停用|补偿|演练|归档|导出|关闭|拦截/.test(action);
+  const commit = () => {
+    const note = `${active.id} ${action}已登记，责任人 ${active.owner}，关联 ${active.trace}`;
+    addAuditLog(action, note);
+    writeGovernanceEvent(action, active, {
+      approvalStatus: /审批|会签|签名|补偿|恢复|演练/.test(action) ? "待审批/复核" : "已记录",
+      result: `${action}已作为跨流程治理约束写入统一业务流`,
+    });
+    saveState();
+    renderAll();
+    showToast(`${action}已写入统一业务流`);
+  };
+  if (highRisk) {
+    openConfirmDialog({
+      tone: "red",
+      title: `${action} ${active.name}`,
+      message: "该动作会影响跨流程权限、审批、消息、接口、审计或恢复能力，静态演示只记录治理结果，不替代真实外部系统动作。",
+      meta: [`对象：${active.id}`, `责任人：${active.owner}`, `追溯引用：${active.trace}`],
+      okText: `确认${action}`,
+      onConfirm: commit,
+    });
+    return;
+  }
+  commit();
+}
+
+function applyMatrixGovernanceAction(itemId, action) {
+  const item = getGovernanceMatrix().find((entry) => entry.id === itemId);
+  if (!item) return;
+  state.matrixId = item.id;
+  const row = buildMatrixGovernanceRow(item);
+  const risky = /停用|补偿|演练|归档|导出|关闭|拦截|冻结|解冻|补打|恢复/.test(action);
+  const commit = () => {
+    const result = `${item.control} ${action}已登记；覆盖 ${item.module}，规则：${item.rule}`;
+    addAuditLog(action, `${item.id} ${result}`);
+    writeGovernanceEvent(action, row, {
+      status: item.status,
+      owner: item.approver,
+      auditRef: item.evidence,
+      approvalStatus: /审批|会签|签名|补偿|演练|发布|导出/.test(action) ? "待审批/复核" : "已记录",
+      result,
+      impact: `${item.module} 将按该治理控制项重新校验按钮权限、审批流、消息规则或审计策略`,
+    });
+    saveState();
+    renderAll();
+    showToast(`${item.control} ${action}已写入统一业务流`);
+  };
+  if (risky) {
+    openConfirmDialog({
+      tone: "red",
+      title: `${action} ${item.control}`,
+      message: "这是细粒度系统治理动作，会影响具体业务页面的按钮权限、审批流、消息升级、审计导出或恢复演练。静态演示只记录治理配置和校验结论。",
+      meta: [`控制项：${item.id}`, `覆盖页面：${item.module}`, `责任人：${item.approver}`],
+      okText: `确认${action}`,
+      onConfirm: commit,
+    });
+    return;
+  }
+  commit();
+}
+
+function reviewAccount(accountId) {
+  updateAccount(accountId, {
+    status: "可登录",
+    statusStyle: "green",
+    check: "权限复核通过，岗位、班组、终端绑定和电子签名范围已确认",
+    next: "进入月度权限复核，关键操作继续写入审计记录",
+  }, "权限复核", "已完成权限复核并允许登录");
+}
+
+function toggleAccountLock(accountId) {
+  const account = rows.find((row) => row.id === accountId);
+  if (!account) return;
+  if (account.status === "锁定") {
+    updateAccount(accountId, {
+      status: "需复核",
+      statusStyle: "orange",
+      check: "主管确认后已解除锁定，仍需权限管理员复核",
+      next: "完成权限复核后恢复可登录",
+    }, "账号解锁", "已解除锁定并转入复核");
+    return;
+  }
+  openConfirmDialog({
+    tone: "red",
+    title: `锁定 ${account.name}`,
+    message: "锁定后该账号不能登录后台、PDA 或参与电子签名。该动作会写入操作记录，历史生产履历不会被删除。",
+    meta: [`账号：${account.id}`, `范围：${account.scope}`, `责任人：${account.owner}`],
+    okText: "确认锁定",
+    onConfirm: () => updateAccount(accountId, {
+      status: "锁定",
+      statusStyle: "red",
+      check: "管理员手工锁定，等待主管确认和令牌复位",
+      next: "主管确认原因后执行解锁或离职停用",
+    }, "锁定账号", "账号已锁定并记录原因待补充"),
+  });
+}
+
+function toggleAccountDisable(accountId) {
+  const account = rows.find((row) => row.id === accountId);
+  if (!account) return;
+  if (account.status === "离职停用") {
+    updateAccount(accountId, {
+      status: "需复核",
+      statusStyle: "orange",
+      check: "离职停用已撤回，需重新确认 HR 在职、班组和终端绑定",
+      next: "复核通过后可重新启用",
+    }, "启用账号", "离职停用已撤回并转复核");
+    return;
+  }
+  openConfirmDialog({
+    tone: "red",
+    title: `离职停用 ${account.name}`,
+    message: "停用后该账号不能登录后台、PDA 或参与电子签名。已被生产履历引用的操作记录会保留，不会物理删除。",
+    meta: [`账号：${account.id}`, `当前状态：${account.status}`, "后续：移交未闭环审批和待办"],
+    okText: "确认停用",
+    onConfirm: () => updateAccount(accountId, {
+      status: "离职停用",
+      statusStyle: "red",
+      check: "HR 离职或岗位移出，已停用 MES 登录、PDA 和电子签名权限",
+      next: "保留历史履历，移交未闭环审批和待办",
+    }, "离职停用", "账号已停用，历史追溯记录保留"),
+  });
+}
+
+function openConfirmDialog({ tone = "orange", title, message, meta = [], okText = "确认", onConfirm }) {
+  $("#confirmTone").className = `settings-confirm__badge ${tone}`;
+  $("#confirmTone").textContent = tone === "red" ? "高风险操作" : "需要确认";
+  $("#confirmTitle").textContent = title;
+  $("#confirmMessage").textContent = message;
+  $("#confirmMeta").innerHTML = meta.map((item) => `<span>${item}</span>`).join("");
+  $("#confirmOkBtn").textContent = okText;
+  $("#confirmOkBtn").onclick = () => {
+    closeConfirmDialog();
+    onConfirm?.();
+  };
+  $("#confirmDialog").hidden = false;
+  $("#confirmCancelBtn").focus();
+}
+
+function closeConfirmDialog() {
+  $("#confirmDialog").hidden = true;
+  $("#confirmOkBtn").onclick = null;
+}
+
+function updateAccount(accountId, patch, action, note) {
+  let updatedAccount = null;
+  rows = rows.map((row) => {
+    if (row.id !== accountId) return row;
+    updatedAccount = { ...row, ...patch, time: getNowText() };
+    return updatedAccount;
+  });
+  state.activeId = accountId;
+  state.detailOpen = true;
+  addAuditLog(action, `${accountId} ${note}`);
+  writeGovernanceEvent(action, updatedAccount, { result: `${accountId} ${note}`, approvalStatus: /锁定|停用|复核/.test(action) ? "已记录审计约束" : "" });
+  populateFilters();
+  saveState();
+  renderAll();
+  showToast(`${action}已写入操作记录`);
+}
+
+function addAuditLog(action, note) {
+  logs.push({ action, note, time: getNowText() });
 }
 
 function addSimulationLog(action, note) {
-  logs.push({ action, note, time: new Date().toLocaleString("zh-CN", { hour12: false }) });
+  logs.push({ action, note, time: getNowText() });
   const active = getActiveRow();
   active.check = `${action}：${note}`;
-  active.time = new Date().toLocaleString("zh-CN", { hour12: false });
+  active.time = getNowText();
+  writeGovernanceEvent(action, active, { result: `${action}：${note}` });
   saveState();
   renderAll();
   showToast(`${action}已写入模拟操作记录`);

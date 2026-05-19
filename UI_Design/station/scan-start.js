@@ -459,6 +459,27 @@ function updateTask(id, patch, message) {
   const index = tasks.findIndex((item) => item.id === id);
   if (index < 0) return;
   tasks[index] = { ...tasks[index], ...patch };
+  const next = tasks[index];
+  if (patch.status === "生产中" || patch.status === "首件待确认") {
+    window.MES_BUSINESS_FLOW?.applyStationAction?.(next.orderId, "scanStart", {
+      dispatchId: next.dispatchNo,
+      station: next.station,
+      equipment: next.equipment,
+      status: next.status,
+      owner: next.operator,
+      result: message,
+    });
+  }
+  if (patch.status === "已拦截") {
+    window.MES_BUSINESS_FLOW?.applyStationAction?.(next.orderId, "startBlock", {
+      dispatchId: next.dispatchNo,
+      station: next.station,
+      equipment: next.equipment,
+      status: next.status,
+      owner: state.owner,
+      reason: next.notes || message,
+    });
+  }
   state.activeTaskId = id;
   recordLog(id, message, "状态已保存到本机演示数据");
   saveState();
@@ -610,6 +631,14 @@ function bindEvents() {
   $("#simulateDeviceBtn").addEventListener("click", () => {
     const task = getActiveTask();
     appendHistory(task, { action: "设备启动信号", scanType: "模拟设备信号", scanCode: task.equipment, owner: task.operator, result: "设备启动信号已绑定当前派工单" });
+    window.MES_BUSINESS_FLOW?.applyStationAction?.(task.orderId, "deviceStartSignal", {
+      dispatchId: task.dispatchNo,
+      station: task.station,
+      equipment: task.equipment,
+      status: "设备信号已绑定",
+      owner: task.operator,
+      result: "模拟设备启动信号已绑定当前派工单",
+    });
     recordLog(task.id, "已同步现场设备启动信号", "设备信号与开工记录已关联");
     saveState();
     renderAll();

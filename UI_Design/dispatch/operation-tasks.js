@@ -335,6 +335,9 @@ function updateTask(id, patch, message) {
   const index = tasks.findIndex((item) => item.id === id);
   if (index < 0) return;
   tasks[index] = { ...tasks[index], ...patch };
+  if (patch.status === "进行中") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(tasks[index].orderId, "release", { owner: tasks[index].operator || "班组长" });
+  if (patch.status === "异常停滞") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(tasks[index].orderId, "hold", { owner: tasks[index].operator || "班组长", reason: message });
+  if (patch.material?.includes("投料")) window.MES_BUSINESS_FLOW?.applyMaterialAction?.(tasks[index].orderId, "feedingRelease", { owner: tasks[index].operator || "操作员", status: "投料已确认", label: "工序任务投料确认" });
   state.activeTaskId = id;
   recordLog(id, message);
   saveState();

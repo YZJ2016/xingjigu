@@ -498,6 +498,16 @@ function updateEmployee(id, patch, message) {
   const index = employees.findIndex((item) => item.id === id);
   if (index < 0) return;
   employees[index] = { ...employees[index], ...patch };
+  const next = employees[index];
+  const action = patch.locked ? "loginLock" : patch.status === "已登录" ? "employeeLogin" : patch.status === "待登录" ? "qualificationPass" : "employeeStatus";
+  window.MES_BUSINESS_FLOW?.applyStationAction?.(next.orderId, action, {
+    dispatchId: next.dispatchNo,
+    station: next.station,
+    equipment: next.equipment,
+    status: next.status,
+    owner: next.name,
+    result: message,
+  });
   state.activeEmployeeId = id;
   recordLog(id, message);
   saveState();

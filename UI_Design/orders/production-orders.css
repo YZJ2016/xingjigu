@@ -517,3 +517,60 @@ tbody tr.is-active {
   color: var(--muted);
   background: rgba(242, 242, 247, 0.86);
 }
+
+.confirm-modal {
+  width: min(460px, calc(100vw - 40px));
+}
+
+.confirm-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.confirm-modal h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 20px;
+}
+
+.confirm-modal p {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.confirm-badge {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(255, 59, 48, 0.12);
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 850;
+  padding: 0 10px;
+}
+
+.confirm-meta {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.58);
+  margin-top: 14px;
+  padding: 10px;
+}
+
+.confirm-meta span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.confirm-actions {
+  margin-top: 16px;
+}

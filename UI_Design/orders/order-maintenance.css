@@ -1,0 +1,192 @@
+.plan-maintenance-panel {
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 18px;
+  margin-bottom: 14px;
+  padding: 14px;
+  background: var(--surface);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+.plan-maintenance-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.plan-maintenance-panel__head h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.plan-maintenance-panel__head p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.45;
+}
+
+.plan-maintenance-panel__badge {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(88, 86, 214, 0.1);
+  color: var(--indigo);
+  font-size: 12px;
+  font-weight: 850;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.plan-maintenance-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.plan-maintenance-actions,
+.plan-maintenance-log {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.plan-maintenance-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.plan-maintenance-actions button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.plan-maintenance-actions button[data-danger="true"] {
+  color: var(--red);
+}
+
+.plan-maintenance-actions button[data-warn="true"] {
+  color: var(--orange);
+}
+
+.plan-maintenance-log {
+  max-height: 146px;
+  overflow: auto;
+}
+
+.plan-maintenance-log__item {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 9px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.plan-maintenance-log__item span,
+.plan-maintenance-log__item em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.plan-maintenance-log__item strong {
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.plan-maintenance-modal {
+  width: min(720px, calc(100vw - 36px));
+}
+
+.plan-maintenance-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.plan-maintenance-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.plan-maintenance-form input,
+.plan-maintenance-form select,
+.plan-maintenance-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 9px 11px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  outline: none;
+}
+
+.plan-maintenance-form input,
+.plan-maintenance-form select {
+  height: 38px;
+}
+
+.plan-maintenance-form textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.plan-maintenance-form .is-wide,
+.plan-maintenance-form .modal__actions {
+  grid-column: 1 / -1;
+}
+
+.plan-maintenance-confirm {
+  width: min(500px, calc(100vw - 36px));
+}
+
+.plan-maintenance-confirm p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 1180px) {
+  .plan-maintenance-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .plan-maintenance-panel__head {
+    display: grid;
+  }
+
+  .plan-maintenance-actions,
+  .plan-maintenance-form {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-maintenance-log__item {
+    grid-template-columns: 1fr;
+  }
+}

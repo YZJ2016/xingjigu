@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xingjigu_mes_production_orders_v1";
+const STORAGE_KEY = "xingjigu_mes_production_orders_v2";
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -33,7 +33,7 @@ const initialOrders = [
   { id: "MO-202606-0012", product: "工业触控终端 HMI-100", customer: "J 客户", qty: 320, done: 80, due: "2026-06-30", line: "Line-B", status: "待首检", priority: "高", risk: "质量", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "320", planner: "李计划", materialGap: "首件尺寸项待确认" },
 ];
 
-let orders = structuredClone(initialOrders);
+let orders = structuredClone(window.MES_BUSINESS_FLOW?.read().orders || window.MES_MASTER_DATA?.orders || initialOrders);
 let integrationLogs = [];
 let state = {
   activeOrderId: "MO-202606-0001",
@@ -110,10 +110,15 @@ function renderFrameMenu() {
 
 function loadState() {
   try {
+    const flowState = window.MES_BUSINESS_FLOW?.read();
+    if (flowState?.orders) {
+      orders = flowState.orders;
+      integrationLogs = flowState.logs.map((item) => ({ orderId: item.orderId, action: `${item.stage}：${item.action} - ${item.result}`, time: item.time }));
+    }
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!saved) return;
-    orders = saved.orders || orders;
-    integrationLogs = saved.integrationLogs || integrationLogs;
+    orders = flowState?.orders || saved.orders || orders;
+    integrationLogs = flowState?.logs?.map((item) => ({ orderId: item.orderId, action: `${item.stage}：${item.action} - ${item.result}`, time: item.time })) || saved.integrationLogs || integrationLogs;
     state = { ...state, ...(saved.state || {}) };
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
@@ -123,6 +128,12 @@ function loadState() {
 function saveState() {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || {};
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, orders, integrationLogs, state }));
+}
+
+function syncFlowStore(pageState = state) {
+  const shape = window.MES_BUSINESS_FLOW?.getOrderStoreShape?.("state", pageState);
+  if (!shape) return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...shape, state: pageState }));
 }
 
 function getActiveOrder() {
@@ -217,7 +228,7 @@ function renderTable() {
           <td>
             <div class="table-actions">
               <button type="button" data-action="edit" data-order-id="${order.id}">编辑</button>
-              <button class="danger-action" type="button" data-action="delete" data-order-id="${order.id}">删除</button>
+              <button class="danger-action" type="button" data-action="delete" data-order-id="${order.id}">${canPhysicallyDelete(order) ? "删除" : "作废"}</button>
             </div>
           </td>
         </tr>
@@ -377,6 +388,7 @@ function bindEvents() {
     if (event.target.id === "orderFormBackdrop") closeOrderForm();
   });
   $("#orderForm").addEventListener("submit", saveOrderForm);
+  bindConfirmDialog();
   $("#orderSearch").addEventListener("input", (event) => {
     state.search = event.target.value;
     state.page = 1;
@@ -419,7 +431,8 @@ function bindEvents() {
   });
   $("#resetOrderPageBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
-    orders = structuredClone(initialOrders);
+    const flowState = window.MES_BUSINESS_FLOW?.reset?.();
+    orders = structuredClone(flowState?.orders || initialOrders);
     integrationLogs = [];
     state = { activeOrderId: "MO-202606-0001", search: "", status: "all", line: "all", risk: "all", page: 1, pageSize: 5, editingOrderId: null };
     $("#orderSearch").value = "";
@@ -440,12 +453,26 @@ function bindEvents() {
   $("#createRiskBtn").addEventListener("click", () => updateActiveOrder({ risk: "交期", schedule: "待调整" }, "计划风险已登记"));
 }
 
+function bindConfirmDialog() {
+  $("#confirmCancelBtn").addEventListener("click", closeConfirmDialog);
+  $("#confirmCloseBtn").addEventListener("click", closeConfirmDialog);
+  $("#confirmBackdrop").addEventListener("click", (event) => {
+    if (event.target.id === "confirmBackdrop") closeConfirmDialog();
+  });
+}
+
 function updateActiveOrder(patch, message) {
   const index = orders.findIndex((order) => order.id === state.activeOrderId);
   if (index < 0) return;
   orders[index] = { ...orders[index], ...patch };
+  if (message.includes("评审")) window.MES_BUSINESS_FLOW?.applyAction(orders[index].id, "approveReview", { owner: orders[index].planner });
+  else if (message.includes("排程")) window.MES_BUSINESS_FLOW?.applyAction(orders[index].id, "publishPlan", { owner: orders[index].planner });
+  else if (message.includes("齐套")) window.MES_BUSINESS_FLOW?.applyAction(orders[index].id, "confirmKit", { owner: orders[index].planner });
+  else window.MES_BUSINESS_FLOW?.upsertOrder(orders[index], { action: message });
   recordIntegration(orders[index].id, message);
+  loadState();
   saveState();
+  syncFlowStore();
   renderAll();
   showToast(message);
 }
@@ -523,14 +550,17 @@ function saveOrderForm(event) {
     const index = orders.findIndex((item) => item.id === state.editingOrderId);
     if (index < 0) return;
     orders[index] = order;
+    window.MES_BUSINESS_FLOW?.upsertOrder(order, { action: "订单变更" });
   } else {
     orders.unshift(order);
     state.page = 1;
+    window.MES_BUSINESS_FLOW?.upsertOrder(order, { action: "MES 新增订单" });
   }
   state.activeOrderId = order.id;
   recordIntegration(order.id, isEdit ? "订单变更已推送联动" : "新增订单已推送联动");
   closeOrderForm();
   saveState();
+  syncFlowStore();
   renderAll();
   showToast(isEdit ? "生产订单已更新" : "生产订单已新增");
 }
@@ -541,17 +571,59 @@ function deleteOrder(orderId) {
     showToast("未找到要删除的生产订单");
     return;
   }
-  const confirmed = window.confirm(`确认删除 ${order.id}？删除后可通过重置演示恢复初始数据。`);
-  if (!confirmed) return;
-  recordIntegration(order.id, "删除订单已通知下游模块");
-  orders = orders.filter((item) => item.id !== orderId);
-  if (state.activeOrderId === orderId) {
-    state.activeOrderId = orders[0]?.id || "";
-  }
-  state.page = Math.min(state.page, getPagination().totalPages);
-  saveState();
-  renderAll();
-  showToast("生产订单已删除");
+  const canDelete = canPhysicallyDelete(order);
+  openConfirmDialog({
+    title: `${canDelete ? "删除" : "作废"} ${order.id}`,
+    message: canDelete
+      ? "该订单尚未被评审、排程或现场执行引用，可从当前 MES 演示订单池删除。真实系统仍会保留导入和操作审计。"
+      : "该订单已被评审、排程、派工或现场执行引用，不能物理删除。系统将改为作废并保留订单、责任人、时间戳和下游影响履历。",
+    meta: [`产品：${order.product}`, `客户：${order.customer}`, `状态：${order.status} / 风险：${order.risk}`],
+    okText: canDelete ? "确认删除" : "确认作废",
+    onConfirm: () => {
+      if (canDelete) {
+        recordIntegration(order.id, "未引用订单已删除并保留导入审计");
+        orders = orders.filter((item) => item.id !== orderId);
+        const flowState = window.MES_BUSINESS_FLOW?.read?.();
+        if (flowState) {
+          flowState.orders = flowState.orders.filter((item) => item.id !== orderId);
+          window.MES_BUSINESS_FLOW.write(flowState);
+        }
+        if (state.activeOrderId === orderId) state.activeOrderId = orders[0]?.id || "";
+        showToast("生产订单已删除");
+      } else {
+        const index = orders.findIndex((item) => item.id === orderId);
+        orders[index] = { ...orders[index], status: "已作废", risk: "资料", materialGap: "订单作废，停止后续计划动作" };
+        window.MES_BUSINESS_FLOW?.upsertOrder(orders[index], { action: "订单作废" });
+        recordIntegration(order.id, "订单已作废，已通知评审、排程、齐套与派工准备");
+        showToast("生产订单已作废");
+      }
+      state.page = Math.min(state.page, getPagination().totalPages);
+      saveState();
+      renderAll();
+    },
+  });
+}
+
+function canPhysicallyDelete(order) {
+  return order.done === 0 && order.review === "待评审" && order.schedule === "未排程" && ["待评审", "待排程"].includes(order.status);
+}
+
+function openConfirmDialog({ title, message, meta = [], okText = "确认", onConfirm }) {
+  $("#confirmTitle").textContent = title;
+  $("#confirmMessage").textContent = message;
+  $("#confirmMeta").innerHTML = meta.map((item) => `<span>${item}</span>`).join("");
+  $("#confirmOkBtn").textContent = okText;
+  $("#confirmOkBtn").onclick = () => {
+    closeConfirmDialog();
+    onConfirm?.();
+  };
+  $("#confirmBackdrop").hidden = false;
+  $("#confirmCancelBtn").focus();
+}
+
+function closeConfirmDialog() {
+  $("#confirmBackdrop").hidden = true;
+  $("#confirmOkBtn").onclick = null;
 }
 
 function recordIntegration(orderId, action) {
@@ -574,6 +646,15 @@ function showToast(message) {
     toast.hidden = true;
   }, 1800);
 }
+
+window.addEventListener("plan-maintenance:changed", () => {
+  loadState();
+  renderAll();
+});
+window.addEventListener("mes-flow:changed", () => {
+  loadState();
+  renderAll();
+});
 
 loadState();
 renderFrameMenu();

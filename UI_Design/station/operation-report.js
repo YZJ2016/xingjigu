@@ -502,6 +502,17 @@ function updateReport(id, patch, message) {
   const index = reports.findIndex((item) => item.id === id);
   if (index < 0) return;
   reports[index] = { ...reports[index], ...patch };
+  const next = reports[index];
+  const action = patch.status === "校验拦截" ? "reportBlock" : patch.status === "已报工" || patch.status === "ERP 待回传" ? "operationReport" : "reportReview";
+  window.MES_BUSINESS_FLOW?.applyStationAction?.(next.orderId, action, {
+    dispatchId: next.dispatchNo,
+    station: next.station,
+    equipment: next.equipment,
+    status: next.status,
+    owner: next.operator || state.owner,
+    goodQty: next.goodQty,
+    result: message,
+  });
   state.activeReportId = id;
   recordLog(id, message, "状态已保存到本机演示数据");
   saveState();

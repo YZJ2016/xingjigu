@@ -1,5 +1,5 @@
 const pageConfig = window.QUALITY_PAGE || { id: "incoming", title: "来料检验", eyebrow: "质量检验 / 来料检验" };
-const STORAGE_KEY = `xingjigu_mes_quality_upstream_${pageConfig.id}_v1`;
+const STORAGE_KEY = `xingjigu_mes_quality_upstream_${pageConfig.id}_v2`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -101,9 +101,12 @@ const initialRows = {
   ],
 };
 
+Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.qualityUpstream || {});
+
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true, openMenus: { quality: true } };
 let logs = [];
+let maintenanceRecords = [];
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -157,14 +160,26 @@ function loadState() {
     if (!saved) return;
     rows = saved.rows || rows;
     logs = saved.logs || logs;
+    maintenanceRecords = saved.maintenanceRecords || maintenanceRecords;
     state = { ...state, ...(saved.state || {}) };
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  mergeFlowRows();
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, state }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, maintenanceRecords, state }));
+}
+
+function mergeFlowRows() {
+  const flowRows = window.MES_BUSINESS_FLOW?.getQualityRows?.(pageConfig.id) || [];
+  if (!flowRows.length) return;
+  const existing = new Map(rows.map((item) => [item.id, item]));
+  flowRows.forEach((item) => {
+    if (!existing.has(item.id)) rows.push(item);
+  });
+  if (!rows.some((item) => item.id === state.activeId)) state.activeId = rows[0]?.id || "";
 }
 
 function getDefinition() {
@@ -236,7 +251,7 @@ function renderTable() {
     <tr class="${item.id === state.activeId ? "is-active" : ""}" data-id="${item.id}">
       ${buildCells(item).map((cell) => `<td>${cell}</td>`).join("")}
     </tr>
-  `).join("") : `<tr><td colspan="8">当前筛选条件下没有${pageConfig.title}记录</td></tr>`;
+  `).join("") : `<tr><td colspan="8"><div class="empty-action">当前筛选条件下没有${pageConfig.title}记录 <button type="button" data-maintenance-action="create">新增检验任务</button></div></td></tr>`;
   $("#qualityTableBody").querySelectorAll("tr[data-id]").forEach((row) => {
     row.addEventListener("click", () => {
       state.activeId = row.dataset.id;
@@ -244,6 +259,9 @@ function renderTable() {
       saveState();
       renderAll();
     });
+  });
+  $("#qualityTableBody").querySelectorAll("[data-maintenance-action]").forEach((button) => {
+    button.addEventListener("click", () => handleMaintenanceAction(button.dataset.maintenanceAction));
   });
 }
 
@@ -345,10 +363,111 @@ function renderLogs() {
 }
 
 function renderAll() {
+  mergeFlowRows();
   renderMetrics();
   renderTable();
   renderCards();
+  renderMaintenancePanel();
   renderDetail();
+}
+
+function getMaintenanceRecipe() {
+  const map = {
+    incoming: ["IQC 检验任务", "录入并复核结论", "放行/冻结后关闭", "IQC 检验员 孟可"],
+    firstArticle: ["首件检验任务", "复核首件结论并放行", "驳回/放行关闭", "首件检验员 赵宁"],
+    patrol: ["IPQC 巡检任务", "补录巡检并转 NCR", "关闭巡检任务", "IPQC 王珊"],
+  };
+  const [create, process, close, owner] = map[pageConfig.id] || map.incoming;
+  return { create, process, close, owner };
+}
+
+function getActiveMaintenance() {
+  return maintenanceRecords[0];
+}
+
+function renderMaintenancePanel() {
+  let panel = $("#qualityMaintenancePanel");
+  if (!panel) {
+    panel = document.createElement("section");
+    panel.id = "qualityMaintenancePanel";
+    panel.className = "quality-panel maintenance-panel";
+    document.querySelector(".quality-left .simulation-box")?.before(panel);
+  }
+  const active = getActive();
+  const recipe = getMaintenanceRecipe();
+  const current = getActiveMaintenance();
+  panel.innerHTML = `
+    <div class="quality-panel__head">
+      <div>
+        <h3>${pageConfig.title}手工维护闭环</h3>
+        <p>后台维护检验任务、结论复核、放行/隔离和关闭记录；采样、PDA 巡检、仪器测试均作为模拟回执或后台复核依据。</p>
+      </div>
+    </div>
+    <div class="maintenance-flow">
+      <button type="button" data-maintenance-action="create">新建 ${recipe.create}</button>
+      <button type="button" data-maintenance-action="process"${current ? "" : " disabled"}>${recipe.process}</button>
+      <button type="button" class="danger-action" data-maintenance-action="close"${current ? "" : " disabled"}>${recipe.close}</button>
+    </div>
+    <div class="maintenance-record">
+      ${current ? `
+        <div><span>维护单</span><strong>${current.id} · ${current.status}</strong></div>
+        <div><span>关联单据</span><strong>${current.related}</strong></div>
+        <div><span>责任/时间</span><strong>${current.owner} · ${current.time}</strong></div>
+        <div><span>前后值摘要</span><strong>${current.before} -> ${current.after}</strong></div>
+      ` : `<div><span>暂无维护单</span><strong>可基于 ${active?.id || pageConfig.title} 新建一条质量管理任务</strong></div>`}
+    </div>
+    <div class="maintenance-log">
+      ${maintenanceRecords.slice(0, 4).map((item) => `<div><span>${item.time}</span><strong>${item.id} ${item.action}：${item.status}</strong></div>`).join("") || `<div><span>操作记录</span><strong>新建、复核、放行、驳回、关闭会写入 localStorage 和统一治理事件</strong></div>`}
+    </div>
+  `;
+  panel.querySelectorAll("[data-maintenance-action]").forEach((button) => {
+    button.addEventListener("click", () => handleMaintenanceAction(button.dataset.maintenanceAction));
+  });
+}
+
+function handleMaintenanceAction(action) {
+  const active = getActive();
+  if (!active) return;
+  const recipe = getMaintenanceRecipe();
+  const now = new Date().toLocaleString("zh-CN", { hour12: false });
+  let record = getActiveMaintenance();
+  if (action === "create") {
+    record = {
+      id: `QA-MAINT-${Date.now().toString().slice(-6)}`,
+      action: recipe.create,
+      status: "待复核",
+      related: `${active.order} / ${active.dispatch} / ${active.id}`,
+      owner: recipe.owner,
+      time: now,
+      before: `${active.status} / ${active.action}`,
+      after: `已新建${recipe.create}`,
+    };
+    maintenanceRecords.unshift(record);
+  } else {
+    if (!record) return;
+    if (action === "close" && !confirm(`确认${recipe.close}？质量记录会保留追溯和审计，不能无痕删除。`)) return;
+    record.action = action === "process" ? recipe.process : recipe.close;
+    record.status = action === "process" ? "已复核/待关闭" : "已关闭";
+    record.time = now;
+    record.before = record.after;
+    record.after = action === "process" ? `${recipe.process}完成，结论等待放行或隔离` : `${recipe.close}完成，追溯记录已归档`;
+  }
+  window.MES_BUSINESS_FLOW?.applyQualityAction?.(active, action === "process" ? "qualityRelease" : "qualityBlock", {
+    status: record.status,
+    owner: record.owner,
+    result: `${record.id} ${record.before} -> ${record.after}`,
+  });
+  window.MES_BUSINESS_FLOW?.applyGovernanceAction?.({ id: record.id, name: pageConfig.title, owner: record.owner, risk: active.risk }, "quality", record.action, {
+    orderId: active.order,
+    status: record.status,
+    source: "质量检验后台维护",
+    result: record.after,
+    auditRef: record.related,
+  });
+  appendLog(`${record.id} ${record.action}：${record.before} -> ${record.after}，责任人 ${record.owner}`);
+  saveState();
+  renderAll();
+  showToast("质量维护记录已保存");
 }
 
 function updateActiveStatus(status, message) {
@@ -383,6 +502,11 @@ function updateActiveStatus(status, message) {
     active.next = "NCR 已生成，等待车间主任与质量工程师闭环";
     active.result = "模拟巡检发现异常，已生成 NCR";
   }
+  window.MES_BUSINESS_FLOW?.applyQualityAction?.(active, status === getDefinition().primaryStatus ? "qualityRelease" : "qualityBlock", {
+    status,
+    owner: active.owner,
+    result: active.result || active.action,
+  });
   appendLog(message || `${active.id} 状态更新为 ${status}`);
   saveState();
   renderPageChrome();
@@ -405,9 +529,10 @@ function simulateStatus() {
 
 function resetPage() {
   localStorage.removeItem(STORAGE_KEY);
-  rows = structuredClone(initialRows[pageConfig.id]);
+  rows = structuredClone([...(window.MES_BUSINESS_FLOW?.getQualityRows?.(pageConfig.id) || []), ...initialRows[pageConfig.id]]);
   state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true, openMenus: { quality: true } };
   logs = [];
+  maintenanceRecords = [];
   $("#searchInput").value = "";
   $("#simulationInput").value = "";
   renderFrameMenu();
@@ -468,6 +593,7 @@ function bindEvents() {
 }
 
 function init() {
+  mergeFlowRows();
   loadState();
   state.openMenus = { quality: true, ...(state.openMenus || {}) };
   renderFrameMenu();
@@ -476,6 +602,11 @@ function init() {
   $("#statusFilter").value = state.status;
   $("#lineFilter").value = state.line;
   bindEvents();
+  window.addEventListener("mes-flow:changed", () => {
+    mergeFlowRows();
+    renderPageChrome();
+    renderAll();
+  });
   renderAll();
 }
 

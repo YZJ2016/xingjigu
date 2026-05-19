@@ -1,5 +1,5 @@
 const pageConfig = window.MONITORING_PAGE || { id: "output", title: "实时产量", eyebrow: "过程监控 / 实时产量" };
-const STORAGE_KEY = `xingjigu_mes_monitoring_${pageConfig.id}_v1`;
+const STORAGE_KEY = `xingjigu_mes_monitoring_${pageConfig.id}_v2`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -163,6 +163,8 @@ const initialRows = {
   ],
 };
 
+Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.monitoring || {});
+
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
 let logs = [];
@@ -222,10 +224,21 @@ function loadState() {
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  mergeFlowRows();
 }
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, state }));
+}
+
+function mergeFlowRows() {
+  const flowRows = window.MES_BUSINESS_FLOW?.getMonitoringRows?.(pageConfig.id) || [];
+  if (!flowRows.length) return;
+  const existing = new Map(rows.map((item) => [item.id, item]));
+  flowRows.forEach((item) => {
+    if (!existing.has(item.id)) rows.push(item);
+  });
+  if (!rows.some((item) => item.id === state.activeId)) state.activeId = rows[0]?.id || "";
 }
 
 function getDefinition() {
@@ -270,6 +283,7 @@ function renderPageChrome() {
   $("#statusFilter").innerHTML = `<option value="all">全部状态</option>${[...new Set(rows.map((item) => item.status))].map((status) => `<option value="${status}">${status}</option>`).join("")}`;
   $("#lineFilter").innerHTML = `<option value="all">全部产线</option>${[...new Set(rows.map((item) => item.line))].map((line) => `<option value="${line}">${line}</option>`).join("")}`;
   $("#tableHead").innerHTML = `<tr>${def.columns.map((col) => `<th>${col}</th>`).join("")}</tr>`;
+  ensureFocusPanel();
 }
 
 function renderMetrics() {
@@ -282,6 +296,148 @@ function renderMetrics() {
       <em>${index === 3 ? "需联动质量、设备、排程或异常闭环" : "随筛选条件实时变化"}</em>
     </article>
   `).join("");
+}
+
+function ensureFocusPanel() {
+  if ($("#monitoringFocusPanel")) return;
+  $("#monitoringMetrics").insertAdjacentHTML("afterend", `<section id="monitoringFocusPanel" class="monitoring-focus"></section>`);
+}
+
+function renderFocusPanel() {
+  ensureFocusPanel();
+  const active = getActive();
+  const visible = getVisibleRows();
+  const renderers = {
+    output: renderOutputFocus,
+    runtime: renderRuntimeFocus,
+    parameters: renderParameterFocus,
+    alarms: renderAlarmFocus,
+    downtime: renderDowntimeFocus,
+    trends: renderTrendFocus,
+    board: renderBoardFocus,
+  };
+  $("#monitoringFocusPanel").className = `monitoring-focus monitoring-focus--${pageConfig.id}`;
+  $("#monitoringFocusPanel").innerHTML = renderers[pageConfig.id](active, visible) + renderFocusMeta(active);
+  $("#monitoringFocusPanel").querySelectorAll("[data-focus-id]").forEach((item) => {
+    item.addEventListener("click", () => {
+      state.activeId = item.dataset.focusId;
+      state.detailOpen = true;
+      saveState();
+      renderAll();
+    });
+  });
+}
+
+function renderFocusMeta(active) {
+  return `
+    <div class="focus-meta" aria-label="当前监控对象闭环摘要">
+      <article><span>状态来源</span><strong>${active.source}</strong></article>
+      <article><span>责任人与时间</span><strong>${active.owner} · ${active.time}</strong></article>
+      <article><span>关联单据</span><strong>${active.order} / ${active.dispatch}</strong></article>
+      <article><span>追溯与边界</span><strong>${active.trace} · 模拟回执不替代现场控制</strong></article>
+    </div>
+  `;
+}
+
+function renderOutputFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>产量节拍达成</h2><p>按产线把 PLC 脉冲、HMI 计数和报工草稿绑定到工单，不在后台直接报工。</p></div>${pill(active.status)}</div>
+    <div class="output-lanes">${visible.length ? visible.map((item) => {
+      const percent = getRatioPercent(item.value);
+      return `
+        <article data-focus-id="${item.id}" class="${item.id === state.activeId ? "is-active" : ""}">
+          <span>${item.line} · ${item.station}</span>
+          <strong>${item.value}</strong>
+          <div class="progress"><i style="width:${percent}%"></i></div>
+          <em>${item.standard} · ${item.action}</em>
+        </article>
+      `;
+    }).join("") : emptyFocus("当前筛选条件下没有产量节拍记录")}</div>
+  `;
+}
+
+function renderRuntimeFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>设备状态矩阵</h2><p>突出运行、待机、故障、满载和开工准入影响；后台只记录模拟状态回执。</p></div><strong>${active.equipment}</strong></div>
+    <div class="runtime-map">${visible.length ? visible.map((item) => `
+      <button type="button" data-focus-id="${item.id}" class="${statusStyle(item.status)} ${item.id === state.activeId ? "is-active" : ""}">
+        <span>${item.equipment}</span><strong>${item.status}</strong><em>${item.value}</em>
+      </button>
+    `).join("") : emptyFocus("当前筛选条件下没有设备状态记录")}</div>
+  `;
+}
+
+function renderParameterFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>参数规格门</h2><p>按规格限识别合格、接近上限和超限拦截，联动过程检验与报工拦截。</p></div>${pill(active.status)}</div>
+    <div class="parameter-gates">${visible.length ? visible.map((item) => `
+      <article data-focus-id="${item.id}" class="${item.id === state.activeId ? "is-active" : ""}">
+        <span>${item.primary}</span><strong>${item.value}</strong><em>${item.standard}</em>${pill(item.status)}
+      </article>
+    `).join("") : emptyFocus("当前筛选条件下没有参数规格记录")}</div>
+  `;
+}
+
+function renderAlarmFocus(active, visible) {
+  const levels = ["高等级", "中等级", "低等级"];
+  return `
+    <div class="focus-head"><div><h2>报警分级流</h2><p>按等级、派单、响应和关闭结果组织报警，不在后台制造或关闭现场报警。</p></div><strong>${active.time}</strong></div>
+    <div class="alarm-flow">${levels.map((level) => `
+      <section><h3>${level}</h3>${visible.filter((item) => item.value === level).map((item) => focusItem(item, `${item.primary} · ${item.status}`)).join("") || "<p>暂无报警</p>"}</section>
+    `).join("")}</div>
+  `;
+}
+
+function renderDowntimeFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>停机原因归因</h2><p>区分 PLC 停机事实、班组模拟补录、维修验收和 OEE/排程影响。</p></div>${pill(active.status)}</div>
+    <div class="downtime-bars">${visible.length ? visible.map((item) => {
+      const minutes = Math.max(extractMinutes(item.value), /计划停机/.test(item.status) ? 60 : 8);
+      return `
+        <article data-focus-id="${item.id}" class="${item.id === state.activeId ? "is-active" : ""}">
+          <div><span>${item.equipment}</span><strong>${item.value}</strong></div>
+          <div class="bar"><i style="width:${Math.min(minutes * 2, 100)}%"></i></div>
+          <em>${item.standard} · ${item.action}</em>
+        </article>
+      `;
+    }).join("") : emptyFocus("当前筛选条件下没有停机归因记录")}</div>
+  `;
+}
+
+function renderTrendFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>SPC 趋势预警</h2><p>用时序窗口、判异结果和处置建议突出趋势页，不改写原始采集数据。</p></div>${pill(active.status)}</div>
+    <div class="trend-cards">${visible.length ? visible.map((item) => `
+      <article data-focus-id="${item.id}" class="${statusStyle(item.status)} ${item.id === state.activeId ? "is-active" : ""}">
+        <span>${item.value}</span><strong>${item.primary}</strong><em>${item.standard}</em><small>${item.action}</small>
+      </article>
+    `).join("") : emptyFocus("当前筛选条件下没有 SPC 趋势记录")}</div>
+  `;
+}
+
+function renderBoardFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>电子看板发布屏</h2><p>面向现场大屏发布产量、设备、异常和质量状态，保留刷新、签收和追溯入口。</p></div><strong>${active.standard}</strong></div>
+    <div class="board-wall">${visible.length ? visible.map((item) => `
+      <article data-focus-id="${item.id}" class="${item.id === state.activeId ? "is-active" : ""}">
+        <span>${item.station}</span><strong>${item.value}</strong><em>${item.item}</em>${pill(item.status)}
+      </article>
+    `).join("") : emptyFocus("当前筛选条件下没有看板发布记录")}</div>
+  `;
+}
+
+function focusItem(item, text) {
+  return `<button type="button" data-focus-id="${item.id}" class="${item.id === state.activeId ? "is-active" : ""}"><strong>${item.id}</strong><span>${text}</span><em>${item.action}</em></button>`;
+}
+
+function emptyFocus(text) {
+  return `<article class="focus-empty"><strong>${text}</strong><em>请调整搜索、状态或产线筛选</em></article>`;
+}
+
+function getRatioPercent(text) {
+  const match = text.match(/(\d+)\s*\/\s*(\d+)/);
+  if (!match) return 0;
+  return Math.min(100, Math.round((Number(match[1]) / Number(match[2])) * 100));
 }
 
 function buildMetricValues(visible) {
@@ -404,18 +560,81 @@ function renderDetail() {
     ["当前动作", active.action],
     ["异常处置", /故障|预警|拦截|待|失控|瓶颈/.test(active.status + active.action) ? "需进入异常、质量、设备或排程闭环" : "当前无阻断，继续监控并归档"],
     ["下游引用", active.trace],
-  ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("") + renderReviewActions(active);
+  $("#actionList").querySelectorAll("[data-monitoring-action]").forEach((button) => {
+    button.addEventListener("click", () => runReviewAction(button.dataset.monitoringAction));
+  });
   renderLogs();
 }
 
 function renderLogs() {
   $("#logList").innerHTML = logs.length ? logs.slice(0, 5).map((log) => `
-    <div><span>${log.time}</span><strong>${log.text}</strong></div>
+    <div><span>${log.time}</span><strong>${log.text}</strong>${log.snapshot ? `<em>${log.snapshot}</em>` : ""}</div>
   `).join("") : `<div><span>暂无</span><strong>当前页面尚未产生模拟回执或人工复核记录</strong></div>`;
 }
 
+function renderReviewActions() {
+  return `
+    <div class="manual-audit">
+      <span>监控复核与发布</span>
+      <strong>只维护复核结论、批注、快照、派单和看板发布状态，不改 PLC/SCADA/时序原始事实</strong>
+      <div class="manual-action-row">
+        ${getReviewActions().map((action) => `<button type="button" class="${action.danger ? "danger-action" : ""}" data-monitoring-action="${action.key}">${action.label}</button>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function getReviewActions() {
+  const map = {
+    output: [{ key: "mark", label: "标记异常" }, { key: "reportReview", label: "发起报工复核" }, { key: "exception", label: "转异常处理" }],
+    runtime: [{ key: "confirmDiff", label: "确认状态差异" }, { key: "repair", label: "生成维修工单" }, { key: "closeFalse", label: "关闭误报", danger: true }],
+    parameters: [{ key: "rejudge", label: "参数复判" }, { key: "spec", label: "确认规格版本" }, { key: "inspection", label: "转过程检验" }],
+    alarms: [{ key: "assign", label: "报警派单" }, { key: "escalate", label: "升级" }, { key: "closeAlarm", label: "关闭报警", danger: true }],
+    downtime: [{ key: "reason", label: "停机原因复核" }, { key: "merge", label: "合并停机段" }, { key: "review", label: "转复盘" }],
+    trends: [{ key: "comment", label: "趋势批注" }, { key: "improve", label: "生成改善项" }, { key: "export", label: "导出趋势快照" }],
+    board: [{ key: "config", label: "看板发布配置" }, { key: "publish", label: "发布/撤回", danger: true }, { key: "refresh", label: "模拟刷新" }],
+  };
+  return [...(map[pageConfig.id] || []), { key: "snapshot", label: "生成复核快照" }];
+}
+
+function runReviewAction(key) {
+  const active = getActive();
+  if (!active) return;
+  const action = getReviewActions().find((item) => item.key === key) || { label: key };
+  if (action.danger && !window.confirm(`${action.label}会改变复核/发布状态但不改原始采集事实，确认处理 ${active.id}？`)) return;
+  const statusMap = {
+    mark: "异常已标记", reportReview: "报工复核中", exception: "已转异常", confirmDiff: "差异已确认", repair: "维修派单中",
+    closeFalse: "误报关闭待复核", rejudge: "参数复判中", spec: "规格已确认", inspection: "过程检验中", assign: "已派单",
+    escalate: "已升级", closeAlarm: "报警关闭待复核", reason: "原因已复核", merge: "停机段待合并", review: "复盘中",
+    comment: "已批注", improve: "改善项已生成", export: "快照已导出", config: "发布配置已保存", publish: "发布状态已更新",
+    refresh: "模拟刷新完成", snapshot: "快照已生成",
+  };
+  active.status = statusMap[key] || active.status;
+  active.action = `${action.label}已登记：责任人 ${active.owner}，关联 ${active.order}/${active.dispatch}，原始事实保持只读`;
+  const snapshot = `${pageConfig.title} ${active.id} · ${new Date().toLocaleString("zh-CN", { hour12: false })}`;
+  window.MES_BUSINESS_FLOW?.applyProcessAction?.(active.order, `monitoring-manual-${key}`, {
+    dispatchId: active.dispatch,
+    source: "后台复核维护",
+    equipment: active.equipment,
+    parameter: active.item || active.primary,
+    value: active.value,
+    status: active.status,
+    owner: active.owner,
+    result: active.action,
+    snapshot,
+  });
+  appendLog(`${active.id} ${action.label}已登记`, snapshot);
+  saveState();
+  renderPageChrome();
+  renderAll();
+  showToast(`${action.label}已留痕`);
+}
+
 function renderAll() {
+  mergeFlowRows();
   renderMetrics();
+  renderFocusPanel();
   renderTable();
   renderCards();
   renderDetail();
@@ -439,6 +658,16 @@ function simulateStatus() {
   if (pageConfig.id === "alarms") active.action = "报警事件已更新响应人和处置时限";
   if (pageConfig.id === "downtime") active.action = "原因代码已复核并进入 OEE 扣减";
   if (pageConfig.id === "board") active.action = "看板刷新成功，班组签收状态已记录";
+  window.MES_BUSINESS_FLOW?.applyProcessAction?.(active.order, `monitoring-${pageConfig.id}`, {
+    dispatchId: active.dispatch,
+    source: active.source,
+    equipment: active.equipment,
+    parameter: active.item || active.primary,
+    value: active.value,
+    status: active.status,
+    owner: active.owner,
+    result: active.action,
+  });
   appendLog(`${active.id} 已接收${getDefinition().simulationTitle}${value ? `：${value}` : ""}`);
   $("#simulationInput").value = "";
   saveState();
@@ -447,13 +676,14 @@ function simulateStatus() {
   showToast("模拟回执已记录");
 }
 
-function appendLog(text) {
-  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text });
+function appendLog(text, snapshot = "") {
+  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text, snapshot });
+  logs = logs.slice(0, 20);
 }
 
 function resetPage() {
   localStorage.removeItem(STORAGE_KEY);
-  rows = structuredClone(initialRows[pageConfig.id]);
+  rows = structuredClone([...(window.MES_BUSINESS_FLOW?.getMonitoringRows?.(pageConfig.id) || []), ...initialRows[pageConfig.id]]);
   state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
   logs = [];
   $("#searchInput").value = "";
@@ -501,6 +731,16 @@ function bindEvents() {
     const active = getActive();
     active.status = /合格|稳定|正常|运行/.test(active.status) ? "人工复核" : active.status;
     active.action = "已登记人工复核，等待责任人确认闭环结果";
+    window.MES_BUSINESS_FLOW?.applyProcessAction?.(active.order, `monitoring-review-${pageConfig.id}`, {
+      dispatchId: active.dispatch,
+      source: "后台人工复核",
+      equipment: active.equipment,
+      parameter: active.item || active.primary,
+      value: active.value,
+      status: active.status,
+      owner: active.owner,
+      result: active.action,
+    });
     appendLog(`${active.id} 已登记人工复核，责任人：${active.owner}`);
     saveState();
     renderPageChrome();
@@ -521,12 +761,18 @@ function bindEvents() {
 
 function init() {
   renderFrameMenu();
+  mergeFlowRows();
   loadState();
   renderPageChrome();
   $("#searchInput").value = state.search;
   $("#statusFilter").value = state.status;
   $("#lineFilter").value = state.line;
   bindEvents();
+  window.addEventListener("mes-flow:changed", () => {
+    mergeFlowRows();
+    renderPageChrome();
+    renderAll();
+  });
   renderAll();
 }
 

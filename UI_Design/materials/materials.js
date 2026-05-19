@@ -1,5 +1,5 @@
 const pageConfig = window.MATERIAL_PAGE || { id: "requirements", title: "用料需求", eyebrow: "物料与线边库 / 用料需求" };
-const STORAGE_KEY = `xingjigu_mes_materials_${pageConfig.id}_v1`;
+const STORAGE_KEY = `xingjigu_mes_materials_${pageConfig.id}_v2`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -154,9 +154,12 @@ const initialRows = {
   ],
 };
 
+Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.materials || {});
+
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
 let logs = [];
+let maintenanceRecords = [];
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -226,14 +229,26 @@ function loadState() {
     if (!saved) return;
     rows = saved.rows || rows;
     logs = saved.logs || logs;
+    maintenanceRecords = saved.maintenanceRecords || maintenanceRecords;
     state = { ...state, ...(saved.state || {}) };
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  mergeFlowRows();
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, state }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, maintenanceRecords, state }));
+}
+
+function mergeFlowRows() {
+  const flowRows = window.MES_BUSINESS_FLOW?.getMaterialRows?.(pageConfig.id) || [];
+  if (!flowRows.length) return;
+  const existing = new Map(rows.map((item) => [item.id, item]));
+  flowRows.forEach((item) => {
+    if (!existing.has(item.id)) rows.push(item);
+  });
+  if (!rows.some((item) => item.id === state.activeId)) state.activeId = rows[0]?.id || "";
 }
 
 function getDefinition() {
@@ -298,6 +313,80 @@ function renderMetrics() {
   `).join("");
 }
 
+function renderBusinessFocus() {
+  let focus = $("#materialsFocus");
+  if (!focus) {
+    focus = document.createElement("section");
+    focus.id = "materialsFocus";
+    focus.className = "materials-focus";
+    $("#materialsMetrics").after(focus);
+  }
+  const active = getActive();
+  const visible = getVisibleRows();
+  const shortageRows = visible.filter((item) => item.gap > 0 || /缺|异常|冻结|拦截|低水位|驳回/.test(`${item.status} ${item.risk}`));
+  const pathRows = visible.slice(0, 4);
+  const slotRows = rows.filter((item) => item.line === active?.line).slice(0, 4);
+  const modeMap = {
+    requirements: ["需求缺口矩阵", "按工序需求、可用量和缺口判断是否转领料、调拨或缺料预警"],
+    picking: ["领料与拣货队列", "按审批、WMS 回执和异常驳回跟踪领料单据，不替代仓库出库"],
+    delivery: ["仓库到线边路径", "按配送起点、到站库位、超时和签收来源监控物料移动"],
+    inventory: ["线边库位状态", "按库位、批次、IQC、冻结、有效期和低水位判断可投状态"],
+    feeding: ["投料防错看板", "按扫码批次、BOM、IQC、库位和用量校验投料回执"],
+    returns: ["退料核销链路", "按余料标签、模拟称重、WMS 入库和用料差异完成核销"],
+    shortage: ["缺料影响分析", "按排程、库存、配送和线边消耗评估断料时间与责任闭环"],
+  };
+  const [title, hint] = modeMap[pageConfig.id] || modeMap.requirements;
+  focus.innerHTML = `
+    <div class="materials-focus__head">
+      <div>
+        <span>本页业务重点</span>
+        <h2>${title}</h2>
+        <p>${hint}</p>
+      </div>
+      <strong>${active?.order || "未选中"} · ${active?.line || "全部产线"}</strong>
+    </div>
+    <div class="materials-focus__grid">
+      <article class="materials-gap-map">
+        <span>缺口与影响</span>
+        ${shortageRows.length ? shortageRows.slice(0, 3).map((item) => `
+          <div>
+            <strong>${item.material}</strong>
+            <em>${item.gap > 0 ? `缺口 ${item.gap} 件` : item.status}</em>
+            <small>${item.order} · ${item.risk}</small>
+          </div>
+        `).join("") : `<div><strong>当前筛选无关键缺口</strong><em>继续监控</em><small>刷新后仍保留需求、配送和投料回执</small></div>`}
+      </article>
+      <article class="materials-route-map">
+        <span>${pageConfig.id === "delivery" ? "配送路径" : pageConfig.id === "inventory" ? "库位状态" : "单据路径"}</span>
+        ${pathRows.map((item) => `
+          <div>
+            <b>${item.id}</b>
+            <strong>${routeLabel(item)}</strong>
+            <em>${item.status}</em>
+          </div>
+        `).join("")}
+      </article>
+      <article class="materials-slot-map">
+        <span>库位 / 批次防错</span>
+        ${slotRows.map((item) => `
+          <div>
+            <strong>${item.batch}</strong>
+            <small>${lineLocation(item.line)} · ${item.source}</small>
+          </div>
+        `).join("")}
+      </article>
+    </div>
+  `;
+}
+
+function routeLabel(item) {
+  if (pageConfig.id === "delivery") return `仓库 -> ${lineLocation(item.line)} -> ${item.operation}`;
+  if (pageConfig.id === "returns") return `${item.operation} -> 模拟称重 -> WMS 入库`;
+  if (pageConfig.id === "feeding") return `${item.operation} -> 防错校验 -> 追溯引用`;
+  if (pageConfig.id === "shortage") return `${item.source} -> ${item.next}`;
+  return `${item.source} -> ${item.next}`;
+}
+
 function renderTable() {
   const visible = getVisibleRows();
   $("#materialsTableBody").innerHTML = visible.length ? visible.map((item) => {
@@ -307,7 +396,7 @@ function renderTable() {
         ${cells.map((cell) => `<td>${cell}</td>`).join("")}
       </tr>
     `;
-  }).join("") : `<tr><td colspan="8">当前筛选条件下没有${pageConfig.title}记录</td></tr>`;
+  }).join("") : `<tr><td colspan="8"><div class="empty-action">当前筛选条件下没有${pageConfig.title}记录 <button type="button" data-maintenance-action="create">新增维护单据</button></div></td></tr>`;
   $("#materialsTableBody").querySelectorAll("tr[data-id]").forEach((row) => {
     row.addEventListener("click", () => {
       state.activeId = row.dataset.id;
@@ -315,6 +404,9 @@ function renderTable() {
       saveState();
       renderAll();
     });
+  });
+  $("#materialsTableBody").querySelectorAll("[data-maintenance-action]").forEach((button) => {
+    button.addEventListener("click", () => handleMaintenanceAction(button.dataset.maintenanceAction));
   });
 }
 
@@ -424,15 +516,139 @@ function renderLogs() {
 }
 
 function renderAll() {
+  mergeFlowRows();
   renderMetrics();
+  renderBusinessFocus();
   renderTable();
   renderCards();
+  renderMaintenancePanel();
   renderDetail();
+}
+
+function getMaintenanceRecipe() {
+  const map = {
+    requirements: ["补充需求", "生成领料建议", "关闭需求差异", "物料计划员 吴琳"],
+    picking: ["领料申请", "审批并重推 WMS", "关闭领料差异", "仓储主管 孙奕"],
+    delivery: ["配送异常", "改派并后台复核", "关闭签收异常", "配送协调员 罗峰"],
+    inventory: ["库位调拨建议", "审批冻结/解冻", "关闭盘点差异", "线边库管理员 吴琳"],
+    feeding: ["投料差异复核", "登记放行依据", "关闭用量差异", "物料追溯员 陈洁"],
+    returns: ["退料申请", "复核称重差异", "关闭退料核销", "退料审核员 谢然"],
+    shortage: ["缺料预警", "分派替代料审批", "关闭缺料预警", "物料异常协调员 何敏"],
+  };
+  const [create, process, close, owner] = map[pageConfig.id] || map.picking;
+  return { create, process, close, owner };
+}
+
+function getActiveMaintenance() {
+  return maintenanceRecords[0];
+}
+
+function renderMaintenancePanel() {
+  let panel = $("#materialsMaintenancePanel");
+  if (!panel) {
+    panel = document.createElement("section");
+    panel.id = "materialsMaintenancePanel";
+    panel.className = "materials-panel maintenance-panel";
+    document.querySelector(".materials-left .simulation-box")?.before(panel);
+  }
+  const active = getActive();
+  const recipe = getMaintenanceRecipe();
+  const current = getActiveMaintenance();
+  panel.innerHTML = `
+    <div class="materials-panel__head">
+      <div>
+        <h3>${pageConfig.title}手工维护闭环</h3>
+        <p>后台只维护申请、审批、复核和差异关闭；现场投料、签收、称重、WMS 出入库均保留为模拟回执或外部回传。</p>
+      </div>
+    </div>
+    <div class="maintenance-flow">
+      <button type="button" data-maintenance-action="create">新增/生成 ${recipe.create}</button>
+      <button type="button" data-maintenance-action="process"${current ? "" : " disabled"}>${recipe.process}</button>
+      <button type="button" class="danger-action" data-maintenance-action="close"${current ? "" : " disabled"}>${recipe.close}</button>
+    </div>
+    <div class="maintenance-record">
+      ${current ? `
+        <div><span>维护单</span><strong>${current.id} · ${current.status}</strong></div>
+        <div><span>关联单据</span><strong>${current.related}</strong></div>
+        <div><span>责任/时间</span><strong>${current.owner} · ${current.time}</strong></div>
+        <div><span>前后值摘要</span><strong>${current.before} -> ${current.after}</strong></div>
+      ` : `
+        <div><span>暂无维护单</span><strong>可基于 ${active?.id || pageConfig.title} 新增一条管理类单据</strong></div>
+      `}
+    </div>
+    <div class="maintenance-log">
+      ${maintenanceRecords.slice(0, 4).map((item) => `<div><span>${item.time}</span><strong>${item.id} ${item.action}：${item.status}</strong></div>`).join("") || `<div><span>操作记录</span><strong>新增、审批、重推、关闭会写入本页 localStorage 和统一治理事件</strong></div>`}
+    </div>
+  `;
+  panel.querySelectorAll("[data-maintenance-action]").forEach((button) => {
+    button.addEventListener("click", () => handleMaintenanceAction(button.dataset.maintenanceAction));
+  });
+}
+
+function handleMaintenanceAction(action) {
+  const active = getActive();
+  if (!active) return;
+  const recipe = getMaintenanceRecipe();
+  const now = new Date().toLocaleString("zh-CN", { hour12: false });
+  let record = getActiveMaintenance();
+  if (action === "create") {
+    record = {
+      id: `MAT-MAINT-${Date.now().toString().slice(-6)}`,
+      action: recipe.create,
+      status: "待处理",
+      related: `${active.order} / ${active.dispatch} / ${active.id}`,
+      owner: recipe.owner,
+      time: now,
+      before: `${active.status} / ${active.next}`,
+      after: `已发起${recipe.create}`,
+    };
+    maintenanceRecords.unshift(record);
+  } else {
+    if (!record) return;
+    if (action === "close" && !confirm(`确认${recipe.close}？该动作会保留审计记录，不能无痕删除。`)) return;
+    record.action = action === "process" ? recipe.process : recipe.close;
+    record.status = action === "process" ? "已审批/已下达" : "已关闭";
+    record.time = now;
+    record.before = record.after;
+    record.after = action === "process" ? `${recipe.process}完成，等待模拟外部回执` : `${recipe.close}完成，差异已验收`;
+  }
+  window.MES_BUSINESS_FLOW?.applyMaterialAction?.(active.order, action === "close" ? "returnClose" : action === "process" ? "pickingReview" : "requestPick", {
+    owner: record.owner,
+    status: record.status,
+    label: `${pageConfig.title}手工维护`,
+    reason: `${record.id} ${record.before} -> ${record.after}`,
+  });
+  window.MES_BUSINESS_FLOW?.applyGovernanceAction?.({ id: record.id, name: pageConfig.title, owner: record.owner, risk: active.risk }, "materials", record.action, {
+    orderId: active.order,
+    status: record.status,
+    source: "物料与线边库后台维护",
+    result: record.after,
+    auditRef: record.related,
+  });
+  appendLog(`${record.id} ${record.action}：${record.before} -> ${record.after}，责任人 ${record.owner}`);
+  saveState();
+  renderAll();
+  showToast("物料维护记录已保存");
 }
 
 function updateActiveStatus(status, message) {
   const active = getActive();
   if (!active) return;
+  const actionMap = {
+    requirements: status.includes("领料") ? "requestPick" : "refreshRequirement",
+    picking: status.includes("出库") ? "requestPick" : "pickingReview",
+    delivery: status.includes("签收") ? "deliverySign" : "deliveryReview",
+    inventory: status.includes("补料") ? "requestReplenish" : "inventoryReview",
+    feeding: status.includes("放行") ? "feedingRelease" : "feedingReview",
+    returns: status.includes("核销") ? "returnClose" : "returnReview",
+    shortage: "shortage",
+  };
+  window.MES_BUSINESS_FLOW?.applyMaterialAction?.(active.order, actionMap[pageConfig.id], {
+    owner: active.owner,
+    status,
+    label: getDefinition().tableTitle,
+    reason: active.risk,
+  });
   active.status = status;
   if (pageConfig.id === "requirements" && status.includes("领料")) active.next = "已生成领料申请";
   if (pageConfig.id === "picking" && status.includes("出库")) active.next = "进入配送进度";
@@ -467,9 +683,10 @@ function simulateStatus() {
 
 function resetPage() {
   localStorage.removeItem(STORAGE_KEY);
-  rows = structuredClone(initialRows[pageConfig.id]);
+  rows = structuredClone(window.MES_BUSINESS_FLOW?.getMaterialRows?.(pageConfig.id) || initialRows[pageConfig.id]);
   state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
   logs = [];
+  maintenanceRecords = [];
   $("#searchInput").value = "";
   $("#statusFilter").value = "all";
   $("#lineFilter").value = "all";
@@ -529,12 +746,18 @@ function bindEvents() {
 
 function init() {
   renderFrameMenu();
+  mergeFlowRows();
   loadState();
   renderPageChrome();
   $("#searchInput").value = state.search;
   $("#statusFilter").value = state.status;
   $("#lineFilter").value = state.line;
   bindEvents();
+  window.addEventListener("mes-flow:changed", () => {
+    mergeFlowRows();
+    renderPageChrome();
+    renderAll();
+  });
   renderAll();
 }
 

@@ -301,10 +301,21 @@ function loadState() {
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  mergeFlowDispatchRows();
 }
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ dispatchOrders, dispatchLogs, dispatchState: state }));
+}
+
+function mergeFlowDispatchRows() {
+  const flowRows = window.MES_BUSINESS_FLOW?.getDispatchRows?.() || [];
+  if (!flowRows.length) return;
+  const existing = new Map(dispatchOrders.map((item) => [item.id, item]));
+  flowRows.forEach((item) => {
+    if (!existing.has(item.id)) dispatchOrders.push(item);
+  });
+  if (!dispatchOrders.some((item) => item.id === state.activeDispatchId)) state.activeDispatchId = dispatchOrders[0]?.id || "";
 }
 
 function getActiveDispatch() {
@@ -324,6 +335,7 @@ function getVisibleDispatchOrders() {
 }
 
 function renderAll() {
+  mergeFlowDispatchRows();
   renderDetailPanelState();
   renderMetrics();
   renderDispatchList();
@@ -530,6 +542,13 @@ function updateDispatch(id, patch, message) {
   const index = dispatchOrders.findIndex((item) => item.id === id);
   if (index < 0) return;
   dispatchOrders[index] = { ...dispatchOrders[index], ...patch };
+  if (patch.status === "待接单") {
+    window.MES_BUSINESS_FLOW?.applyDispatchAction?.(dispatchOrders[index].orderId, "release", { owner: dispatchOrders[index].operator || "车间主任" });
+  } else if (patch.status === "异常锁定") {
+    window.MES_BUSINESS_FLOW?.applyDispatchAction?.(dispatchOrders[index].orderId, "hold", { owner: dispatchOrders[index].operator || "车间主任", reason: message });
+  } else {
+    window.MES_BUSINESS_FLOW?.applyDispatchAction?.(dispatchOrders[index].orderId, "generate", { owner: dispatchOrders[index].operator || "车间主任" });
+  }
   state.activeDispatchId = id;
   recordLog(id, message);
   saveState();
@@ -584,6 +603,7 @@ function bindEvents() {
     targets.forEach((item) => {
       item.status = "待接单";
       recordLog(item.id, "派工单已批量下达到工位终端");
+      window.MES_BUSINESS_FLOW?.applyDispatchAction?.(item.orderId, "release", { owner: item.operator || "车间主任" });
     });
     state.activeDispatchId = targets[0].id;
     saveState();
@@ -642,7 +662,7 @@ function bindEvents() {
   });
   $("#resetDispatchBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
-    dispatchOrders = structuredClone(initialDispatchOrders);
+    dispatchOrders = structuredClone(window.MES_BUSINESS_FLOW?.getDispatchRows?.() || initialDispatchOrders);
     dispatchLogs = [];
     state = { activeDispatchId: "D-001", search: "", status: "all", line: "all", team: "all", detailOpen: true };
     $("#dispatchSearch").value = "";
@@ -661,4 +681,8 @@ $("#statusFilter").value = state.status;
 $("#lineFilter").value = state.line;
 $("#teamFilter").value = state.team;
 bindEvents();
+window.addEventListener("mes-flow:changed", () => {
+  mergeFlowDispatchRows();
+  renderAll();
+});
 renderAll();

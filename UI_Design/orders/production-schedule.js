@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xingjigu_mes_production_orders_v1";
+const STORAGE_KEY = "xingjigu_mes_production_orders_v2";
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -46,7 +46,7 @@ const operationTemplates = [
   ["包装入库", "06-23 13:00", "06-23 18:00", "Pack"],
 ];
 
-let orders = structuredClone(initialOrders);
+let orders = structuredClone(window.MES_MASTER_DATA?.orders || initialOrders);
 let integrationLogs = [];
 let schedulePlans = {};
 let state = {
@@ -117,10 +117,15 @@ function renderFrameMenu() {
 
 function loadState() {
   try {
+    const flowState = window.MES_BUSINESS_FLOW?.read?.();
+    if (flowState?.orders) {
+      orders = flowState.orders;
+      integrationLogs = flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time }));
+    }
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!saved) return;
-    orders = saved.orders || orders;
-    integrationLogs = saved.integrationLogs || integrationLogs;
+    orders = flowState?.orders || saved.orders || orders;
+    integrationLogs = flowState?.logs ? flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time })) : saved.integrationLogs || integrationLogs;
     schedulePlans = saved.schedulePlans || schedulePlans;
     state = { ...state, ...(saved.scheduleState || {}) };
     if (!["all", "未排程", "待调整"].includes(state.schedule)) state.schedule = "all";
@@ -426,6 +431,11 @@ function showToast(message) {
     toast.hidden = true;
   }, 1800);
 }
+
+window.addEventListener("plan-maintenance:changed", () => {
+  loadState();
+  renderAll();
+});
 
 function bindEvents() {
   $("#scheduleSearch").addEventListener("input", (event) => {

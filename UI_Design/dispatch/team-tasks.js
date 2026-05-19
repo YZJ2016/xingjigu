@@ -327,6 +327,8 @@ function updateTask(id, patch, message) {
   const index = teamTasks.findIndex((item) => item.id === id);
   if (index < 0) return;
   teamTasks[index] = { ...teamTasks[index], ...patch };
+  if (patch.status === "执行中") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(teamTasks[index].orderId, "release", { owner: teamTasks[index].leader || "班组长" });
+  if (patch.status === "人员异常") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(teamTasks[index].orderId, "hold", { owner: teamTasks[index].leader || "班组长", reason: message });
   state.activeTaskId = id;
   recordLog(id, message);
   saveState();

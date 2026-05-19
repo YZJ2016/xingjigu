@@ -1,5 +1,5 @@
 const pageConfig = window.EXCEPTION_PAGE || { id: "pending", title: "待处理异常", eyebrow: "异常处理 / 待处理异常" };
-const STORAGE_KEY = `xingjigu_mes_exceptions_${pageConfig.id}_v1`;
+const STORAGE_KEY = `xingjigu_mes_exceptions_${pageConfig.id}_v2`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -154,6 +154,8 @@ const initialRows = {
   ],
 };
 
+Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.exceptions || {});
+
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
 let logs = [];
@@ -219,10 +221,21 @@ function loadState() {
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  mergeFlowRows();
 }
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, state }));
+}
+
+function mergeFlowRows() {
+  const flowRows = window.MES_BUSINESS_FLOW?.getExceptionRows?.(pageConfig.id) || [];
+  if (!flowRows.length) return;
+  const existing = new Map(rows.map((item) => [item.id, item]));
+  flowRows.forEach((item) => {
+    if (!existing.has(item.id)) rows.push(item);
+  });
+  if (!rows.some((item) => item.id === state.activeId)) state.activeId = rows[0]?.id || "";
 }
 
 function getDefinition() {
@@ -267,6 +280,7 @@ function renderPageChrome() {
   $("#statusFilter").innerHTML = `<option value="all">全部状态</option>${[...new Set(rows.map((item) => item.status))].map((status) => `<option value="${status}">${status}</option>`).join("")}`;
   $("#lineFilter").innerHTML = `<option value="all">全部产线</option>${[...new Set(rows.map((item) => item.line))].map((line) => `<option value="${line}">${line}</option>`).join("")}`;
   $("#tableHead").innerHTML = `<tr>${def.columns.map((col) => `<th>${col}</th>`).join("")}</tr>`;
+  ensureFocusPanel();
 }
 
 function renderMetrics() {
@@ -285,6 +299,162 @@ function renderMetrics() {
       <em>${index === 3 ? "随异常状态和业务联动结果变化" : "随筛选条件实时变化"}</em>
     </article>
   `).join("");
+}
+
+function ensureFocusPanel() {
+  if ($("#exceptionFocusPanel")) return;
+  $("#exceptionMetrics").insertAdjacentHTML("afterend", `<section id="exceptionFocusPanel" class="exception-focus"></section>`);
+}
+
+function renderFocusPanel() {
+  ensureFocusPanel();
+  const active = getActive();
+  const visible = getVisibleRows();
+  const renderers = {
+    report: renderReportFocus,
+    pending: renderPendingFocus,
+    lineStop: renderLineStopFocus,
+    shortage: renderShortageFocus,
+    quality: renderQualityFocus,
+    equipment: renderEquipmentFocus,
+    review: renderReviewFocus,
+  };
+  $("#exceptionFocusPanel").className = `exception-focus exception-focus--${pageConfig.id}`;
+  $("#exceptionFocusPanel").innerHTML = renderers[pageConfig.id](active, visible) + renderFocusMeta(active);
+  $("#exceptionFocusPanel").querySelectorAll("[data-focus-id]").forEach((item) => {
+    item.addEventListener("click", () => {
+      state.activeId = item.dataset.focusId;
+      state.detailOpen = true;
+      saveState();
+      renderAll();
+    });
+  });
+}
+
+function renderFocusMeta(active) {
+  return `
+    <div class="focus-meta" aria-label="当前异常闭环摘要">
+      <article><span>异常来源</span><strong>${active.source}</strong></article>
+      <article><span>责任人与 SLA</span><strong>${active.owner} · ${active.sla}</strong></article>
+      <article><span>影响对象</span><strong>${active.order} / ${active.dispatch} · ${active.station}</strong></article>
+      <article><span>追溯与边界</span><strong>${active.trace} · 模拟回执不替代现场处置</strong></article>
+    </div>
+  `;
+}
+
+function renderReportFocus(active, visible) {
+  const sources = ["设备异常", "质量异常", "缺料异常", "工艺异常"];
+  return `
+    <div class="focus-head"><div><h2>异常来源分级</h2><p>把工位终端、PDA、Andon、PLC 和人工确认的事实先分级再派单。</p></div>${pill(active.severity)}</div>
+    <div class="source-grid">${sources.map((source) => {
+      const item = visible.find((row) => row.type === source);
+      return sourceTile(item, source);
+    }).join("")}</div>
+  `;
+}
+
+function renderPendingFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>SLA 处置队列</h2><p>按剩余时间、当前状态和责任人组织响应、升级、恢复验证和关闭前校验。</p></div><strong>${active.sla}</strong></div>
+    <div class="sla-board">${visible.length ? visible.map((item) => `
+      <article data-focus-id="${item.id}" class="${statusStyle(item.status)} ${item.id === state.activeId ? "is-active" : ""}">
+        <span>${item.sla}</span><strong>${item.id}</strong><em>${item.type} · ${item.owner}</em>${pill(item.status)}
+      </article>
+    `).join("") : emptyFocus("当前筛选条件下没有待处理异常")}</div>
+  `;
+}
+
+function renderLineStopFocus(active, visible) {
+  const gates = ["申请", "审批", "锁定", "恢复验证"];
+  return `
+    <div class="focus-head"><div><h2>停线授权门</h2><p>停线和恢复必须保留触发异常、锁定范围、审批责任和排程影响。</p></div>${pill(active.status)}</div>
+    <div class="line-stop-gates">${gates.map((gate, index) => `
+      <article class="${index <= getLineStopStep(active.status) ? "is-current" : ""}">
+        <span>${gate}</span><strong>${index === 0 ? active.source : index === 1 ? active.owner : index === 2 ? active.impact : active.action}</strong>
+      </article>
+    `).join("")}</div>
+    <div class="focus-strip">${visible.map((item) => focusChip(item, `${item.line} · ${item.status}`)).join("")}</div>
+  `;
+}
+
+function renderShortageFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>缺料处置路径</h2><p>把断料影响、调拨、替代料、采购催料和计划调整放到同一事实链上。</p></div><strong>${active.line}</strong></div>
+    <div class="shortage-path">${visible.length ? visible.map((item) => `
+      <article data-focus-id="${item.id}" class="${item.id === state.activeId ? "is-active" : ""}">
+        <span>${item.id}</span><strong>${item.impact}</strong><em>${item.action}</em>${pill(item.status)}
+      </article>
+    `).join("") : emptyFocus("当前筛选条件下没有缺料处置记录")}</div>
+  `;
+}
+
+function renderQualityFocus(active, visible) {
+  const lanes = [
+    ["围堵隔离", /围堵|隔离|停线|MRB|待判/],
+    ["复判处置", /供应商|MRB|返工|让步|复检/],
+    ["CAPA 入口", /CAPA|8D|纠正|预防|工艺/],
+  ];
+  return `
+    <div class="focus-head"><div><h2>质量围堵与 MRB</h2><p>突出不良对象、隔离范围、MRB 判定、返工/让步和 CAPA 闭环。</p></div>${pill(active.status)}</div>
+    <div class="quality-lanes">${lanes.map(([title, rule]) => `
+      <section><h3>${title}</h3>${visible.filter((item) => rule.test(item.status + item.action + item.impact)).map((item) => focusChip(item, `${item.type} · ${item.owner}`)).join("") || "<p>暂无记录</p>"}</section>
+    `).join("")}</div>
+  `;
+}
+
+function renderEquipmentFocus(active, visible) {
+  return `
+    <div class="focus-head"><div><h2>维修响应闭环</h2><p>从 PLC/SCADA/扫码报修到维修到场、备件、试运行、验收和 OEE 回写。</p></div><strong>${active.owner}</strong></div>
+    <div class="repair-board">${visible.length ? visible.map((item) => `
+      <article data-focus-id="${item.id}" class="${statusStyle(item.status)} ${item.id === state.activeId ? "is-active" : ""}">
+        <span>${item.station}</span><strong>${item.status}</strong><em>${item.action}</em><small>${item.sla}</small>
+      </article>
+    `).join("") : emptyFocus("当前筛选条件下没有设备故障记录")}</div>
+  `;
+}
+
+function renderReviewFocus(active, visible) {
+  const steps = ["RCA", "CAPA", "执行", "有效性验证"];
+  return `
+    <div class="focus-head"><div><h2>RCA / CAPA 复盘</h2><p>重大或重复异常要沉淀根因、纠正预防、责任人和复发验证。</p></div>${pill(active.status)}</div>
+    <div class="review-board">${visible.length ? visible.map((item) => `
+      <article data-focus-id="${item.id}" class="${item.id === state.activeId ? "is-active" : ""}">
+        <div>${steps.map((step, index) => `<span class="${index <= getReviewStep(item.status) ? "is-done" : ""}">${step}</span>`).join("")}</div>
+        <strong>${item.id}</strong><em>${item.action}</em>
+      </article>
+    `).join("") : emptyFocus("当前筛选条件下没有复盘记录")}</div>
+  `;
+}
+
+function sourceTile(item, fallback) {
+  if (!item) return `<article><span>${fallback}</span><strong>暂无</strong><em>等待模拟外部异常回执</em></article>`;
+  return `
+    <article data-focus-id="${item.id}" class="${item.id === state.activeId ? "is-active" : ""}">
+      <span>${item.type}</span><strong>${item.id}</strong><em>${item.source}</em>${pill(item.status)}
+    </article>
+  `;
+}
+
+function focusChip(item, hint) {
+  return `<button type="button" data-focus-id="${item.id}" class="${item.id === state.activeId ? "is-active" : ""}"><span>${item.id}</span><strong>${hint}</strong>${pill(item.status)}</button>`;
+}
+
+function emptyFocus(text) {
+  return `<article class="focus-empty"><strong>${text}</strong><em>请调整搜索、状态或产线筛选</em></article>`;
+}
+
+function getLineStopStep(status) {
+  if (/已恢复|待恢复/.test(status)) return 3;
+  if (/已锁定|已停线/.test(status)) return 2;
+  if (/审批|已审批/.test(status)) return 1;
+  return 0;
+}
+
+function getReviewStep(status) {
+  if (/已验证/.test(status)) return 3;
+  if (/执行|改善/.test(status)) return 2;
+  if (/CAPA/.test(status)) return 1;
+  return 0;
 }
 
 function metricTwo(items) {
@@ -385,7 +555,10 @@ function renderDetail() {
     ["影响说明", active.impact],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   $("#timelineList").innerHTML = buildTimeline(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
-  $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("") + renderManualActions(active);
+  $("#actionList").querySelectorAll("[data-manual-action]").forEach((button) => {
+    button.addEventListener("click", () => runManualAction(button.dataset.manualAction));
+  });
   renderLogs();
 }
 
@@ -412,13 +585,15 @@ function buildActions(active) {
 }
 
 function renderLogs() {
-  $("#logList").innerHTML = logs.length ? logs.slice(0, 5).map((log) => `
-    <div><span>${log.time}</span><strong>${log.text}</strong></div>
+  $("#logList").innerHTML = logs.length ? logs.slice(0, 8).map((log) => `
+    <div><span>${log.time}</span><strong>${log.text}</strong>${log.beforeAfter ? `<em>${log.beforeAfter}</em>` : ""}</div>
   `).join("") : `<div><span>暂无</span><strong>当前页面尚未产生模拟回执或临时措施记录</strong></div>`;
 }
 
 function renderAll() {
+  mergeFlowRows();
   renderMetrics();
+  renderFocusPanel();
   renderTable();
   renderCards();
   renderDetail();
@@ -432,9 +607,81 @@ function updateActiveStatus(status, message) {
   if (status.includes("已审批")) active.action = "审批通过，等待现场恢复验证";
   if (status.includes("已缓解")) active.action = "临时措施已生效，进入关闭验证";
   if (status.includes("已验证")) active.action = "验证通过，进入复盘或归档";
+  window.MES_BUSINESS_FLOW?.applyExceptionAction?.(active, /已验证|已验收/.test(status) ? "exceptionClose" : "exceptionAdvance", {
+    status,
+    owner: active.owner,
+    result: active.action || active.risk,
+  });
   appendLog(message || `${active.id} 状态更新为 ${status}`);
   saveState();
   renderAll();
+}
+
+function renderManualActions(active) {
+  const actions = getManualActions(active);
+  return `
+    <div class="manual-audit">
+      <span>强审计维护</span>
+      <strong>责任人、时间戳、关联单据、前后值摘要和操作记录写入 localStorage</strong>
+      <div class="manual-action-row">
+        ${actions.map((action) => `<button type="button" class="${action.danger ? "danger-action" : ""}" data-manual-action="${action.key}">${action.label}</button>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function getManualActions(active = getActive()) {
+  const common = [
+    { key: "edit", label: "编辑处置说明" },
+    { key: "history", label: "查看履历" },
+  ];
+  const map = {
+    report: [{ key: "new", label: "新建异常" }, { key: "dispatch", label: "派单" }, { key: "withdraw", label: "撤回草稿", danger: true }],
+    pending: [{ key: "accept", label: "接单" }, { key: "transfer", label: "转派" }, { key: "escalate", label: "升级" }, { key: "close", label: "恢复验证关闭", danger: true }],
+    lineStop: [{ key: "newStop", label: "新建停线申请" }, { key: "approve", label: "审批锁定" }, { key: "release", label: "解除停线", danger: true }],
+    shortage: [{ key: "dispatch", label: "派单催料" }, { key: "compensate", label: "调拨/替代补偿" }, { key: "close", label: "关闭缺料", danger: true }],
+    quality: [{ key: "contain", label: "隔离围堵" }, { key: "mrb", label: "MRB 审批" }, { key: "close", label: "关闭 CAPA", danger: true }],
+    equipment: [{ key: "dispatch", label: "派维修" }, { key: "acceptance", label: "试运行验收" }, { key: "close", label: "验收关闭", danger: true }],
+    review: [{ key: "newReview", label: "新建复盘" }, { key: "capa", label: "分派 CAPA" }, { key: "archive", label: "归档复盘", danger: true }],
+  };
+  return [...(map[pageConfig.id] || []), ...common].filter((action) => action.key !== "close" || !/已关闭|已归档/.test(active?.status || ""));
+}
+
+function runManualAction(key) {
+  const active = getActive();
+  if (!active) return;
+  const action = getManualActions(active).find((item) => item.key === key) || { label: key };
+  if (action.danger && !confirmDanger(action.label, active.id)) return;
+  const before = `${active.status} / ${active.action}`;
+  const result = buildManualResult(key, action.label);
+  active.status = result.status || active.status;
+  active.action = result.action || active.action;
+  const beforeAfter = `前：${before}；后：${active.status} / ${active.action}`;
+  window.MES_BUSINESS_FLOW?.applyExceptionAction?.(active, `manual-${key}`, {
+    status: active.status,
+    owner: active.owner,
+    result: active.action,
+    beforeAfter,
+    document: `${active.order} / ${active.dispatch}`,
+  });
+  appendLog(`${active.id} ${action.label}已登记，责任人：${active.owner}`, beforeAfter);
+  saveState();
+  renderAll();
+  showToast(`${action.label}已留痕`);
+}
+
+function buildManualResult(key, label) {
+  const statusMap = {
+    new: "草稿", dispatch: "已派单", withdraw: "已撤回", accept: "已响应", transfer: "已转派", escalate: "已升级",
+    close: "已关闭", newStop: "待审批", approve: "已审批", release: "已解除", compensate: "补偿中",
+    contain: "围堵中", mrb: "MRB 审批中", acceptance: "待验收", newReview: "复盘草稿", capa: "CAPA 执行", archive: "已归档",
+    edit: "人工复核", history: undefined,
+  };
+  return { status: statusMap[key], action: `${label}：已记录原因、责任人、时间戳、关联单据和恢复/审批依据` };
+}
+
+function confirmDanger(label, id) {
+  return window.confirm(`${label}属于危险动作，将写入审计记录且不可无痕删除。确认处理 ${id}？`);
 }
 
 function nextStatus() {
@@ -460,6 +707,11 @@ function registerMeasure() {
   const active = getActive();
   if (!active) return;
   active.action = pageConfig.id === "shortage" ? "已登记调拨/替代料临时措施，等待验证" : "已登记围堵、隔离、维修或现场确认临时措施";
+  window.MES_BUSINESS_FLOW?.applyExceptionAction?.(active, "temporaryMeasure", {
+    status: active.status,
+    owner: active.owner,
+    result: active.action,
+  });
   appendLog(`${active.id} 已登记临时措施，责任人：${active.owner}`);
   saveState();
   renderAll();
@@ -468,7 +720,7 @@ function registerMeasure() {
 
 function resetPage() {
   localStorage.removeItem(STORAGE_KEY);
-  rows = structuredClone(initialRows[pageConfig.id]);
+  rows = structuredClone([...(window.MES_BUSINESS_FLOW?.getExceptionRows?.(pageConfig.id) || []), ...initialRows[pageConfig.id]]);
   state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
   logs = [];
   $("#searchInput").value = "";
@@ -493,8 +745,9 @@ function showToast(text) {
   showToast.timer = setTimeout(() => toast.remove(), 2200);
 }
 
-function appendLog(text) {
-  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text });
+function appendLog(text, beforeAfter = "") {
+  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text, beforeAfter });
+  logs = logs.slice(0, 20);
 }
 
 function bindEvents() {
@@ -531,12 +784,18 @@ function bindEvents() {
 
 function init() {
   renderFrameMenu();
+  mergeFlowRows();
   loadState();
   renderPageChrome();
   $("#searchInput").value = state.search;
   $("#statusFilter").value = state.status;
   $("#lineFilter").value = state.line;
   bindEvents();
+  window.addEventListener("mes-flow:changed", () => {
+    mergeFlowRows();
+    renderPageChrome();
+    renderAll();
+  });
   renderAll();
 }
 

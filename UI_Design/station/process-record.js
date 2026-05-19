@@ -542,6 +542,17 @@ function updateRecord(id, patch, message) {
   const index = records.findIndex((item) => item.id === id);
   if (index < 0) return;
   records[index] = { ...records[index], ...patch };
+  const next = records[index];
+  window.MES_BUSINESS_FLOW?.applyProcessAction?.(next.orderId, patch.status === "已拦截" ? "processBlock" : "processCollect", {
+    dispatchId: next.dispatchNo,
+    source: next.source,
+    equipment: next.equipment,
+    parameter: next.parameter,
+    value: formatValue(next),
+    status: next.status,
+    owner: state.owner || next.operator,
+    result: next.alarm || next.spc || message,
+  });
   state.activeRecordId = id;
   recordLog(id, message, "状态已保存到本机演示数据");
   saveState();

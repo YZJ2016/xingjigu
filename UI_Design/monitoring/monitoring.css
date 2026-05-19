@@ -71,6 +71,233 @@
   font-weight: 680;
 }
 
+.monitoring-focus {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+.focus-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.focus-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.focus-head p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.focus-head > strong {
+  color: var(--blue);
+  white-space: nowrap;
+}
+
+.output-lanes,
+.runtime-map,
+.parameter-gates,
+.downtime-bars,
+.trend-cards,
+.board-wall,
+.focus-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.output-lanes article,
+.parameter-gates article,
+.downtime-bars article,
+.trend-cards article,
+.board-wall article,
+.runtime-map button,
+.alarm-flow section,
+.alarm-flow button {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.focus-meta article,
+.focus-empty {
+  min-width: 0;
+  border: 1px solid rgba(0, 122, 255, 0.14);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(0, 122, 255, 0.05);
+}
+
+.output-lanes article,
+.parameter-gates article,
+.downtime-bars article,
+.trend-cards article,
+.board-wall article {
+  display: grid;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.focus-meta article,
+.focus-empty {
+  display: grid;
+  gap: 6px;
+}
+
+.runtime-map button,
+.alarm-flow button {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.output-lanes article.is-active,
+.parameter-gates article.is-active,
+.downtime-bars article.is-active,
+.trend-cards article.is-active,
+.board-wall article.is-active,
+.runtime-map button.is-active,
+.alarm-flow button.is-active {
+  border-color: rgba(0, 122, 255, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(0, 122, 255, 0.12);
+}
+
+.output-lanes span,
+.runtime-map span,
+.parameter-gates span,
+.alarm-flow h3,
+.downtime-bars span,
+.trend-cards span,
+.board-wall span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 780;
+}
+
+.focus-meta span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.output-lanes strong,
+.runtime-map strong,
+.parameter-gates strong,
+.downtime-bars strong,
+.trend-cards strong,
+.board-wall strong,
+.alarm-flow strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.focus-meta strong,
+.focus-empty strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.output-lanes em,
+.runtime-map em,
+.parameter-gates em,
+.alarm-flow em,
+.downtime-bars em,
+.trend-cards em,
+.board-wall em,
+.trend-cards small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 680;
+}
+
+.focus-empty em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 680;
+}
+
+.progress,
+.bar {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(142, 142, 147, 0.16);
+}
+
+.progress i,
+.bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--blue), var(--teal));
+}
+
+.runtime-map button.red,
+.trend-cards article.red {
+  border-color: rgba(255, 59, 48, 0.26);
+  background: rgba(255, 59, 48, 0.08);
+}
+
+.runtime-map button.orange,
+.trend-cards article.orange {
+  border-color: rgba(255, 159, 10, 0.3);
+  background: rgba(255, 159, 10, 0.1);
+}
+
+.runtime-map button.green,
+.trend-cards article.green {
+  border-color: rgba(52, 199, 89, 0.28);
+  background: rgba(52, 199, 89, 0.08);
+}
+
+.alarm-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.alarm-flow section {
+  display: grid;
+  gap: 8px;
+}
+
+.alarm-flow h3 {
+  margin: 0;
+}
+
+.alarm-flow p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .monitoring-layout {
   display: grid;
   grid-template-columns: minmax(760px, 1fr) 420px;
@@ -353,7 +580,8 @@
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
 }
 
-.is-hidden {
+.is-hidden,
+[hidden] {
   display: none !important;
 }
 
@@ -369,8 +597,20 @@
 
 @media (max-width: 920px) {
   .monitoring-metrics,
+  .output-lanes,
+  .runtime-map,
+  .parameter-gates,
+  .alarm-flow,
+  .downtime-bars,
+  .trend-cards,
+  .board-wall,
+  .focus-meta,
   .monitoring-card-grid,
   .monitoring-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .focus-head {
+    display: grid;
   }
 }

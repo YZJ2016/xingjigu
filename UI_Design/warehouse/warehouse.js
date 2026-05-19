@@ -1,5 +1,5 @@
 const pageConfig = window.WAREHOUSE_PAGE || { id: "operation", title: "工序完工", eyebrow: "完工与入库 / 工序完工" };
-const STORAGE_KEY = `xingjigu_mes_warehouse_${pageConfig.id}_v1`;
+const STORAGE_KEY = `xingjigu_mes_warehouse_${pageConfig.id}_v2`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -173,6 +173,8 @@ const initialRows = {
   ],
 };
 
+Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.warehouse || {});
+
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
 let logs = [];
@@ -231,6 +233,55 @@ function loadState() {
   }
 }
 
+function hydrateRowsFromBusinessFlow() {
+  const completionRows = window.MES_BUSINESS_FLOW?.read ? getWarehouseFlowRows() : [];
+  if (!completionRows.length) return;
+  const existing = new Set(rows.map((item) => item.id));
+  rows = [...completionRows.filter((item) => !existing.has(item.id)), ...rows];
+}
+
+function getWarehouseFlowRows() {
+  const flow = window.MES_BUSINESS_FLOW?.read?.();
+  if (!flow?.completionEvents?.length) return [];
+  const stageByPage = {
+    operation: "工序完工",
+    confirmation: "完工确认",
+    packaging: "包装作业",
+    receipt: "成品入库",
+    freeze: "库存冻结",
+    return: "退料入库",
+    sync: "单据同步",
+  };
+  return flow.completionEvents
+    .filter((event) => event.stage === stageByPage[pageConfig.id] || pageConfig.id === "sync")
+    .slice(0, 12)
+    .map((event) => {
+      const order = flow.orders.find((item) => item.id === event.orderId) || {};
+      return {
+        id: event.businessId || event.id,
+        order: event.orderId,
+        dispatch: event.dispatchId || "统一业务流",
+        product: order.product || "业务流产品",
+        operation: event.stage,
+        station: event.location || "统一业务流",
+        line: order.line || "全部产线",
+        batch: event.batch || "批次待关联",
+        qty: event.qty || order.done || 0,
+        bad: 0,
+        scrap: 0,
+        pack: event.packageLevel || "包装层级待关联",
+        location: event.location || "库位待回执",
+        status: event.status,
+        owner: event.owner,
+        source: event.source,
+        check: event.result,
+        next: event.stage === "成品入库" ? "单据同步 / 追溯查询 / 经营报表" : "继续推进完工入库闭环",
+        risk: /异常|拦截|冻结|差异/.test(`${event.status} ${event.result}`) ? event.result : "无",
+        time: event.time,
+      };
+    });
+}
+
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, state }));
 }
@@ -272,6 +323,7 @@ function renderPageChrome() {
   $("#simulationTitle").textContent = def.simulationTitle;
   $("#simulationHint").textContent = def.simulationHint;
   $("#simulationInput").placeholder = `${def.simulationTitle}，例如 ${rows[0]?.id || "单据号"} / ${rows[0]?.batch || "批次号"}`;
+  $("#secondaryActionBtn").textContent = getGovernanceAction().button;
   $("#statusFilter").innerHTML = `<option value="all">全部状态</option>${[...new Set(rows.map((item) => item.status))].map((status) => `<option value="${status}">${status}</option>`).join("")}`;
   $("#lineFilter").innerHTML = `<option value="all">全部产线</option>${[...new Set(rows.map((item) => item.line))].map((line) => `<option value="${line}">${line}</option>`).join("")}`;
   $("#tableHead").innerHTML = `<tr>${def.columns.map((col) => `<th>${col}</th>`).join("")}</tr>`;
@@ -293,6 +345,96 @@ function renderMetrics() {
       <em>${index === 3 ? "需责任人闭环并保留追溯引用" : "随筛选条件实时变化"}</em>
     </article>
   `).join("");
+}
+
+function renderBusinessFocus() {
+  let focus = $("#warehouseFocus");
+  if (!focus) {
+    focus = document.createElement("section");
+    focus.id = "warehouseFocus";
+    focus.className = "warehouse-focus";
+    $("#warehouseMetrics").after(focus);
+  }
+  const active = getActive();
+  const visible = getVisibleRows();
+  const blocked = visible.filter((item) => /异常|拦截|冻结|差异|待|重试|补/.test(`${item.status} ${item.risk} ${item.check}`)).slice(0, 4);
+  const modeMap = {
+    operation: ["完工回执校验门", "校验数量、工时、用料、质量和 WIP 结转，决定是否流转下道或完工确认"],
+    confirmation: ["入库前校验门", "复核工序、FQC、NCR、SPC、用料核销、成品标签和未关闭异常"],
+    packaging: ["包装层级追溯", "按 SN、箱码、托盘码、包材批次和客户标签版本形成层级关系"],
+    receipt: ["WMS 入库回执", "按 MES 入库指令、WMS 模拟上架、库位建议和箱托校验闭环"],
+    freeze: ["冻结 / 解冻控制", "按质量异常、追溯召回、客户投诉和 WMS 回执管理出库与投产拦截"],
+    return: ["退料入库核销", "按余料标签、模拟称重、WMS 入库和用料差异完成退料闭环"],
+    sync: ["ERP / WMS 对账补偿", "按完工、入库、退料、冻结和工单关闭同步任务处理重试与差异"],
+  };
+  const [title, hint] = modeMap[pageConfig.id] || modeMap.operation;
+  focus.innerHTML = `
+    <div class="warehouse-focus__head">
+      <div>
+        <span>本页业务重点</span>
+        <h2>${title}</h2>
+        <p>${hint}</p>
+      </div>
+      <strong>${active?.order || "未选中"} · ${active?.batch || "批次待选"}</strong>
+    </div>
+    <div class="warehouse-focus__grid">
+      <article class="warehouse-gate">
+        <span>${pageConfig.id === "packaging" ? "层级绑定" : pageConfig.id === "sync" ? "同步节点" : "校验门"}</span>
+        ${buildGateItems(active).map(([label, value, state]) => `
+          <div>
+            <b class="warehouse-gate__mark warehouse-gate__mark--${state}"></b>
+            <strong>${label}</strong>
+            <em>${value}</em>
+          </div>
+        `).join("")}
+      </article>
+      <article class="warehouse-lane">
+        <span>${pageConfig.id === "receipt" ? "入库流转" : pageConfig.id === "freeze" ? "冻结范围" : "业务流转"}</span>
+        ${visible.slice(0, 4).map((item) => `
+          <div>
+            <strong>${item.id}</strong>
+            <em>${laneLabel(item)}</em>
+            <small>${item.status}</small>
+          </div>
+        `).join("")}
+      </article>
+      <article class="warehouse-exception-stack">
+        <span>待闭环事项</span>
+        ${blocked.length ? blocked.map((item) => `
+          <div>
+            <strong>${item.id}</strong>
+            <em>${item.risk || item.check}</em>
+            <small>${item.owner}</small>
+          </div>
+        `).join("") : `<div><strong>当前无阻断事项</strong><em>继续等待下游模拟回执</em><small>${active?.owner || "责任人"} 跟踪</small></div>`}
+      </article>
+    </div>
+  `;
+}
+
+function buildGateItems(active) {
+  if (!active) return [["单据", "未选中", "warn"]];
+  const riskState = /异常|拦截|冻结|差异|禁止|待补/.test(`${active.status} ${active.risk} ${active.check}`) ? "warn" : "ok";
+  if (pageConfig.id === "packaging") {
+    return [["SN 范围", active.location, riskState], ["箱托层级", active.pack, riskState], ["标签版本", active.check, riskState]];
+  }
+  if (pageConfig.id === "receipt") {
+    return [["入库指令", active.source, riskState], ["库位建议", active.location, riskState], ["箱托校验", active.check, riskState]];
+  }
+  if (pageConfig.id === "freeze") {
+    return [["冻结范围", active.location, riskState], ["来源事件", active.source, riskState], ["复判/解冻", active.next, riskState]];
+  }
+  if (pageConfig.id === "sync") {
+    return [["目标系统", active.station, riskState], ["回执状态", active.status, riskState], ["对账依据", active.check, riskState]];
+  }
+  return [["数量校验", `良品 ${active.qty} / 不良 ${active.bad} / 报废 ${active.scrap}`, riskState], ["质量/用料", active.check, riskState], ["下游放行", active.next, riskState]];
+}
+
+function laneLabel(item) {
+  if (pageConfig.id === "sync") return `${item.operation} -> ${item.station}`;
+  if (pageConfig.id === "receipt") return `${item.batch} -> ${item.location}`;
+  if (pageConfig.id === "return") return `${item.source} -> ${item.location}`;
+  return `${item.operation} -> ${item.next}`;
 }
 
 function renderTable() {
@@ -368,7 +510,7 @@ function renderDetail() {
     ["数量口径", `良品 ${active.qty} / 不良 ${active.bad} / 报废 ${active.scrap}`],
     ["包装层级", active.pack],
     ["责任人", active.owner],
-    ["时间戳", active.time],
+    ["时间戳", active.time || "业务流回执时间待同步"],
     ["风险说明", active.risk],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   $("#timelineList").innerHTML = [
@@ -377,7 +519,10 @@ function renderDetail() {
     ["责任确认", `${active.owner} 已接收 ${active.id}`],
     ["追溯引用", `${active.order} / ${active.dispatch} / ${active.batch}`],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
-  $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("") + renderManualActions(active);
+  $("#actionList").querySelectorAll("[data-manual-action]").forEach((button) => {
+    button.addEventListener("click", () => runManualAction(button.dataset.manualAction));
+  });
   $("#quickLinks").innerHTML = buildQuickLinks().map(([label, href]) => `<a href="${href}">${label}</a>`).join("");
   renderLogs();
 }
@@ -387,11 +532,47 @@ function buildActions(active) {
     ["当前动作", getDefinition().primary],
     ["异常处置", /异常|拦截|冻结|差异|风险|禁止/.test(`${active.status} ${active.risk}`) ? "生成异常、冻结、复判、补偿或人工审核记录" : "无关键拦截，继续等待下游回执"],
     ["下游结果", active.next],
+    ["非主干维护", getGovernanceAction(active).hint],
   ];
   if (pageConfig.id === "sync") actions.push(["对账依据", "保留请求批次、回执时间、重试次数和业务责任人"]);
   if (pageConfig.id === "confirmation") actions.push(["校验门", "所有工序、FQC、NCR、SPC、用料、标签和异常必须关闭"]);
   if (pageConfig.id === "freeze") actions.push(["拦截范围", "冻结批次禁止出库、投产或 ERP 入账，解冻需审批"]);
   return actions;
+}
+
+function getGovernanceAction(active = getActive()) {
+  const map = {
+    operation: { button: "补录工时差异", status: "差异待审", type: "工序完工补录", result: "已生成工时/数量差异补录审批，保留前后值和责任人", hint: "支持报工数量、工时和 WIP 结转差异补录审批" },
+    confirmation: { button: "提交放行审批", status: "审批中", type: "完工确认审批", result: "已提交完工放行审批，FQC、用料核销、标签和异常关闭作为签核依据", hint: "支持完工放行、退回补资料和校验门审批留痕" },
+    packaging: { button: "撤回包装层级", status: "撤回待复核", type: "包装层级撤回", result: "已撤回箱码/托盘码层级，需标签管理员复核旧码作废和新码关联", hint: "支持箱码托盘码撤回、补打关联和客户标签版本复核" },
+    receipt: { button: "撤回入库指令", status: "撤回待复核", type: "入库指令撤回", result: "已撤回 MES 入库指令，等待 WMS 库位回滚和质量复核", hint: "支持成品入库撤回、WMS 回执失败重试和账实补偿" },
+    freeze: { button: active?.status === "待解冻" ? "提交解冻审批" : "提交冻结审批", status: active?.status === "待解冻" ? "解冻审批中" : "冻结审批中", type: "冻结解冻审批", result: "已提交冻结/解冻审批，影响出库、投产、ERP 入账和客户追溯报告", hint: "支持库存冻结、解冻、复判和审批链留痕" },
+    return: { button: "提交差异审批", status: "差异审批中", type: "退料差异审批", result: "已提交退料实收差异审批，等待电子秤、PDA 和 WMS 回执复核", hint: "支持退料实收差异、报废、余料核销和成本归集审批" },
+    sync: { button: active?.status === "对账差异" ? "关闭对账差异" : "重试同步单据", status: active?.status === "对账差异" ? "差异关闭待复核" : "重试中", type: "ERP/WMS补偿", result: "已登记 ERP/WMS 同步重试或对账差异关闭，保留请求批次、回执和责任人", hint: "支持 ERP/WMS 重试、补偿、对账差异关闭和日终锁账依据" },
+  };
+  return map[pageConfig.id] || { button: "登记维护动作", status: "维护中", type: "完工入库维护", result: "已登记维护动作", hint: "登记补偿、审批、撤回或关闭动作" };
+}
+
+function applyGovernanceAction() {
+  const active = getActive();
+  if (!active) return;
+  const config = getGovernanceAction(active);
+  const before = `${active.status} / ${active.next}`;
+  active.status = config.status;
+  active.next = config.result;
+  window.MES_BUSINESS_FLOW?.applyCompletionAction?.(active, pageConfig.id, config.button, {
+    status: config.status,
+    result: config.result,
+    owner: active.owner,
+    governanceType: config.type,
+    approvalStatus: config.status,
+    beforeAfter: `${before} -> ${active.status} / ${active.next}`,
+  });
+  appendLog(`${active.id} 已执行${config.button}：${config.result}`);
+  saveState();
+  renderPageChrome();
+  renderAll();
+  showToast(`${config.button}已登记`);
 }
 
 function buildQuickLinks() {
@@ -408,11 +589,72 @@ function buildQuickLinks() {
 }
 
 function renderLogs() {
-  $("#logList").innerHTML = logs.length ? logs.slice(0, 5).map((log) => `<div><span>${log.time}</span><strong>${log.text}</strong></div>`).join("") : `<div><span>暂无</span><strong>当前页面尚未产生模拟回执或人工处置记录</strong></div>`;
+  $("#logList").innerHTML = logs.length ? logs.slice(0, 8).map((log) => `<div><span>${log.time}</span><strong>${log.text}</strong>${log.beforeAfter ? `<em>${log.beforeAfter}</em>` : ""}</div>`).join("") : `<div><span>暂无</span><strong>当前页面尚未产生模拟回执或人工处置记录</strong></div>`;
+}
+
+function renderManualActions(active) {
+  return `
+    <div class="manual-audit">
+      <span>入库强审计动作</span>
+      <strong>不直接修改 WMS/ERP 账务；仅维护申请、审批、补偿、撤回、关闭和复核结论</strong>
+      <div class="manual-action-row">
+        ${getManualActions(active).map((action) => `<button type="button" class="${action.danger ? "danger-action" : ""}" data-manual-action="${action.key}">${action.label}</button>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function getManualActions(active = getActive()) {
+  const map = {
+    operation: [{ key: "review", label: "完工复核" }, { key: "reject", label: "驳回异常完工", danger: true }, { key: "compensate", label: "触发补偿" }],
+    confirmation: [{ key: "reviewGate", label: "复核校验门" }, { key: "release", label: "放行审批" }, { key: "reject", label: "驳回补资料", danger: true }],
+    packaging: [{ key: "newPack", label: "新建包装任务" }, { key: "reviewBind", label: "复核箱托绑定" }, { key: "withdraw", label: "撤回层级", danger: true }],
+    receipt: [{ key: "instruction", label: "生成入库指令" }, { key: "retryWms", label: "重推 WMS" }, { key: "closeReceipt", label: "关闭入库单", danger: true }],
+    freeze: [{ key: "newFreeze", label: "新建冻结" }, { key: "approveUnfreeze", label: "审批解冻", danger: true }, { key: "closeFreeze", label: "关闭冻结", danger: true }],
+    return: [{ key: "newReturn", label: "新建退料入库" }, { key: "reviewDiff", label: "复核差异" }, { key: "closeReturn", label: "关闭退料", danger: true }],
+    sync: [{ key: "retry", label: "重试" }, { key: "compensate", label: "补偿申请", danger: true }, { key: "closeDiff", label: "关闭差异", danger: true }, { key: "export", label: "导出对账" }],
+  };
+  return [...(map[pageConfig.id] || []), { key: "history", label: "查看履历" }];
+}
+
+function runManualAction(key) {
+  const active = getActive();
+  if (!active) return;
+  const action = getManualActions(active).find((item) => item.key === key) || { label: key };
+  if (action.danger && !confirmDanger(action.label, active.id)) return;
+  const before = `${active.status} / ${active.next}`;
+  const statusMap = {
+    review: "复核中", reject: "已驳回", compensate: "补偿申请中", reviewGate: "校验复核中", release: "放行审批中",
+    newPack: "包装草稿", reviewBind: "绑定复核中", withdraw: "撤回待复核", instruction: "指令已生成", retryWms: "WMS重推中",
+    closeReceipt: "关闭待复核", newFreeze: "冻结审批中", approveUnfreeze: "解冻审批中", closeFreeze: "冻结关闭待复核",
+    newReturn: "退料草稿", reviewDiff: "差异复核中", closeReturn: "退料关闭待复核", retry: "重试中", closeDiff: "差异关闭待复核",
+    export: "已导出", history: active.status,
+  };
+  active.status = statusMap[key] || active.status;
+  active.next = `${action.label}已登记：保留责任人、时间戳、关联单据、前后值和外部回执占位`;
+  const beforeAfter = `前：${before}；后：${active.status} / ${active.next}`;
+  window.MES_BUSINESS_FLOW?.applyCompletionAction?.(active, pageConfig.id, action.label, {
+    status: active.status,
+    result: active.next,
+    owner: active.owner,
+    governanceType: "完工入库强审计",
+    approvalStatus: active.status,
+    beforeAfter,
+  });
+  appendLog(`${active.id} ${action.label}已登记`, beforeAfter);
+  saveState();
+  renderPageChrome();
+  renderAll();
+  showToast(`${action.label}已留痕`);
+}
+
+function confirmDanger(label, id) {
+  return window.confirm(`${label}属于冻结、解冻、撤回、关闭或补偿类危险动作，将写入审计记录。确认处理 ${id}？`);
 }
 
 function renderAll() {
   renderMetrics();
+  renderBusinessFocus();
   renderTable();
   renderCards();
   renderDetail();
@@ -432,13 +674,19 @@ function updateActiveStatus(status, message) {
     sync: "同步回执已更新并进入日终对账",
   };
   active.next = nextMap[pageConfig.id] || active.next;
+  window.MES_BUSINESS_FLOW?.applyCompletionAction?.(active, pageConfig.id, message || getDefinition().primary, {
+    status,
+    result: active.next,
+    owner: active.owner,
+  });
   appendLog(message || `${active.id} 状态更新为 ${status}`);
   saveState();
   renderAll();
 }
 
-function appendLog(text) {
-  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text });
+function appendLog(text, beforeAfter = "") {
+  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text, beforeAfter });
+  logs = logs.slice(0, 20);
 }
 
 function simulateStatus() {
@@ -459,6 +707,7 @@ function simulateStatus() {
 function resetPage() {
   localStorage.removeItem(STORAGE_KEY);
   rows = structuredClone(initialRows[pageConfig.id]);
+  hydrateRowsFromBusinessFlow();
   state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
   logs = [];
   $("#searchInput").value = "";
@@ -503,8 +752,7 @@ function bindEvents() {
   $("#simulateBtn").addEventListener("click", simulateStatus);
   $("#primaryActionBtn").addEventListener("click", simulateStatus);
   $("#secondaryActionBtn").addEventListener("click", () => {
-    updateActiveStatus("异常待处理", `${getActive().id} 已登记异常处置，等待责任人闭环`);
-    showToast("异常处置已登记");
+    applyGovernanceAction();
   });
   $("#closeDetailBtn").addEventListener("click", () => {
     state.detailOpen = false;
@@ -521,6 +769,7 @@ function bindEvents() {
 function init() {
   renderFrameMenu();
   loadState();
+  hydrateRowsFromBusinessFlow();
   renderPageChrome();
   $("#searchInput").value = state.search;
   $("#statusFilter").value = state.status;

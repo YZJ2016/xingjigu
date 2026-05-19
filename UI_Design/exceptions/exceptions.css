@@ -71,6 +71,251 @@
   font-weight: 680;
 }
 
+.exception-focus {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+.focus-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.focus-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.focus-head p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.focus-head > strong {
+  color: var(--red);
+  white-space: nowrap;
+}
+
+.source-grid,
+.sla-board,
+.shortage-path,
+.repair-board,
+.review-board,
+.focus-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.source-grid article,
+.sla-board article,
+.shortage-path article,
+.repair-board article,
+.review-board article,
+.line-stop-gates article,
+.quality-lanes section,
+.focus-strip button {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.focus-meta article,
+.focus-empty {
+  min-width: 0;
+  border: 1px solid rgba(255, 59, 48, 0.14);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 59, 48, 0.05);
+}
+
+.source-grid article,
+.sla-board article,
+.shortage-path article,
+.repair-board article,
+.review-board article,
+.line-stop-gates article {
+  display: grid;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.focus-meta article,
+.focus-empty {
+  display: grid;
+  gap: 6px;
+}
+
+.source-grid article.is-active,
+.sla-board article.is-active,
+.shortage-path article.is-active,
+.repair-board article.is-active,
+.review-board article.is-active,
+.focus-strip button.is-active {
+  border-color: rgba(255, 59, 48, 0.38);
+  box-shadow: inset 0 0 0 1px rgba(255, 59, 48, 0.1);
+}
+
+.source-grid span,
+.sla-board span,
+.shortage-path span,
+.repair-board span,
+.review-board span,
+.line-stop-gates span,
+.quality-lanes h3,
+.focus-strip span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 780;
+}
+
+.focus-meta span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.source-grid strong,
+.sla-board strong,
+.shortage-path strong,
+.repair-board strong,
+.review-board strong,
+.line-stop-gates strong,
+.focus-strip strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.focus-meta strong,
+.focus-empty strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.source-grid em,
+.sla-board em,
+.shortage-path em,
+.repair-board em,
+.repair-board small,
+.review-board em {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 680;
+}
+
+.focus-empty em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 680;
+}
+
+.sla-board article.red,
+.repair-board article.red {
+  border-color: rgba(255, 59, 48, 0.28);
+  background: rgba(255, 59, 48, 0.08);
+}
+
+.sla-board article.orange,
+.repair-board article.orange {
+  border-color: rgba(255, 159, 10, 0.3);
+  background: rgba(255, 159, 10, 0.1);
+}
+
+.sla-board article.green,
+.repair-board article.green {
+  border-color: rgba(52, 199, 89, 0.28);
+  background: rgba(52, 199, 89, 0.08);
+}
+
+.line-stop-gates {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.line-stop-gates article.is-current {
+  border-color: rgba(255, 59, 48, 0.28);
+  background: rgba(255, 59, 48, 0.08);
+}
+
+.focus-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.focus-strip button {
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  max-width: 100%;
+  cursor: pointer;
+}
+
+.quality-lanes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quality-lanes section {
+  display: grid;
+  gap: 8px;
+}
+
+.quality-lanes h3,
+.quality-lanes p {
+  margin: 0;
+}
+
+.quality-lanes p {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.review-board article > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.review-board article > div span {
+  border-radius: 999px;
+  padding: 5px 7px;
+  background: rgba(142, 142, 147, 0.12);
+  text-align: center;
+}
+
+.review-board article > div span.is-done {
+  background: rgba(52, 199, 89, 0.14);
+  color: var(--green);
+}
+
 .exceptions-layout {
   display: grid;
   grid-template-columns: minmax(760px, 1fr) 420px;
@@ -361,8 +606,24 @@
 
 @media (max-width: 920px) {
   .exception-metrics,
+  .source-grid,
+  .sla-board,
+  .line-stop-gates,
+  .shortage-path,
+  .quality-lanes,
+  .repair-board,
+  .review-board,
+  .focus-meta,
   .exception-card-grid,
   .exceptions-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .focus-head {
+    display: grid;
+  }
+
+  .focus-strip button {
     grid-template-columns: 1fr;
   }
 }

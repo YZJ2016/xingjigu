@@ -1,5 +1,5 @@
 const pageConfig = window.BASIC_PAGE || { id: "products", title: "产品资料", eyebrow: "基础资料 / 产品资料" };
-const STORAGE_KEY = `xingjigu_mes_basic_${pageConfig.id}_v1`;
+const STORAGE_KEY = `xingjigu_mes_basic_${pageConfig.id}_v2`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -162,6 +162,8 @@ const initialRows = {
   ],
 };
 
+Object.assign(initialRows, window.MES_MASTER_DATA?.basicRows || {});
+
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", source: "all", detailOpen: true };
 let logs = [];
@@ -262,7 +264,19 @@ function renderPageChrome() {
   $("#statusFilter").innerHTML = `<option value="all">全部状态</option>${[...new Set(rows.map((item) => item.status))].map((status) => `<option value="${status}">${status}</option>`).join("")}`;
   const sourceOptions = ["ERP", "PLM", "WMS", "QMS", "MES", "APS", "设备"];
   $("#sourceFilter").innerHTML = `<option value="all">全部来源</option>${sourceOptions.map((source) => `<option value="${source}">${source}</option>`).join("")}`;
-  $("#tableHead").innerHTML = `<tr>${def.columns.map((col) => `<th>${col}</th>`).join("")}</tr>`;
+  $("#tableHead").innerHTML = `<tr>${def.columns.map((col) => `<th>${col}</th>`).join("")}<th>维护动作</th></tr>`;
+  ensureMaintenanceActions();
+  syncFilterControls();
+}
+
+function syncFilterControls() {
+  if ($("#searchInput")) $("#searchInput").value = state.search;
+  if ($("#statusFilter")) {
+    const statusExists = [...$("#statusFilter").options].some((option) => option.value === state.status);
+    if (!statusExists) state.status = "all";
+    $("#statusFilter").value = state.status;
+  }
+  if ($("#sourceFilter")) $("#sourceFilter").value = state.source;
 }
 
 function renderMetrics() {
@@ -288,14 +302,21 @@ function renderTable() {
   $("#basicTableBody").innerHTML = visible.length ? visible.map((item) => `
     <tr class="${item.id === state.activeId ? "is-active" : ""}" data-id="${item.id}">
       ${buildCells(item).map((cell) => `<td>${cell}</td>`).join("")}
+      <td>${buildRowActions(item)}</td>
     </tr>
-  `).join("") : `<tr><td colspan="8">当前筛选条件下没有${pageConfig.title}记录</td></tr>`;
+  `).join("") : `<tr><td colspan="9">当前筛选条件下没有${pageConfig.title}记录</td></tr>`;
   $("#basicTableBody").querySelectorAll("tr[data-id]").forEach((row) => {
     row.addEventListener("click", () => {
       state.activeId = row.dataset.id;
       state.detailOpen = true;
       saveState();
       renderAll();
+    });
+  });
+  $("#basicTableBody").querySelectorAll("[data-basic-action]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      handleRowAction(button.dataset.basicAction, button.dataset.id);
     });
   });
 }
@@ -319,6 +340,25 @@ function twoLine(main, sub) {
 
 function pill(text) {
   return `<span class="pill pill--${statusStyle(text)}">${text}</span>`;
+}
+
+function buildRowActions(item) {
+  const disabled = /停用/.test(item.status);
+  const buttons = [["edit", "编辑"]];
+  if (disabled) {
+    buttons.push(["enable", "启用"]);
+    return `<div class="basic-row-actions">${buttons.map(([action, label]) => `
+      <button class="${action === "disable" || action === "withdraw" ? "danger-action" : ""}" type="button" data-basic-action="${action}" data-id="${item.id}">${label}</button>
+    `).join("")}</div>`;
+  }
+  buttons.push(["copy", "复制版本"]);
+  if (/草稿|撤回|待|评估|复核|签收|观察/.test(item.status)) buttons.push(["approve", "提交审批"]);
+  if (!/已发布|已生效|可执行|可排程/.test(item.status)) buttons.push(["publish", "发布"]);
+  if (/草稿|未生效|待审批|影响评估中/.test(item.status)) buttons.push(["withdraw", "撤回"]);
+  buttons.push([disabled ? "enable" : "disable", disabled ? "启用" : "停用"]);
+  return `<div class="basic-row-actions">${buttons.map(([action, label]) => `
+    <button class="${action === "disable" || action === "withdraw" ? "danger-action" : ""}" type="button" data-basic-action="${action}" data-id="${item.id}">${label}</button>
+  `).join("")}</div>`;
 }
 
 function renderCards() {
@@ -383,15 +423,19 @@ function buildActions(active) {
     ["下游联动", active.downstream],
   ];
   if (pageConfig.id === "bom") actions.push(["用料校验", "齐套检查、领料申请和投料确认必须引用同一 BOM 版本"]);
+  if (pageConfig.id === "bom") actions.push(["明细维护入口", "维护制造用量、损耗率、替代料和版本明细摘要，不编辑 PLM 设计 BOM"]);
   if (pageConfig.id === "routing") actions.push(["现场签收", "SOP、参数规格和检验触发规则需下发到工位终端"]);
-  if (pageConfig.id === "stations") actions.push(["准入校验", "开工前校验人员资质、设备状态、工位绑定和终端签收"]);
+  if (pageConfig.id === "routing") actions.push(["明细维护入口", "维护工序顺序、标准工时、SOP 引用和检验触发摘要，不编辑 PLM 工艺文件"]);
+  if (pageConfig.id === "stations") actions.push(["准入校验", "开工前校验人员资质、设备状态、工位绑定、班组班次和终端签收"]);
+  if (pageConfig.id === "workshops") actions.push(["资源准入", "产线、班组、班次和产能日历发布后才允许 APS 排程与现场看板引用"]);
+  if (pageConfig.id === "partners") actions.push(["业务规则", "客户标签要求、供应商质量等级和追溯口径发布后进入订单、IQC 和包装校验"]);
   return actions;
 }
 
 function renderLogs() {
   $("#logList").innerHTML = logs.length ? logs.slice(0, 5).map((log) => `
-    <div><span>${log.time}</span><strong>${log.text}</strong></div>
-  `).join("") : `<div><span>暂无</span><strong>当前页面尚未产生模拟同步或影响评估记录</strong></div>`;
+    <div><span>${log.time}</span><strong>${log.text}<em>${log.owner || getDefinition().user} · ${log.scope || pageConfig.title}</em></strong></div>
+  `).join("") : `<div><span>暂无</span><strong>当前页面尚未产生维护、模拟同步或影响评估记录</strong></div>`;
 }
 
 function renderAll() {
@@ -405,20 +449,34 @@ function updateActiveStatus(status, message) {
   const active = getActive();
   if (!active) return;
   active.status = status;
+  active.time = formatNow();
   if (status === "已发布") active.impact = "已允许下游执行引用";
   if (status === "影响评估中") active.impact = "已生成资料影响评估任务";
-  appendLog(message || `${active.id} 状态更新为 ${status}`);
+  appendLog(message || `${active.id} 状态更新为 ${status}`, active);
   saveState();
   renderAll();
 }
 
-function appendLog(text) {
-  logs.unshift({ time: new Date().toLocaleTimeString("zh-CN", { hour12: false }), text });
+function appendLog(text, row = getActive()) {
+  logs.unshift({
+    time: formatNow(),
+    text,
+    owner: row?.owner || getDefinition().user,
+    scope: row?.scope || row?.impact || pageConfig.title,
+  });
+  logs = logs.slice(0, 30);
+}
+
+function formatNow() {
+  const now = new Date();
+  const date = now.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" }).replace(/\//g, "-");
+  const time = now.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false });
+  return `${date} ${time}`;
 }
 
 function simulateStatus() {
   const value = $("#simulationInput").value.trim();
-  updateActiveStatus("已发布", `${getActive().id} 已记录${getDefinition().simulationTitle}${value ? `：${value}` : ""}`);
+  updateActiveStatus("已发布", `${getActive().id} 已记录${getDefinition().simulationTitle}${value ? `：${value}` : ""}，MES 仅形成执行快照和审批留痕`);
   showToast("模拟同步已记录");
 }
 
@@ -449,7 +507,390 @@ function showToast(text) {
   showToast.timer = setTimeout(() => toast.remove(), 2200);
 }
 
+function ensureMaintenanceActions() {
+  if (!$("#addMasterDataBtn")) {
+    const primary = $("#primaryActionBtn");
+    const addButton = document.createElement("button");
+    addButton.id = "addMasterDataBtn";
+    addButton.className = "primary-action";
+    addButton.type = "button";
+    addButton.textContent = `新增${pageConfig.title}`;
+    primary.parentElement.insertBefore(addButton, primary);
+
+    const importButton = document.createElement("button");
+    importButton.id = "mockImportBtn";
+    importButton.className = "secondary-action";
+    importButton.type = "button";
+    importButton.textContent = "导入模拟";
+    primary.parentElement.insertBefore(importButton, primary);
+  }
+  if (!$("#masterDataDialog")) mountMaintenanceDialogs();
+}
+
+function mountMaintenanceDialogs() {
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <div id="masterDataDialog" class="basic-modal" hidden>
+      <section class="basic-modal__panel" role="dialog" aria-modal="true" aria-labelledby="masterDataDialogTitle">
+        <div class="basic-modal__head">
+          <div>
+            <h3 id="masterDataDialogTitle">维护${pageConfig.title}</h3>
+            <p>MES 维护执行快照、生效范围和审批留痕，不直接改写 ERP/PLM/WMS/QMS 原始档案。</p>
+          </div>
+          <button id="closeMasterDataDialogBtn" class="icon-button" type="button" aria-label="关闭维护弹窗">×</button>
+        </div>
+        <form id="masterDataForm" class="basic-form">
+          <input id="editingRowId" type="hidden" />
+          <div class="basic-form-grid">
+            <label>编码<input id="formId" required /></label>
+            <label>名称<input id="formName" required /></label>
+            <label>版本 / 分组<input id="formVersion" required /></label>
+            <label>来源<input id="formSource" required /></label>
+            <label>状态<select id="formStatus"></select></label>
+            <label>关键引用<input id="formRef" required /></label>
+            <label>影响范围<input id="formImpact" required /></label>
+            <label>责任人<input id="formOwner" required /></label>
+            <label>生效范围<textarea id="formScope" rows="2" required></textarea></label>
+            <label>风险与准入<textarea id="formRisk" rows="2" required></textarea></label>
+            <label class="span-2">下游引用<textarea id="formDownstream" rows="2" required></textarea></label>
+          </div>
+          <div class="basic-form-note" id="formDomainNote"></div>
+          <div class="basic-modal__actions">
+            <button id="cancelMasterDataDialogBtn" class="secondary-action" type="button">取消</button>
+            <button class="primary-action" type="submit">保存维护</button>
+          </div>
+        </form>
+      </section>
+    </div>
+    <div id="basicConfirmDialog" class="basic-confirm" hidden>
+      <section class="basic-confirm__panel" role="dialog" aria-modal="true" aria-labelledby="basicConfirmTitle">
+        <div class="basic-confirm__head">
+          <span id="basicConfirmTone" class="basic-confirm__badge">需要确认</span>
+          <button id="basicConfirmCloseBtn" class="icon-button" type="button" aria-label="关闭确认弹窗">×</button>
+        </div>
+        <h3 id="basicConfirmTitle">确认操作</h3>
+        <p id="basicConfirmMessage"></p>
+        <div id="basicConfirmMeta" class="basic-confirm__meta"></div>
+        <div class="basic-confirm__actions">
+          <button id="basicConfirmCancelBtn" class="secondary-action" type="button">取消</button>
+          <button id="basicConfirmOkBtn" class="primary-action" type="button">确认</button>
+        </div>
+      </section>
+    </div>
+  `;
+  document.body.append(...wrapper.children);
+  $("#formStatus").innerHTML = getStatusOptions().map((status) => `<option value="${status}">${status}</option>`).join("");
+  $("#formDomainNote").textContent = getFormDomainNote();
+}
+
+function getStatusOptions() {
+  const base = ["草稿", "待审批", "影响评估中", "已发布", "已生效", "停用"];
+  return [...new Set([...base, ...rows.map((row) => row.status)])];
+}
+
+function getFormDomainNote() {
+  const notes = {
+    bom: "BOM 明细入口只维护制造用量摘要、损耗率、替代料和版本明细摘要，不作为 PLM 设计 BOM 编辑器。",
+    routing: "工艺路线明细入口只维护工序链、SOP 引用、参数规格和现场签收摘要，不作为 PLM 工艺文件编辑器。",
+    stations: "工序工位需维护设备、终端、班组、资质和开工准入规则；真实开工仍由现场终端、扫码枪、工牌/NFC 或设备回执产生。",
+    workshops: "产线车间需维护车间、产线、班组、班次和产能日历；MES 不直接控制现场产线。",
+    partners: "客户供应商需维护标签要求、供应商质量等级和追溯口径，并保留 ERP/QMS 模拟同步来源。",
+  };
+  return notes[pageConfig.id] || "维护结果发布后只作为 MES 执行版本和下游校验口径，外部系统同步均为模拟记录。";
+}
+
+function handleRowAction(action, id) {
+  const row = rows.find((item) => item.id === id);
+  if (!row) return;
+  state.activeId = row.id;
+  if (action === "edit") openMasterDataDialog(row);
+  if (action === "copy") copyVersion(row);
+  if (action === "approve") submitApproval(row);
+  if (action === "publish") publishRow(row);
+  if (action === "withdraw") withdrawRow(row);
+  if (action === "disable") toggleRow(row, false);
+  if (action === "enable") toggleRow(row, true);
+}
+
+function openMasterDataDialog(row = null) {
+  const isEdit = Boolean(row);
+  $("#masterDataDialogTitle").textContent = `${isEdit ? "编辑" : "新增"}${pageConfig.title}`;
+  $("#editingRowId").value = row?.id || "";
+  $("#formId").value = row?.id || buildNextId();
+  $("#formId").disabled = isEdit;
+  $("#formName").value = row?.name || "";
+  $("#formVersion").value = row?.version || "V1.0";
+  $("#formSource").value = row?.source || `MES 手工维护 + ${getMockSourceLabel()}`;
+  $("#formStatus").value = row?.status || "草稿";
+  $("#formRef").value = row?.ref || getDefaultRef();
+  $("#formImpact").value = row?.impact || "待提交审批，暂不允许下游执行引用";
+  $("#formOwner").value = row?.owner || getDefinition().user;
+  $("#formScope").value = row?.scope || getDefaultScope();
+  $("#formRisk").value = row?.risk || "需完成编码、版本、生效范围和下游影响校验";
+  $("#formDownstream").value = row?.downstream || getDefaultDownstream();
+  $("#masterDataDialog").hidden = false;
+  $("#formName").focus();
+}
+
+function closeMasterDataDialog() {
+  $("#masterDataDialog").hidden = true;
+  $("#masterDataForm").reset();
+  $("#formId").disabled = false;
+}
+
+function saveMasterDataForm(event) {
+  event.preventDefault();
+  const editingId = $("#editingRowId").value;
+  const next = {
+    id: $("#formId").value.trim(),
+    name: $("#formName").value.trim(),
+    version: $("#formVersion").value.trim(),
+    source: $("#formSource").value.trim(),
+    status: $("#formStatus").value,
+    ref: $("#formRef").value.trim(),
+    impact: $("#formImpact").value.trim(),
+    owner: $("#formOwner").value.trim(),
+    time: formatNow(),
+    scope: $("#formScope").value.trim(),
+    risk: $("#formRisk").value.trim(),
+    downstream: $("#formDownstream").value.trim(),
+  };
+  if (!next.id || !next.name) return;
+  const duplicate = rows.some((row) => row.id === next.id && row.id !== editingId);
+  if (duplicate) {
+    showToast("编码已存在，请更换主数据编码");
+    return;
+  }
+  if (editingId) {
+    rows = rows.map((row) => (row.id === editingId ? next : row));
+    appendLog(`${next.id} 已编辑，更新执行快照、影响范围和审批责任人`, next);
+  } else {
+    rows.unshift(next);
+    appendLog(`${next.id} 已新增，状态为草稿，等待提交审批`, next);
+  }
+  window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, next, editingId ? "编辑主数据" : "新增主数据", { status: next.status, owner: next.owner, impact: next.impact });
+  state.activeId = next.id;
+  closeMasterDataDialog();
+  saveState();
+  renderPageChrome();
+  renderAll();
+  showToast(`${pageConfig.title}已保存`);
+}
+
+function copyVersion(row) {
+  const copy = {
+    ...row,
+    id: `${row.id}-COPY-${String(Date.now()).slice(-4)}`,
+    version: nextVersion(row.version),
+    status: "草稿",
+    impact: "复制版本待评估，未发布前不允许现场执行引用",
+    risk: `${row.risk}；复制版本需重新审批`,
+    time: formatNow(),
+  };
+  rows.unshift(copy);
+  state.activeId = copy.id;
+  appendLog(`${row.id} 已复制为 ${copy.id}，形成未生效版本`, copy);
+  saveState();
+  renderPageChrome();
+  renderAll();
+  showToast("复制版本已生成");
+}
+
+function submitApproval(row) {
+  row.status = "待审批";
+  row.time = formatNow();
+  row.impact = "已提交审批，发布前下游仅可查看不可执行引用";
+  appendLog(`${row.id} 已提交审批，等待责任人复核生效范围和下游影响`, row);
+  window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, row, "提交审批", { status: row.status, owner: row.owner, impact: row.impact });
+  saveState();
+  renderPageChrome();
+  renderAll();
+  showToast("审批已提交");
+}
+
+function publishRow(row) {
+  openConfirmDialog({
+    title: `确认发布 ${row.id}？`,
+    message: `发布后 ${pageConfig.title} 将作为 MES 执行快照下发给计划、现场终端、质量或仓储校验；外部 ERP/PLM/QMS/WMS 原始资料不会被改写。`,
+    okText: "确认发布",
+    meta: [row.name, row.scope, row.downstream],
+    onConfirm: () => {
+      row.status = getPublishedStatus();
+      row.time = formatNow();
+      row.impact = "已允许下游执行引用";
+      appendLog(`${row.id} 已发布到执行，影响范围：${row.scope}`, row);
+      window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, row, "发布到执行", { status: row.status, owner: row.owner, impact: row.impact });
+      saveState();
+      renderPageChrome();
+      renderAll();
+      showToast("已发布到执行");
+    },
+  });
+}
+
+function withdrawRow(row) {
+  openConfirmDialog({
+    title: `确认撤回 ${row.id}？`,
+    message: "撤回仅适用于未生效版本；撤回后下游订单、派工、工位终端和质量检验不能引用该版本。",
+    okText: "确认撤回",
+    tone: "red",
+    meta: [row.name, row.status, row.impact],
+    onConfirm: () => {
+      row.status = "已撤回";
+      row.time = formatNow();
+      row.impact = "未生效版本已撤回，下游不可引用";
+      appendLog(`${row.id} 未生效版本已撤回`, row);
+      window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, row, "撤回版本", { status: row.status, owner: row.owner, impact: row.impact });
+      saveState();
+      renderPageChrome();
+      renderAll();
+      showToast("版本已撤回");
+    },
+  });
+}
+
+function toggleRow(row, enabled) {
+  const nextStatus = enabled ? "待审批" : "停用";
+  openConfirmDialog({
+    title: `${enabled ? "确认启用" : "确认停用"} ${row.id}？`,
+    message: enabled
+      ? `启用后仍需重新审批，${pageConfig.title} 不会立即被现场执行引用。`
+      : `停用后该资料不能被新订单、派工、现场终端、PDA 或质量/仓储校验继续引用，历史追溯记录保留。`,
+    okText: enabled ? "确认启用" : "确认停用",
+    tone: enabled ? "blue" : "red",
+    meta: [row.name, row.scope, row.downstream],
+    onConfirm: () => {
+      row.status = nextStatus;
+      row.time = formatNow();
+      row.impact = enabled ? "已恢复为待审批，发布前不可执行引用" : "已停用，阻止新业务引用";
+      appendLog(`${row.id} 已${enabled ? "启用并进入待审批" : "停用"}，影响范围：${row.scope}`, row);
+      window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, row, enabled ? "启用待审批" : "停用主数据", { status: row.status, owner: row.owner, impact: row.impact });
+      saveState();
+      renderPageChrome();
+      renderAll();
+      showToast(enabled ? "已启用，等待审批" : "已停用");
+    },
+  });
+}
+
+function mockImport() {
+  const row = {
+    id: buildNextId("IMP"),
+    name: `模拟导入${pageConfig.title}`,
+    version: "V1.0",
+    source: getMockSourceLabel(),
+    status: "待审批",
+    ref: getDefaultRef(),
+    impact: "模拟导入待审批，暂不允许下游执行引用",
+    owner: getDefinition().user,
+    time: formatNow(),
+    scope: getDefaultScope(),
+    risk: "模拟外部同步资料需完成影响评估",
+    downstream: getDefaultDownstream(),
+  };
+  rows.unshift(row);
+  state.activeId = row.id;
+  appendLog(`${row.id} 已完成导入模拟，等待审批和执行发布`, row);
+  saveState();
+  renderPageChrome();
+  renderAll();
+  showToast("导入模拟已记录");
+}
+
+function openConfirmDialog({ title, message, okText, meta = [], tone = "blue", onConfirm }) {
+  $("#basicConfirmTone").className = `basic-confirm__badge ${tone}`;
+  $("#basicConfirmTone").textContent = tone === "red" ? "高风险操作" : "需要确认";
+  $("#basicConfirmTitle").textContent = title;
+  $("#basicConfirmMessage").textContent = message;
+  $("#basicConfirmMeta").innerHTML = meta.map((item) => `<span>${item}</span>`).join("");
+  $("#basicConfirmOkBtn").textContent = okText;
+  $("#basicConfirmOkBtn").onclick = () => {
+    closeConfirmDialog();
+    onConfirm?.();
+  };
+  $("#basicConfirmDialog").hidden = false;
+  $("#basicConfirmCancelBtn").focus();
+}
+
+function closeConfirmDialog() {
+  $("#basicConfirmDialog").hidden = true;
+  $("#basicConfirmOkBtn").onclick = null;
+}
+
+function getPublishedStatus() {
+  if (pageConfig.id === "stations") return "可执行";
+  if (pageConfig.id === "workshops") return "可排程";
+  if (pageConfig.id === "partners") return "已生效";
+  return "已发布";
+}
+
+function nextVersion(version) {
+  const match = String(version).match(/V(\d+)(?:\.(\d+))?/i);
+  if (!match) return `${version}-副本`;
+  return `V${match[1]}.${Number(match[2] || 0) + 1}`;
+}
+
+function buildNextId(prefix = "NEW") {
+  const pagePrefix = { products: "PRD", materials: "MAT", bom: "BOM", routing: "RT", stations: "WS", workshops: "LINE", partners: "PART" }[pageConfig.id] || "MD";
+  return `${pagePrefix}-${prefix}-${String(Date.now()).slice(-5)}`;
+}
+
+function getMockSourceLabel() {
+  const sources = {
+    products: "模拟 ERP / PLM 同步",
+    materials: "模拟 ERP / WMS / QMS 同步",
+    bom: "模拟 PLM BOM 同步",
+    routing: "模拟 PLM 工艺同步",
+    stations: "模拟设备 / 工位终端回执",
+    workshops: "模拟 APS / 设备日历同步",
+    partners: "模拟 ERP / QMS 伙伴同步",
+  };
+  return sources[pageConfig.id] || "模拟外部系统同步";
+}
+
+function getDefaultRef() {
+  const refs = {
+    bom: "版本明细摘要：关键物料 / 损耗率 / 替代料",
+    routing: "明细维护入口：工序链 / SOP 引用 / 检验触发",
+    stations: "设备 / 终端 / 班组 / 班次 / 开工准入",
+    workshops: "车间 / 产线 / 班组 / 班次 / 产能日历",
+    partners: "客户标签要求 / 供应商质量等级 / 追溯口径",
+  };
+  return refs[pageConfig.id] || "编码 / 版本 / 生效范围 / 客户要求";
+}
+
+function getDefaultScope() {
+  return "华东一厂 · 电子装配车间 / 待指定产品、产线或客户范围";
+}
+
+function getDefaultDownstream() {
+  const downstream = {
+    products: "订单评审、BOM、工艺路线、成品标签、产品追溯",
+    materials: "BOM、齐套检查、领料申请、投料确认、批次追溯",
+    bom: "用料需求、领料申请、投料防错、物料损耗",
+    routing: "派工单、工位指导、过程采集、首件检验",
+    stations: "扫码开工、投料确认、过程记录、设备履历",
+    workshops: "生产排程、产能负荷、电子看板、班次交接",
+    partners: "订单评审、来料检验、成品标签、客户追溯报告",
+  };
+  return downstream[pageConfig.id] || "计划、现场执行、质量、仓储和追溯";
+}
+
 function bindEvents() {
+  ensureMaintenanceActions();
+  $("#addMasterDataBtn").addEventListener("click", () => openMasterDataDialog());
+  $("#mockImportBtn").addEventListener("click", mockImport);
+  $("#masterDataForm").addEventListener("submit", saveMasterDataForm);
+  $("#closeMasterDataDialogBtn").addEventListener("click", closeMasterDataDialog);
+  $("#cancelMasterDataDialogBtn").addEventListener("click", closeMasterDataDialog);
+  $("#masterDataDialog").addEventListener("click", (event) => {
+    if (event.target.id === "masterDataDialog") closeMasterDataDialog();
+  });
+  $("#basicConfirmCancelBtn").addEventListener("click", closeConfirmDialog);
+  $("#basicConfirmCloseBtn").addEventListener("click", closeConfirmDialog);
+  $("#basicConfirmDialog").addEventListener("click", (event) => {
+    if (event.target.id === "basicConfirmDialog") closeConfirmDialog();
+  });
   $("#searchInput").addEventListener("input", (event) => {
     state.search = event.target.value;
     saveState();
@@ -467,7 +908,7 @@ function bindEvents() {
   });
   $("#resetBasicBtn").addEventListener("click", resetPage);
   $("#simulateBtn").addEventListener("click", simulateStatus);
-  $("#primaryActionBtn").addEventListener("click", simulateStatus);
+  $("#primaryActionBtn").addEventListener("click", () => publishRow(getActive()));
   $("#secondaryActionBtn").addEventListener("click", () => {
     updateActiveStatus("影响评估中", `${getActive().id} 已登记影响评估，等待责任人审批和下游确认`);
     showToast("影响评估已登记");

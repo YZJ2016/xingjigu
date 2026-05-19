@@ -1,5 +1,5 @@
 const pageConfig = window.EQUIPMENT_PAGE || { id: "status", title: "设备状态", eyebrow: "设备与保养 / 设备状态" };
-const STORAGE_KEY = `xingjigu_mes_equipment_${pageConfig.id}_v1`;
+const STORAGE_KEY = `xingjigu_mes_equipment_${pageConfig.id}_v2`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -155,9 +155,12 @@ const initialRows = {
   ],
 };
 
+Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.equipment || {});
+
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
 let logs = [];
+let maintenanceRecords = [];
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -234,14 +237,26 @@ function loadState() {
     if (!saved) return;
     rows = saved.rows || rows;
     logs = saved.logs || logs;
+    maintenanceRecords = saved.maintenanceRecords || maintenanceRecords;
     state = { ...state, ...(saved.state || {}) };
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  mergeFlowRows();
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, state }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, logs, maintenanceRecords, state }));
+}
+
+function mergeFlowRows() {
+  const flowRows = window.MES_BUSINESS_FLOW?.getEquipmentRows?.(pageConfig.id) || [];
+  if (!flowRows.length) return;
+  const existing = new Map(rows.map((item) => [item.id, item]));
+  flowRows.forEach((item) => {
+    if (!existing.has(item.id)) rows.push(item);
+  });
+  if (!rows.some((item) => item.id === state.activeId)) state.activeId = rows[0]?.id || "";
 }
 
 function getDefinition() {
@@ -313,6 +328,77 @@ function renderMetrics() {
   `).join("");
 }
 
+function renderBusinessFocus() {
+  let focus = $("#equipmentFocus");
+  if (!focus) {
+    focus = document.createElement("section");
+    focus.id = "equipmentFocus";
+    focus.className = "equipment-focus";
+    $("#equipmentMetrics").after(focus);
+  }
+  const active = getActive();
+  const visible = getVisibleRows();
+  const critical = visible.filter((item) => /故障|异常|待|低库存|影响|瓶颈|待归因|待复核/.test(`${item.status} ${item.risk} ${item.next}`)).slice(0, 4);
+  const modeMap = {
+    status: ["设备状态矩阵", "按 PLC/SCADA 状态、工单占用、报警和开工准入识别设备可用性"],
+    inspection: ["点检日历与漏检拦截", "按班前、班中、故障后复检管理点检回执和准入风险"],
+    maintenance: ["保养窗口日历", "按运行时长、计数和 CBM 阈值同步 APS 产能窗口"],
+    repair: ["维修响应闭环", "按报警、扫码报修、到场、备件、试运行和验收跟踪维修工单"],
+    downtime: ["停机归因矩阵", "按 PLC 停机事实、班组补录和维修结果沉淀 OEE 扣减依据"],
+    spares: ["备件领用与安装追溯", "按维修/保养工单、WMS 出库、安装设备和成本归集闭环"],
+    efficiency: ["OEE 三分项", "按可用率、性能率、质量率下钻停机、维修和质量原因"],
+  };
+  const [title, hint] = modeMap[pageConfig.id] || modeMap.status;
+  focus.innerHTML = `
+    <div class="equipment-focus__head">
+      <div>
+        <span>本页业务重点</span>
+        <h2>${title}</h2>
+        <p>${hint}</p>
+      </div>
+      <strong>${active?.equipment || "未选中"} · ${active?.line || "全部产线"}</strong>
+    </div>
+    <div class="equipment-focus__grid">
+      <article class="equipment-state-map">
+        <span>${pageConfig.id === "efficiency" ? "OEE 三分项" : "设备状态"}</span>
+        ${visible.slice(0, 4).map((item) => `
+          <div class="equipment-state-map__row">
+            <b class="equipment-dot equipment-dot--${statusStyle(item.status)}"></b>
+            <strong>${item.equipment}</strong>
+            <em>${item.status}</em>
+            <small>${item.duration}</small>
+          </div>
+        `).join("")}
+      </article>
+      <article class="equipment-calendar">
+        <span>${pageConfig.id === "maintenance" ? "保养窗口" : pageConfig.id === "inspection" ? "点检窗口" : "响应窗口"}</span>
+        ${visible.slice(0, 4).map((item) => `
+          <div>
+            <strong>${timeLabel(item.duration)}</strong>
+            <em>${item.id}</em>
+            <small>${item.next}</small>
+          </div>
+        `).join("")}
+      </article>
+      <article class="equipment-risk-stack">
+        <span>闭环风险</span>
+        ${critical.length ? critical.map((item) => `
+          <div>
+            <strong>${item.id}</strong>
+            <em>${item.risk}</em>
+            <small>${item.owner}</small>
+          </div>
+        `).join("") : `<div><strong>当前无阻断风险</strong><em>继续接收设备模拟回执</em><small>${active?.owner || "设备员"} 负责复核</small></div>`}
+      </article>
+    </div>
+  `;
+}
+
+function timeLabel(duration) {
+  const text = String(duration || "");
+  return text.includes("/") ? text.split("/")[0].trim() : text;
+}
+
 function average(values) {
   const valid = values.filter((value) => Number(value) > 0);
   if (!valid.length) return "0.0";
@@ -328,7 +414,7 @@ function renderTable() {
         ${cells.map((cell) => `<td>${cell}</td>`).join("")}
       </tr>
     `;
-  }).join("") : `<tr><td colspan="8">当前筛选条件下没有${pageConfig.title}记录</td></tr>`;
+  }).join("") : `<tr><td colspan="8"><div class="empty-action">当前筛选条件下没有${pageConfig.title}记录 <button type="button" data-maintenance-action="create">新增维护单据</button></div></td></tr>`;
   $("#equipmentTableBody").querySelectorAll("tr[data-id]").forEach((row) => {
     row.addEventListener("click", () => {
       state.activeId = row.dataset.id;
@@ -336,6 +422,9 @@ function renderTable() {
       saveState();
       renderAll();
     });
+  });
+  $("#equipmentTableBody").querySelectorAll("[data-maintenance-action]").forEach((button) => {
+    button.addEventListener("click", () => handleMaintenanceAction(button.dataset.maintenanceAction));
   });
 }
 
@@ -448,10 +537,116 @@ function renderLogs() {
 }
 
 function renderAll() {
+  mergeFlowRows();
   renderMetrics();
+  renderBusinessFocus();
   renderTable();
   renderCards();
+  renderMaintenancePanel();
   renderDetail();
+}
+
+function getMaintenanceRecipe() {
+  const map = {
+    status: ["设备台账补充", "状态复核并锁定准入", "停用/解除锁定验收", "设备管理员 周诚"],
+    inspection: ["点检计划", "发布点检并复核漏检", "关闭点检异常", "设备点检员 黄宁"],
+    maintenance: ["保养计划", "生成保养工单并审批窗口", "验收关闭保养", "保养计划员 许锐"],
+    repair: ["维修工单", "派工接单并申请备件", "试运行验收关闭", "维修调度员 吴启"],
+    downtime: ["停机归因补录", "复核 OEE 扣减口径", "关闭停机复盘", "停机分析员 周诚"],
+    spares: ["备件领用申请", "审批并发起 WMS 出库", "登记安装并关闭", "备件管理员 林蔚"],
+    efficiency: ["TPM 改善项", "分派责任并复核 OEE", "关闭改善验收", "设备效率分析员 袁立"],
+  };
+  const [create, process, close, owner] = map[pageConfig.id] || map.repair;
+  return { create, process, close, owner };
+}
+
+function getActiveMaintenance() {
+  return maintenanceRecords[0];
+}
+
+function renderMaintenancePanel() {
+  let panel = $("#equipmentMaintenancePanel");
+  if (!panel) {
+    panel = document.createElement("section");
+    panel.id = "equipmentMaintenancePanel";
+    panel.className = "equipment-panel maintenance-panel";
+    document.querySelector(".equipment-left .simulation-box")?.before(panel);
+  }
+  const active = getActive();
+  const recipe = getMaintenanceRecipe();
+  const current = getActiveMaintenance();
+  panel.innerHTML = `
+    <div class="equipment-panel__head">
+      <div>
+        <h3>${pageConfig.title}手工维护闭环</h3>
+        <p>后台维护台账、计划、派单、复核和验收；设备运行、点检、维修、WMS 出库只记录模拟回执，不直接控制设备或移动备件。</p>
+      </div>
+    </div>
+    <div class="maintenance-flow">
+      <button type="button" data-maintenance-action="create">新增 ${recipe.create}</button>
+      <button type="button" data-maintenance-action="process"${current ? "" : " disabled"}>${recipe.process}</button>
+      <button type="button" class="danger-action" data-maintenance-action="close"${current ? "" : " disabled"}>${recipe.close}</button>
+    </div>
+    <div class="maintenance-record">
+      ${current ? `
+        <div><span>维护单</span><strong>${current.id} · ${current.status}</strong></div>
+        <div><span>关联单据</span><strong>${current.related}</strong></div>
+        <div><span>责任/时间</span><strong>${current.owner} · ${current.time}</strong></div>
+        <div><span>前后值摘要</span><strong>${current.before} -> ${current.after}</strong></div>
+      ` : `<div><span>暂无维护单</span><strong>可基于 ${active?.id || pageConfig.title} 新建设备管理单据</strong></div>`}
+    </div>
+    <div class="maintenance-log">
+      ${maintenanceRecords.slice(0, 4).map((item) => `<div><span>${item.time}</span><strong>${item.id} ${item.action}：${item.status}</strong></div>`).join("") || `<div><span>操作记录</span><strong>新增、发布、派工、验收会写入 localStorage 和统一治理事件</strong></div>`}
+    </div>
+  `;
+  panel.querySelectorAll("[data-maintenance-action]").forEach((button) => {
+    button.addEventListener("click", () => handleMaintenanceAction(button.dataset.maintenanceAction));
+  });
+}
+
+function handleMaintenanceAction(action) {
+  const active = getActive();
+  if (!active) return;
+  const recipe = getMaintenanceRecipe();
+  const now = new Date().toLocaleString("zh-CN", { hour12: false });
+  let record = getActiveMaintenance();
+  if (action === "create") {
+    record = {
+      id: `EQ-MAINT-${Date.now().toString().slice(-6)}`,
+      action: recipe.create,
+      status: "待处理",
+      related: `${active.order} / ${active.dispatch} / ${active.id}`,
+      owner: recipe.owner,
+      time: now,
+      before: `${active.status} / ${active.next}`,
+      after: `已发起${recipe.create}`,
+    };
+    maintenanceRecords.unshift(record);
+  } else {
+    if (!record) return;
+    if (action === "close" && !confirm(`确认${recipe.close}？验收关闭会保留设备审计记录。`)) return;
+    record.action = action === "process" ? recipe.process : recipe.close;
+    record.status = action === "process" ? "处理中/已审批" : "已验收关闭";
+    record.time = now;
+    record.before = record.after;
+    record.after = action === "process" ? `${recipe.process}完成，等待现场模拟回执` : `${recipe.close}完成，设备履历已归档`;
+  }
+  window.MES_BUSINESS_FLOW?.applyEquipmentAction?.(active, action === "close" ? "equipmentClose" : "equipmentAdvance", {
+    status: record.status,
+    owner: record.owner,
+    result: `${record.id} ${record.before} -> ${record.after}`,
+  });
+  window.MES_BUSINESS_FLOW?.applyGovernanceAction?.({ id: record.id, name: pageConfig.title, owner: record.owner, risk: active.risk, trace: active.trace }, "equipment", record.action, {
+    orderId: active.order,
+    status: record.status,
+    source: "设备与保养后台维护",
+    result: record.after,
+    auditRef: record.related,
+  });
+  appendLog(`${record.id} ${record.action}：${record.before} -> ${record.after}，责任人 ${record.owner}`);
+  saveState();
+  renderAll();
+  showToast("设备维护记录已保存");
 }
 
 function updateActiveStatus(status, message) {
@@ -465,6 +660,11 @@ function updateActiveStatus(status, message) {
   if (pageConfig.id === "downtime" && status.includes("归因")) active.next = "进入 OEE 和复盘";
   if (pageConfig.id === "spares" && status.includes("出库")) active.next = "绑定安装记录并归集成本";
   if (pageConfig.id === "efficiency" && status.includes("重算")) active.next = "刷新 OEE 三分项和改善建议";
+  window.MES_BUSINESS_FLOW?.applyEquipmentAction?.(active, /验收|完成|归因|重算/.test(status) ? "equipmentClose" : "equipmentAdvance", {
+    status,
+    owner: active.owner,
+    result: active.next || active.risk,
+  });
   appendLog(message || `${active.id} 状态更新为 ${status}`);
   saveState();
   renderAll();
@@ -491,9 +691,10 @@ function simulateStatus() {
 
 function resetPage() {
   localStorage.removeItem(STORAGE_KEY);
-  rows = structuredClone(initialRows[pageConfig.id]);
+  rows = structuredClone([...(window.MES_BUSINESS_FLOW?.getEquipmentRows?.(pageConfig.id) || []), ...initialRows[pageConfig.id]]);
   state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
   logs = [];
+  maintenanceRecords = [];
   $("#searchInput").value = "";
   $("#statusFilter").value = "all";
   $("#lineFilter").value = "all";
@@ -553,12 +754,18 @@ function bindEvents() {
 
 function init() {
   renderFrameMenu();
+  mergeFlowRows();
   loadState();
   renderPageChrome();
   $("#searchInput").value = state.search;
   $("#statusFilter").value = state.status;
   $("#lineFilter").value = state.line;
   bindEvents();
+  window.addEventListener("mes-flow:changed", () => {
+    mergeFlowRows();
+    renderPageChrome();
+    renderAll();
+  });
   renderAll();
 }
 

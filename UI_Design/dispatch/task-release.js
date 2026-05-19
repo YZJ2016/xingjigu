@@ -340,6 +340,11 @@ function updateRelease(id, patch, message) {
   const index = releases.findIndex((item) => item.id === id);
   if (index < 0) return;
   releases[index] = { ...releases[index], ...patch };
+  if (patch.status === "已下达") {
+    window.MES_BUSINESS_FLOW?.applyDispatchAction?.(releases[index].orderId, "release", { owner: releases[index].team || "车间主任" });
+  } else if (patch.status === "下达拦截" || patch.status === "已撤回") {
+    window.MES_BUSINESS_FLOW?.applyDispatchAction?.(releases[index].orderId, "hold", { owner: releases[index].team || "车间主任", reason: message });
+  }
   state.activeReleaseId = id;
   recordLog(id, message);
   saveState();

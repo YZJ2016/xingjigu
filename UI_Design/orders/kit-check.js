@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xingjigu_mes_production_orders_v1";
+const STORAGE_KEY = "xingjigu_mes_production_orders_v2";
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -33,8 +33,15 @@ const initialOrders = [
   { id: "MO-202606-0012", product: "工业触控终端 HMI-100", customer: "J 客户", qty: 320, done: 80, due: "2026-06-30", line: "Line-B", status: "待首检", priority: "高", risk: "质量", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "320", planner: "李计划", materialGap: "首件尺寸项待确认" },
 ];
 
+const masterOrders = window.MES_MASTER_DATA?.orders || [];
+masterOrders.forEach((masterOrder) => {
+  const existing = initialOrders.find((order) => order.id === masterOrder.id);
+  if (existing) Object.assign(existing, masterOrder);
+  else initialOrders.push(masterOrder);
+});
+
 const planDays = ["06-20", "06-21", "06-22", "06-23", "06-24", "06-25", "06-26"];
-let orders = structuredClone(initialOrders);
+let orders = structuredClone(window.MES_MASTER_DATA?.orders || initialOrders);
 let schedulePlans = {};
 let integrationLogs = [];
 let kitChecks = {};
@@ -101,11 +108,16 @@ function renderFrameMenu() {
 
 function loadState() {
   try {
+    const flowState = window.MES_BUSINESS_FLOW?.read?.();
+    if (flowState?.orders) {
+      orders = flowState.orders;
+      integrationLogs = flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time }));
+    }
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!saved) return;
-    orders = saved.orders || orders;
+    orders = flowState?.orders || saved.orders || orders;
     schedulePlans = saved.schedulePlans || schedulePlans;
-    integrationLogs = saved.integrationLogs || integrationLogs;
+    integrationLogs = flowState?.logs ? flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time })) : saved.integrationLogs || integrationLogs;
     kitChecks = saved.kitChecks || kitChecks;
     state = { ...state, ...(saved.kitState || {}) };
   } catch (error) {
@@ -167,6 +179,16 @@ function getShortageQty(order) {
 }
 
 function getMaterials(order, shortageQty) {
+  const masterMaterials = window.MES_MASTER_DATA?.getBomMaterials?.(order.productCode || order.product, order.qty);
+  if (masterMaterials?.length) {
+    return masterMaterials.map((item) => {
+      const shortageName = order.materialGap || order.kit || "";
+      const isShortageMaterial = shortageName.includes(item.name) || shortageName.includes(item.materialNo);
+      const targetGap = isShortageMaterial && shortageQty > 0 ? shortageQty : item.gap;
+      const available = Math.max(0, item.need - targetGap - item.transit);
+      return { ...item, available, gap: Math.max(0, item.need - available - item.transit) };
+    });
+  }
   const base = [
     { name: "PCB 主板", need: order.qty, available: order.qty + 80, transit: 0, eta: "库存可用", substitute: "无" },
     { name: order.product.includes("电源") ? "电源芯片" : "温度传感器", need: order.qty, available: Math.max(0, order.qty - shortageQty), transit: shortageQty ? Math.ceil(shortageQty * 0.7) : 0, eta: shortageQty ? "06-22 下午" : "库存可用", substitute: shortageQty ? "可评估替代批" : "无" },
@@ -364,6 +386,11 @@ function showToast(message) {
     toast.hidden = true;
   }, 1800);
 }
+
+window.addEventListener("plan-maintenance:changed", () => {
+  loadState();
+  renderAll();
+});
 
 function bindEvents() {
   $("#kitSearch").addEventListener("input", (event) => {

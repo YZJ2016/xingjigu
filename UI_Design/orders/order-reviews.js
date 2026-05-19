@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xingjigu_mes_production_orders_v1";
+const STORAGE_KEY = "xingjigu_mes_production_orders_v2";
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -33,7 +33,7 @@ const initialOrders = [
   { id: "MO-202606-0012", product: "工业触控终端 HMI-100", customer: "J 客户", qty: 320, done: 80, due: "2026-06-30", line: "Line-B", status: "待首检", priority: "高", risk: "质量", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "320", planner: "李计划", materialGap: "首件尺寸项待确认" },
 ];
 
-let orders = structuredClone(initialOrders);
+let orders = structuredClone(window.MES_MASTER_DATA?.orders || initialOrders);
 let integrationLogs = [];
 let reviewMaterials = {};
 let state = {
@@ -104,10 +104,15 @@ function renderFrameMenu() {
 
 function loadState() {
   try {
+    const flowState = window.MES_BUSINESS_FLOW?.read?.();
+    if (flowState?.orders) {
+      orders = flowState.orders;
+      integrationLogs = flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time }));
+    }
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!saved) return;
-    orders = saved.orders || orders;
-    integrationLogs = saved.integrationLogs || integrationLogs;
+    orders = flowState?.orders || saved.orders || orders;
+    integrationLogs = flowState?.logs ? flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time })) : saved.integrationLogs || integrationLogs;
     reviewMaterials = saved.reviewMaterials || reviewMaterials;
     state = { ...state, ...(saved.reviewState || {}) };
   } catch (error) {
@@ -125,6 +130,12 @@ function getActiveOrder() {
 }
 
 function getReviewScope(order) {
+  const flowReview = window.MES_BUSINESS_FLOW?.read?.().reviews?.[order.id];
+  if (flowReview?.gates?.length) {
+    const gates = flowReview.gates.map((gate) => ({ label: gate.label, desc: gate.ref, status: gate.status }));
+    const blocked = gates.filter((gate) => !["通过", "已发布", "可承诺", "已配置"].includes(gate.status));
+    return { gates, blocked };
+  }
   const materials = getReviewMaterials(order);
   const gates = [
     { label: "产品主数据", desc: order.product, status: order.review === "已通过" ? "通过" : "待确认" },
@@ -377,6 +388,11 @@ function showToast(message) {
     toast.hidden = true;
   }, 1800);
 }
+
+window.addEventListener("plan-maintenance:changed", () => {
+  loadState();
+  renderAll();
+});
 
 function bindEvents() {
   $("#reviewSearch").addEventListener("input", (event) => {

@@ -329,6 +329,78 @@
   gap: 8px;
 }
 
+.maintenance-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.maintenance-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.maintenance-flow button,
+.empty-action button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: white;
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.maintenance-flow button:first-child {
+  background: var(--red);
+  border-color: var(--red);
+  color: white;
+}
+
+.maintenance-flow button.danger-action {
+  background: rgba(255, 59, 48, 0.1);
+  border-color: rgba(255, 59, 48, 0.28);
+  color: var(--red);
+}
+
+.maintenance-flow button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.maintenance-record,
+.maintenance-log {
+  display: grid;
+  gap: 8px;
+}
+
+.maintenance-record div,
+.maintenance-log div,
+.empty-action {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.35fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.maintenance-record span,
+.maintenance-log span,
+.empty-action {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.maintenance-record strong,
+.maintenance-log strong {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .quick-links a {
   display: inline-flex;
   align-items: center;
@@ -380,5 +452,11 @@
 
   .topbar-actions {
     justify-content: flex-start;
+  }
+
+  .maintenance-record div,
+  .maintenance-log div,
+  .empty-action {
+    grid-template-columns: 1fr;
   }
 }

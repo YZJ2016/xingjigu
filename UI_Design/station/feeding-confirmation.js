@@ -506,6 +506,35 @@ function updateFeeding(id, patch, message) {
   const index = feedings.findIndex((item) => item.id === id);
   if (index < 0) return;
   feedings[index] = { ...feedings[index], ...patch };
+  const next = feedings[index];
+  if (patch.status === "已确认") {
+    window.MES_BUSINESS_FLOW?.applyStationAction?.(next.orderId, "feedingConfirm", {
+      dispatchId: next.dispatchNo,
+      station: next.station,
+      equipment: next.equipment,
+      status: "投料已确认",
+      owner: next.operator,
+      result: message,
+    });
+  }
+  if (patch.status === "已拦截") {
+    window.MES_BUSINESS_FLOW?.applyStationAction?.(next.orderId, "feedingBlock", {
+      dispatchId: next.dispatchNo,
+      station: next.station,
+      equipment: next.equipment,
+      status: "已拦截",
+      owner: state.owner,
+      reason: next.variance || message,
+    });
+  }
+  if (patch.status === "差异待核销") {
+    window.MES_BUSINESS_FLOW?.applyMaterialAction?.(next.orderId, "feedingReview", {
+      owner: state.owner,
+      status: "差异待核销",
+      label: "投料差异登记",
+      reason: next.variance || message,
+    });
+  }
   state.activeFeedingId = id;
   recordLog(id, message, "状态已保存到本机演示数据");
   saveState();

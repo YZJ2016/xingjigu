@@ -1,0 +1,114 @@
+.dispatch-maintenance-panel {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+  border: 1px solid rgba(52, 199, 89, 0.22);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(52, 199, 89, 0.06);
+}
+
+.dispatch-maintenance-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dispatch-maintenance-head span,
+.dispatch-maintenance-record span,
+.dispatch-maintenance-log span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.dispatch-maintenance-head h2 {
+  margin: 4px 0;
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.dispatch-maintenance-head p {
+  margin: 0;
+  max-width: 820px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.dispatch-maintenance-head strong {
+  align-self: start;
+  white-space: nowrap;
+  color: var(--green);
+  font-size: 13px;
+}
+
+.dispatch-maintenance-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dispatch-maintenance-flow button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: white;
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dispatch-maintenance-flow button:first-child {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}
+
+.dispatch-maintenance-flow button.danger-action {
+  background: rgba(255, 59, 48, 0.1);
+  border-color: rgba(255, 59, 48, 0.28);
+  color: var(--red);
+}
+
+.dispatch-maintenance-flow button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.dispatch-maintenance-record,
+.dispatch-maintenance-log {
+  display: grid;
+  gap: 8px;
+}
+
+.dispatch-maintenance-record div,
+.dispatch-maintenance-log div {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.28fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.dispatch-maintenance-record strong,
+.dispatch-maintenance-log strong {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 860px) {
+  .dispatch-maintenance-head,
+  .dispatch-maintenance-record div,
+  .dispatch-maintenance-log div {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .dispatch-maintenance-head strong {
+    white-space: normal;
+  }
+}

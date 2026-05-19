@@ -316,6 +316,8 @@ function updateChange(id, patch, message) {
   const index = changes.findIndex((item) => item.id === id);
   if (index < 0) return;
   changes[index] = { ...changes[index], ...patch };
+  if (patch.status === "已生效") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(changes[index].orderId, "release", { owner: changes[index].owner || "车间主任" });
+  if (patch.status === "待审批" || patch.status === "待评估") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(changes[index].orderId, "hold", { owner: changes[index].owner || "车间主任", reason: message });
   state.activeChangeId = id;
   recordLog(id, message);
   saveState();

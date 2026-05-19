@@ -115,6 +115,13 @@ const initialOrders = [
   { id: "MO-202606-0012", product: "工业触控终端 HMI-100", customer: "J 客户", qty: 320, done: 80, due: "2026-06-30", line: "Line-B", status: "待首检", priority: "高", risk: "质量", quality: 96.9, oee: 80.8 },
 ];
 
+const masterOrders = window.MES_MASTER_DATA?.orders || [];
+masterOrders.forEach((masterOrder) => {
+  const existing = initialOrders.find((order) => order.id === masterOrder.id);
+  if (existing) Object.assign(existing, masterOrder);
+  else initialOrders.push(masterOrder);
+});
+
 const flowSteps = [
   { name: "ERP 工单", meta: "MO-202606-0001 接收成功", status: "done", owner: "计划员", action: "查看订单" },
   { name: "生产资料检查", meta: "BOM / 工艺 / 作业指导 / 检验要求通过", status: "done", owner: "工艺工程师", action: "查看资料" },
@@ -170,6 +177,7 @@ let orders = structuredClone(initialOrders);
 let operations = structuredClone(initialOperations);
 let risks = structuredClone(initialRisks);
 let todos = structuredClone(initialTodos);
+let workbenchLogs = [];
 let state = structuredClone(initialState);
 
 function loadDemoState() {
@@ -181,13 +189,14 @@ function loadDemoState() {
     risks = saved.risks || risks;
     todos = saved.todos || todos;
     state = { ...state, ...(saved.state || {}) };
+    workbenchLogs = saved.workbenchLogs || workbenchLogs;
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
 }
 
 function saveDemoState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ orders, operations, risks, todos, state }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ orders, operations, risks, todos, state, workbenchLogs }));
 }
 
 function resetDemoState() {
@@ -196,6 +205,7 @@ function resetDemoState() {
   operations = structuredClone(initialOperations);
   risks = structuredClone(initialRisks);
   todos = structuredClone(initialTodos);
+  workbenchLogs = [];
   state = structuredClone(initialState);
   $("#lineSelect").value = state.line;
   $("#shiftSelect").value = state.shift;
@@ -219,6 +229,14 @@ const heroSummary = $("#heroSummary");
 
 function getActiveOrder() {
   return orders.find((order) => order.id === state.activeOrderId) || orders[0];
+}
+
+function getOrderMaster(order = getActiveOrder()) {
+  const master = window.MES_MASTER_DATA;
+  const product = master?.productByCode?.(order.productCode || order.product);
+  const bom = master?.bomByProduct?.(order.productCode || product?.code);
+  const routing = master?.routingByProduct?.(order.productCode || product?.code);
+  return { product, bom, routing };
 }
 
 function getVisibleOrders() {
@@ -539,8 +557,20 @@ function setActiveKpi(type) {
 
 function renderTimeline() {
   const order = getActiveOrder();
+  const master = getOrderMaster(order);
+  const orderFlowSteps = flowSteps.map((step) => {
+    if (step.name !== "生产资料检查") return step;
+    const blocking = [master.product, master.bom, master.routing].some((item) => /待|冻结|评估/.test(item?.status || ""));
+    return {
+      ...step,
+      meta: `${master.product?.id || "产品资料"} / ${master.bom?.id || "BOM"} / ${master.routing?.id || "工艺路线"} · ${blocking ? "存在待确认项" : "执行版本通过"}`,
+      status: blocking ? "current" : "done",
+      owner: master.product?.owner || step.owner,
+      action: blocking ? "进入基础资料补齐" : "查看基础资料",
+    };
+  });
   $("#flowSubtitle").textContent = `${order.id} · ${order.customer} · ${order.product}`;
-  timeline.innerHTML = flowSteps
+  timeline.innerHTML = orderFlowSteps
     .map((step, index) => {
       const className = step.status === "done" ? "is-done" : step.status === "current" ? "is-current" : "";
       return `
@@ -555,7 +585,17 @@ function renderTimeline() {
 
   timeline.querySelectorAll(".flow-step").forEach((stepEl) => {
     stepEl.addEventListener("click", () => {
-      const step = flowSteps[Number(stepEl.dataset.index)];
+      const step = orderFlowSteps[Number(stepEl.dataset.index)];
+      if (step.name === "生产资料检查") {
+        openDrawer("基础资料校验", order.id, detailRows([
+          ["产品资料", `${master.product?.id || "未配置"} · ${master.product?.status || "待确认"}`],
+          ["BOM 清单", `${master.bom?.id || "未配置"} · ${master.bom?.status || "待确认"}`],
+          ["工艺路线", `${master.routing?.id || "未配置"} · ${master.routing?.status || "待确认"}`],
+          ["下游影响", `${order.review || "待评审"} / ${order.schedule || "未排程"} / ${order.kit || "待齐套"}`],
+        ]));
+        setContext(step.name, `${step.meta}。负责人：${step.owner}。建议动作：${step.action}。`);
+        return;
+      }
       setContext(step.name, `${step.meta}。负责人：${step.owner}。建议动作：${step.action}。`);
       openDrawer("流程节点", step.name, detailRows([
         ["当前状态", step.status === "done" ? "已完成" : step.status === "current" ? "进行中" : "待开始"],
@@ -609,6 +649,7 @@ function renderRisks(filter = "") {
         <div class="row-actions">
           <button type="button" data-action="detail" data-id="${item.id}">查看</button>
           <button type="button" data-action="assign" data-id="${item.id}">派给我</button>
+          <button type="button" data-action="exception" data-id="${item.id}">转异常</button>
           <button type="button" data-action="close" data-id="${item.id}">${item.done ? "已关闭" : "关闭"}</button>
         </div>
       </div>
@@ -643,8 +684,9 @@ function renderTodos() {
 }
 
 function renderPreview() {
+  const favoriteIds = state.favoriteModuleIds || homePreviewModuleIds;
   submenuPreview.innerHTML = modules
-    .filter((module) => homePreviewModuleIds.includes(module.id))
+    .filter((module) => favoriteIds.includes(module.id))
     .map((module) => `
       <button class="preview-card" type="button" data-module="${module.id}" data-entry="${module.items[0]}" data-title="${module.title}">
         <div class="preview-card__title">
@@ -662,6 +704,12 @@ function renderPreview() {
       applyMenuEntry(card.dataset.module, card.dataset.entry);
     });
   });
+  const config = document.createElement("button");
+  config.className = "preview-card preview-card--config";
+  config.type = "button";
+  config.innerHTML = `<div class="preview-card__title"><span class="preview-card__dot" style="background:var(--indigo)"></span>配置常用入口</div><ul><li>异常处理</li><li>完工入库</li><li>条码标签</li><li>追溯与报表</li></ul>`;
+  config.addEventListener("click", configureFavorites);
+  submenuPreview.appendChild(config);
 }
 
 function renderKpis() {
@@ -964,6 +1012,10 @@ function bindSearch() {
     const keyword = event.target.value.trim().toLowerCase();
     const data = [
       ...orders.map((item) => ({ title: item.id, desc: `${item.product} · ${item.customer} · ${item.line}`, type: "生产订单" })),
+      ...(window.MES_MASTER_DATA?.products || []).map((item) => ({ title: item.id, desc: `${item.name} · ${item.version} · ${item.bom}`, type: "产品资料" })),
+      ...(window.MES_MASTER_DATA?.materials || []).map((item) => ({ title: item.id, desc: `${item.name} · ${item.batch} · ${item.status}`, type: "物料资料" })),
+      ...(window.MES_MASTER_DATA?.bomHeaders || []).map((item) => ({ title: item.id, desc: `${item.productName} · ${item.version} · ${item.status}`, type: "BOM 清单" })),
+      ...(window.MES_MASTER_DATA?.routings || []).map((item) => ({ title: item.id, desc: `${item.name} · ${item.steps}`, type: "工艺路线" })),
       ...operations.map((item) => ({ title: item.name, desc: item.meta.join(" · "), type: "生产任务" })),
       ...risks.map((item) => ({ title: item.name, desc: item.meta.join(" · "), type: item.type })),
       ...modules.flatMap((module) => module.items.map((item) => ({ title: item, desc: module.title, type: "业务入口" }))),
@@ -1008,12 +1060,32 @@ function bindModal() {
       owner: "待分配",
       done: false,
     });
+    const activeOrder = getActiveOrder();
+    window.MES_BUSINESS_FLOW?.applyExceptionAction?.({
+      id: `WB-EX-${Date.now()}`,
+      type,
+      severity: style === "red" ? "高" : "中",
+      line: activeOrder.line,
+      station: step,
+      order: activeOrder.id,
+      dispatch: "首页草稿",
+      source: "首页工作台新建异常草稿",
+      status: "草稿",
+      owner: "待分配",
+      action: desc,
+      trace: "workbench_exception_draft",
+    }, "workbenchExceptionDraft", {
+      status: "草稿",
+      owner: "生产经理",
+      result: `首页已串联异常上报入口：${type} / ${step}`,
+    });
+    appendWorkbenchLog("新建异常草稿", `${type} / ${step} / ${activeOrder.id}`);
     $("#exceptionDesc").value = "";
     closeModal();
     saveDemoState();
     renderAllProduction();
     setContext("新建异常", `已提交 ${type} 异常，影响工序：${step}。`);
-    showToast("异常已创建");
+    showToast("异常草稿已创建，可进入异常上报继续维护");
   });
 }
 
@@ -1061,12 +1133,49 @@ function handleRiskAction(action, id) {
     renderRisks();
     showToast("已派给生产经理");
   }
+  if (action === "exception") {
+    appendWorkbenchLog("风险转异常", `${item.name} / ${item.orderId}`);
+    saveDemoState();
+    setContext("风险转异常", `${item.name} 已串联到异常处理页面，可继续派单、升级、关闭和复盘。`);
+    window.location.href = "./exceptions/pending-exceptions.html";
+  }
   if (action === "close" && !item.done) {
+    if (!window.confirm(`关闭风险会写入首页复核结论，不修改生产、设备、仓储或质量原始事实。确认关闭 ${item.name}？`)) return;
     item.done = true;
+    item.meta = [...item.meta.slice(0, -1), `关闭人：生产经理 ${new Date().toLocaleString("zh-CN", { hour12: false })}`];
+    appendWorkbenchLog("风险关闭复核", `${item.name} / ${item.orderId}`);
+    window.MES_BUSINESS_FLOW?.recordGovernanceEvent?.({
+      domain: "workbench",
+      action: "风险关闭",
+      page: "首页工作台",
+      owner: "生产经理",
+      result: `${item.name} 已关闭；仅维护复核结论和责任时间戳`,
+      time: new Date().toLocaleString("zh-CN", { hour12: false }),
+    });
     saveDemoState();
     renderAllProduction();
     showToast("风险已关闭");
   }
+}
+
+function configureFavorites() {
+  const compact = ["exceptions", "warehouse", "barcode", "station", "process", "trace", "reports"];
+  const full = homePreviewModuleIds;
+  state.favoriteModuleIds = JSON.stringify(state.favoriteModuleIds || full) === JSON.stringify(compact) ? full : compact;
+  appendWorkbenchLog("常用入口配置", `当前入口：${state.favoriteModuleIds.join("、")}`);
+  saveDemoState();
+  renderPreview();
+  openDrawer("常用入口配置", "首页仅配置维护入口", detailRows([
+    ["当前入口", state.favoriteModuleIds.map((id) => modules.find((module) => module.id === id)?.title).filter(Boolean).join("、")],
+    ["边界", "首页不重复承载完整业务页面，只串联异常、风险关闭、复核、快照、导出和发布入口"],
+    ["恢复", "再次点击配置常用入口可切换完整入口"],
+  ]));
+  showToast("常用入口配置已保存");
+}
+
+function appendWorkbenchLog(action, summary) {
+  workbenchLogs.unshift({ time: new Date().toLocaleString("zh-CN", { hour12: false }), action, summary });
+  workbenchLogs = workbenchLogs.slice(0, 20);
 }
 
 function refreshData() {
