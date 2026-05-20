@@ -215,7 +215,7 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!saved) return;
-    rows = saved.rows || rows;
+    rows = (saved.rows || rows).map(normalizeFlowExceptionRow);
     logs = saved.logs || logs;
     state = { ...state, ...(saved.state || {}) };
   } catch (error) {
@@ -233,9 +233,28 @@ function mergeFlowRows() {
   if (!flowRows.length) return;
   const existing = new Map(rows.map((item) => [item.id, item]));
   flowRows.forEach((item) => {
-    if (!existing.has(item.id)) rows.push(item);
+    if (!existing.has(item.id)) rows.push(normalizeFlowExceptionRow(item));
   });
   if (!rows.some((item) => item.id === state.activeId)) state.activeId = rows[0]?.id || "";
+}
+
+function normalizeFlowExceptionRow(item) {
+  return {
+    ...item,
+    type: item.type || "业务联动异常",
+    severity: item.severity || "中",
+    order: item.order || item.orderId || "关联工单待同步",
+    dispatch: item.dispatch || item.dispatchId || "关联派工待同步",
+    line: item.line || "关联产线待同步",
+    station: item.station || "关联工位待同步",
+    source: item.source || "统一业务流派生",
+    status: item.status || "待处理",
+    action: item.action || item.next || "等待责任人处置",
+    owner: item.owner || "异常协调员",
+    impact: item.impact || item.risk || "影响范围待复核",
+    sla: item.sla || "待评估",
+    trace: item.trace || item.id || "业务流事件",
+  };
 }
 
 function getDefinition() {

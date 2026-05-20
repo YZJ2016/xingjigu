@@ -156,7 +156,7 @@ const initialRows = {
 
 Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.reports || {});
 
-let rows = structuredClone(initialRows[pageConfig.id]);
+let rows = structuredClone(initialRows[pageConfig.id]).map(normalizeFlowReportRow);
 let state = { activeId: rows[0]?.id || "", search: "", line: "all", shift: "all", status: "all", detailOpen: true };
 let logs = [];
 
@@ -166,7 +166,28 @@ function hydrateRowsFromBusinessFlow() {
   const flowRows = window.MES_BUSINESS_FLOW?.getReportRows?.(pageConfig.id) || [];
   if (!flowRows.length) return;
   const existing = new Set(rows.map((row) => row.id));
-  rows = [...flowRows.filter((row) => !existing.has(row.id)), ...rows];
+  rows = [...flowRows.filter((row) => !existing.has(row.id)).map(normalizeFlowReportRow), ...rows];
+}
+
+function normalizeFlowReportRow(row) {
+  const now = new Date().toLocaleString("zh-CN", { hour12: false });
+  return {
+    ...row,
+    name: row.name || row.title || "业务流派生报表项",
+    line: row.line || "全部产线",
+    shift: row.shift || "白班",
+    order: row.order || row.orderId || "关联订单待同步",
+    source: row.source || "MES_BUSINESS_FLOW",
+    plan: row.plan || row.value || "计划/完成口径待复核",
+    quality: row.quality || row.metric || "质量/OEE 口径待复核",
+    status: row.status || "待复核",
+    statusStyle: row.statusStyle || "orange",
+    risk: row.risk || row.impact || "风险摘要待复核",
+    owner: row.owner || "报表复核员",
+    updated: row.updated || row.time || now,
+    trace: row.trace || row.id || "业务流事件",
+    next: row.next || row.action || "等待复核发布",
+  };
 }
 
 function renderAppShell() {
@@ -290,7 +311,7 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!saved) return;
-    rows = saved.rows || rows;
+    rows = (saved.rows || rows).map(normalizeFlowReportRow);
     logs = saved.logs || logs;
     state = { ...state, ...(saved.state || {}) };
   } catch (error) {

@@ -45,7 +45,7 @@ const pageDefinitions = {
     columns: ["产品编码", "产品 / 客户", "版本 / 来源", "关键引用", "执行状态", "下游校验", "责任人", "时间戳"],
     tableTitle: "产品主数据与执行版本",
     tableHint: "来自 ERP/PLM 的产品资料经 MES 审批后，供订单评审、BOM、工艺、标签和追溯引用",
-    cardTitle: "产品资料驱动关系",
+    cardTitle: "影响关系 / 下游引用检查",
     simulationTitle: "模拟 ERP / PLM 产品同步",
     simulationHint: "模拟外部主数据同步，不代表后台直接修改 ERP 或 PLM 原始资料",
   },
@@ -313,6 +313,9 @@ function renderTable() {
       renderAll();
     });
   });
+  $("#basicTableBody").querySelectorAll(".basic-row-actions").forEach((actions) => {
+    actions.addEventListener("click", (event) => event.stopPropagation());
+  });
   $("#basicTableBody").querySelectorAll("[data-basic-action]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -347,22 +350,42 @@ function buildRowActions(item) {
   const buttons = [["edit", "编辑"]];
   if (disabled) {
     buttons.push(["enable", "启用"]);
-    return `<div class="basic-row-actions">${buttons.map(([action, label]) => `
-      <button class="${action === "disable" || action === "withdraw" ? "danger-action" : ""}" type="button" data-basic-action="${action}" data-id="${item.id}">${label}</button>
-    `).join("")}</div>`;
+    return buildRowActionMenu(item, buttons);
   }
   buttons.push(["copy", "复制版本"]);
+  if (canResyncProduct(item)) buttons.push(["resync", "重新同步产品"]);
   if (/草稿|撤回|待|评估|复核|签收|观察/.test(item.status)) buttons.push(["approve", "提交审批"]);
   if (!/已发布|已生效|可执行|可排程/.test(item.status)) buttons.push(["publish", "发布"]);
   if (/草稿|未生效|待审批|影响评估中/.test(item.status)) buttons.push(["withdraw", "撤回"]);
   buttons.push([disabled ? "enable" : "disable", disabled ? "启用" : "停用"]);
-  return `<div class="basic-row-actions">${buttons.map(([action, label]) => `
+  return buildRowActionMenu(item, buttons);
+}
+
+function buildRowActionMenu(item, buttons) {
+  const [primary, ...more] = buttons;
+  const menu = more.map(([action, label]) => `
     <button class="${action === "disable" || action === "withdraw" ? "danger-action" : ""}" type="button" data-basic-action="${action}" data-id="${item.id}">${label}</button>
-  `).join("")}</div>`;
+  `).join("");
+  return `
+    <div class="basic-row-actions">
+      <button type="button" data-basic-action="${primary[0]}" data-id="${item.id}">${primary[1]}</button>
+      ${more.length ? `
+        <details class="basic-action-menu">
+          <summary>更多</summary>
+          <div class="basic-action-menu__list">${menu}</div>
+        </details>
+      ` : ""}
+    </div>
+  `;
 }
 
 function renderCards() {
   const active = getActive();
+  if (pageConfig.id === "products") {
+    renderProductImpactChecks(active);
+    return;
+  }
+  $("#basicCards").className = "basic-card-grid";
   const cards = [
     ["上游来源", active.source, "保留 ERP、PLM、WMS、QMS 或设备回传来源"],
     ["执行边界", getBoundaryText(), "后台管理资料生效、版本下发、校验和异常处置"],
@@ -375,6 +398,169 @@ function renderCards() {
       <em>${hint}</em>
     </div>
   `).join("");
+}
+
+function renderProductImpactChecks(active) {
+  const checks = buildProductImpactChecks(active);
+  $("#basicCards").className = "basic-impact-grid";
+  $("#basicCards").innerHTML = checks.map((check) => `
+    <article class="impact-check impact-check--${check.tone}">
+      <div class="impact-check__head">
+        <span>${check.title}</span>
+        ${pill(check.status)}
+      </div>
+      <strong>${check.primary}</strong>
+      <p>${check.detail}</p>
+      <div class="impact-check__meta">${check.meta.map((item) => `<em>${item}</em>`).join("")}</div>
+      <div class="impact-check__links">${check.links.map((link) => `<a href="${link.href}">${link.label}</a>`).join("")}</div>
+    </article>
+  `).join("");
+}
+
+function buildProductImpactChecks(active) {
+  const context = getProductImpactContext(active);
+  const orderSummary = context.orders.length
+    ? context.orders.map((order) => order.id).join("、")
+    : "未关联生产订单";
+  const orderDetail = context.orders.length
+    ? context.orders.map((order) => `${order.status} / 评审 ${order.review || "待确认"} / 排程 ${order.schedule || "待确认"}`).join("；")
+    : "当前产品版本尚未被 ERP 工单引用，可先维护资料后进入订单评审。";
+  const orderRisks = context.orders.length ? context.orders.map((order) => order.materialGap || order.risk).filter(Boolean) : ["待订单下达"];
+  const bomStatus = context.bom?.status || "未关联";
+  const routingStatus = context.routing?.status || "未关联";
+  const labelStatus = context.labelConfirmed ? "已确认" : "待确认";
+  const inspectionStatus = context.inspectionConfirmed ? "已配置" : "待确认";
+  const conclusion = buildProductAccessConclusion(context, active);
+
+  return [
+    {
+      title: "订单引用",
+      status: context.orders.length ? "已关联" : "未关联",
+      tone: context.orders.length ? "blue" : "orange",
+      primary: orderSummary,
+      detail: orderDetail,
+      meta: orderRisks,
+      links: [{ label: "订单评审", href: "../orders/order-reviews.html" }],
+    },
+    {
+      title: "BOM 发布",
+      status: bomStatus,
+      tone: statusStyle(bomStatus),
+      primary: context.bom?.id || context.product?.bom || "未关联 BOM",
+      detail: context.bom ? `${context.bom.productName || active.name} / ${context.bom.version || active.version}` : "未找到可供齐套检查和投料防错引用的制造 BOM。",
+      meta: [context.bom?.risk || "需维护制造 BOM、生效范围和损耗口径"],
+      links: [{ label: "BOM 清单", href: "./bom-list.html" }],
+    },
+    {
+      title: "工艺路线",
+      status: routingStatus,
+      tone: statusStyle(routingStatus),
+      primary: context.routing?.id || context.product?.routing || "未关联工艺路线",
+      detail: context.routing ? `${context.routing.steps || "工序链待维护"} / ${context.routing.sop || "SOP 待引用"}` : "未找到可供派工、工位指导和开工检查引用的工艺路线。",
+      meta: [context.routing?.risk || "需维护工序顺序、SOP 引用和现场签收状态"],
+      links: [{ label: "工艺路线", href: "./routing.html" }, { label: "开工检查", href: "../dispatch/start-check.html" }],
+    },
+    {
+      title: "标签模板",
+      status: labelStatus,
+      tone: context.labelConfirmed ? "green" : "orange",
+      primary: context.product?.labelTemplate || getRefPart(active, 2) || "未配置标签模板",
+      detail: context.labelConfirmed ? "客户成品标签模板已可被成品标签、标签打印和包装入库引用。" : "客户标签模板未确认，成品标签打印和补打审批需拦截。",
+      meta: [context.product?.customer || getProductCode(active), "来源 ERP 客户规则 / MES 标签版本"],
+      links: [{ label: "成品标签", href: "../barcode/finished-labels.html" }],
+    },
+    {
+      title: "检验规范",
+      status: inspectionStatus,
+      tone: context.inspectionConfirmed ? "green" : "orange",
+      primary: context.product?.inspection || "未配置检验规范",
+      detail: context.inspectionConfirmed ? "首件、过程检验或 FQC 规范已具备下游引用条件。" : "检验规范仍待质量确认，订单评审、排程或质量放行需提示阻断。",
+      meta: [context.product?.owner || active.owner, context.product?.time || active.time],
+      links: [{ label: "成品检验", href: "../quality/final-inspection.html" }, { label: "订单评审", href: "../orders/order-reviews.html" }],
+    },
+    {
+      title: "准入结论",
+      status: conclusion.status,
+      tone: conclusion.tone,
+      primary: conclusion.primary,
+      detail: conclusion.detail,
+      meta: conclusion.meta,
+      links: [{ label: "开工检查", href: "../dispatch/start-check.html" }, { label: "订单评审", href: "../orders/order-reviews.html" }],
+    },
+  ];
+}
+
+function getProductImpactContext(active) {
+  const master = window.MES_MASTER_DATA || {};
+  const productCode = getProductCode(active);
+  const product = (master.products || []).find((item) => item.id === active.id || item.code === productCode || active.name.includes(item.code));
+  const code = product?.code || productCode;
+  const orders = (master.orders || []).filter((order) => order.productCode === code || order.product === active.name);
+  const bom = (master.bomHeaders || []).find((item) => item.id === product?.bom || item.id === getRefPart(active, 0) || item.productCode === code);
+  const routing = (master.routings || []).find((item) => item.id === product?.routing || item.id === getRefPart(active, 1) || item.productCode === code);
+  const label = product?.labelTemplate || getRefPart(active, 2);
+  const inspection = product?.inspection || "";
+  return {
+    product,
+    productCode: code,
+    orders,
+    bom,
+    routing,
+    labelConfirmed: Boolean(label) && !/待|未/.test(label),
+    inspectionConfirmed: Boolean(inspection) && !/待|未|需.*签核|审批/.test(inspection),
+  };
+}
+
+function buildProductAccessConclusion(context, active) {
+  const texts = [
+    active.status,
+    active.risk,
+    context.bom?.status,
+    context.bom?.risk,
+    context.routing?.status,
+    context.routing?.risk,
+    context.product?.inspection,
+  ].join(" ");
+  const orderBlock = context.orders.some((order) => /待评审|未排程/.test(`${order.review || ""} ${order.schedule || ""} ${order.status || ""}`));
+  const missingBase = !context.bom || !context.routing || !context.labelConfirmed || !context.inspectionConfirmed;
+  const hardBlock = orderBlock || missingBase || /阻止|拦截|冻结|影响评估|待质量|待现场|待替代|未确认|待审批|待签收|需.*签核/.test(texts);
+  if (hardBlock) {
+    return {
+      status: "阻断待处置",
+      tone: "red",
+      primary: "排程或开工前需完成资料闭环",
+      detail: "当前产品版本存在资料、BOM、工艺路线、标签或检验规范未闭环项，下游只能查看，不能作为现场执行依据。",
+      meta: ["生成资料影响评估", "责任人复核后再发布执行快照"],
+    };
+  }
+  const softRisks = context.orders.map((order) => order.materialGap || order.risk).filter((item) => item && !/齐套|正常/.test(item));
+  if (softRisks.length || /缺料|交期|瓶颈/.test(texts)) {
+    return {
+      status: "可引用有风险",
+      tone: "orange",
+      primary: "产品资料可用于排程和开工准入",
+      detail: "主数据版本已具备引用条件，但订单、物料或资源侧仍有风险，需要在齐套检查、排程或开工检查中继续跟踪。",
+      meta: softRisks.length ? softRisks : ["保留缺料、交期或瓶颈资源提示"],
+    };
+  }
+  return {
+    status: "可执行引用",
+    tone: "green",
+    primary: "允许下游排程、派工、标签和追溯引用",
+    detail: "产品、BOM、工艺路线、标签模板和检验规范均已具备 MES 执行版本条件。",
+    meta: ["写入订单评审", "写入生产批次与追溯履历"],
+  };
+}
+
+function getProductCode(active) {
+  if (!active) return "";
+  if (active.id?.startsWith("PRD-")) return active.id.replace("PRD-", "");
+  const match = active.name?.match(/[A-Z]+-\d+/);
+  return match?.[0] || active.id || "";
+}
+
+function getRefPart(active, index) {
+  return active?.ref?.split("/").map((item) => item.trim())[index] || "";
 }
 
 function getBoundaryText() {
@@ -545,7 +731,7 @@ function mountMaintenanceDialogs() {
             <label>编码<input id="formId" required /></label>
             <label>名称<input id="formName" required /></label>
             <label>版本 / 分组<input id="formVersion" required /></label>
-            <label>来源<input id="formSource" required /></label>
+            <label>来源<select id="formSource" required></select></label>
             <label>状态<select id="formStatus"></select></label>
             <label>关键引用<input id="formRef" required /></label>
             <label>影响范围<input id="formImpact" required /></label>
@@ -580,12 +766,26 @@ function mountMaintenanceDialogs() {
   `;
   document.body.append(...wrapper.children);
   $("#formStatus").innerHTML = getStatusOptions().map((status) => `<option value="${status}">${status}</option>`).join("");
+  $("#formSource").innerHTML = getSourceOptions().map((source) => `<option value="${source}">${source}</option>`).join("");
   $("#formDomainNote").textContent = getFormDomainNote();
 }
 
 function getStatusOptions() {
   const base = ["草稿", "待审批", "影响评估中", "已发布", "已生效", "停用"];
   return [...new Set([...base, ...rows.map((row) => row.status)])];
+}
+
+function getSourceOptions(extra = "") {
+  const defaults = {
+    products: ["ERP 物料主数据", "PLM 产品定义", "ERP 物料 + PLM 产品", "ERP 新增 + PLM 工艺", "PLM 发布 + ERP 物料", "PLM 变更 ECN", "MES 手工维护"],
+    materials: ["ERP 物料主数据", "ERP 物料 + WMS 库存", "ERP 物料 + IQC 规则", "ERP 物料 + QMS 冻结", "MES 手工维护"],
+    bom: ["PLM 发布", "PLM 工程变更", "PLM 变更待评估", "MES 手工维护"],
+    routing: ["PLM 工艺发布", "PLM 首版", "PLM ECN 变更", "MES 手工维护"],
+    stations: ["MES 维护 + 设备/终端状态", "设备 API + 工位终端", "测试台 API", "QMS 抽样方案"],
+    workshops: ["MES 资源模型", "APS 产能日历", "APS + 设备保养计划", "MES 手工维护"],
+    partners: ["ERP 客户资料", "QMS 供应商档案", "ERP / QMS 伙伴同步", "MES 手工维护"],
+  };
+  return [...new Set([...(defaults[pageConfig.id] || ["MES 手工维护"]), ...rows.map((row) => row.source), extra].filter(Boolean))];
 }
 
 function getFormDomainNote() {
@@ -606,6 +806,7 @@ function handleRowAction(action, id) {
   if (action === "edit") openMasterDataDialog(row);
   if (action === "copy") copyVersion(row);
   if (action === "approve") submitApproval(row);
+  if (action === "resync") resyncProductVersion(row);
   if (action === "publish") publishRow(row);
   if (action === "withdraw") withdrawRow(row);
   if (action === "disable") toggleRow(row, false);
@@ -620,7 +821,9 @@ function openMasterDataDialog(row = null) {
   $("#formId").disabled = isEdit;
   $("#formName").value = row?.name || "";
   $("#formVersion").value = row?.version || "V1.0";
-  $("#formSource").value = row?.source || `MES 手工维护 + ${getMockSourceLabel()}`;
+  const selectedSource = row?.source || "MES 手工维护";
+  $("#formSource").innerHTML = getSourceOptions(selectedSource).map((source) => `<option value="${source}">${source}</option>`).join("");
+  $("#formSource").value = selectedSource;
   $("#formStatus").value = row?.status || "草稿";
   $("#formRef").value = row?.ref || getDefaultRef();
   $("#formImpact").value = row?.impact || "待提交审批，暂不允许下游执行引用";
@@ -645,7 +848,7 @@ function saveMasterDataForm(event) {
     id: $("#formId").value.trim(),
     name: $("#formName").value.trim(),
     version: $("#formVersion").value.trim(),
-    source: $("#formSource").value.trim(),
+    source: $("#formSource").value,
     status: $("#formStatus").value,
     ref: $("#formRef").value.trim(),
     impact: $("#formImpact").value.trim(),
@@ -706,6 +909,62 @@ function submitApproval(row) {
   renderPageChrome();
   renderAll();
   showToast("审批已提交");
+}
+
+function resyncProductVersion(row) {
+  if (!canResyncProduct(row)) {
+    showToast("MES 本地维护版本不需要重新同步");
+    return;
+  }
+  const upstream = getUpstreamProductRow(row);
+  openConfirmDialog({
+    title: `重新同步 ${row.id}？`,
+    message: "当上游 ERP/PLM 推送 MES 失败时，MES 可按当前选择的产品版本主动拉取最新资料，完成校验后更新 MES 执行快照和下游引用检查；该动作不直接改写上游系统。",
+    okText: "重新同步产品",
+    meta: [
+      `当前版本：${row.version}`,
+      `拉取来源：${upstream?.source || row.source || "ERP / PLM"}`,
+      `引用对象：${upstream ? `${upstream.bom} / ${upstream.routing} / ${upstream.labelTemplate}` : row.ref}`,
+    ],
+    onConfirm: () => {
+      if (upstream) applyUpstreamProductSnapshot(row, upstream);
+      row.time = formatNow();
+      appendLog(`${row.id} 已重新同步：MES 主动拉取 ${row.version} 最新产品资料并重算下游引用检查`, row);
+      window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, row, "重新同步产品", { status: row.status, owner: row.owner, impact: row.impact });
+      saveState();
+      renderPageChrome();
+      renderAll();
+      showToast("重新同步产品已完成");
+    },
+  });
+}
+
+function canResyncProduct(row) {
+  if (pageConfig.id !== "products" || !row) return false;
+  if (/-COPY-|PRD-(NEW|IMP)-/.test(row.id)) return false;
+  if (/MES 手工|手工维护|模拟导入|本地维护|复制版本/.test(row.source || "")) return false;
+  if (!/(ERP|PLM)/.test(row.source || "")) return false;
+  return Boolean(getUpstreamProductRow(row));
+}
+
+function getUpstreamProductRow(row) {
+  const master = window.MES_MASTER_DATA || {};
+  const productCode = getProductCode(row);
+  return (master.products || []).find((item) => item.id === row.id || item.code === productCode || row.name.includes(item.code));
+}
+
+function applyUpstreamProductSnapshot(row, upstream) {
+  const linkedOrders = (window.MES_MASTER_DATA?.orders || []).filter((order) => order.productCode === upstream.code);
+  row.name = upstream.name;
+  row.version = upstream.version;
+  row.source = `${upstream.source} + MES 主动拉取`;
+  row.status = upstream.status;
+  row.ref = `${upstream.bom} / ${upstream.routing} / ${upstream.labelTemplate}`;
+  row.impact = `${linkedOrders[0]?.id || "待关联工单"} ${/待|评估|冻结/.test(upstream.status + upstream.risk) ? "需复核" : "可排程"}`;
+  row.owner = upstream.owner;
+  row.scope = `${upstream.customer} / ${upstream.line} / 电子装配`;
+  row.risk = upstream.risk;
+  row.downstream = upstream.downstream;
 }
 
 function publishRow(row) {
