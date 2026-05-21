@@ -404,13 +404,14 @@ function renderProductImpactChecks(active) {
   const checks = buildProductImpactChecks(active);
   $("#basicCards").className = "basic-impact-grid";
   $("#basicCards").innerHTML = checks.map((check) => `
-    <article class="impact-check impact-check--${check.tone}">
+    <article class="impact-check impact-check--${check.tone}${check.variant ? ` impact-check--${check.variant}` : ""}">
       <div class="impact-check__head">
         <span>${check.title}</span>
         ${pill(check.status)}
       </div>
       <strong>${check.primary}</strong>
       <p>${check.detail}</p>
+      ${check.body || ""}
       <div class="impact-check__meta">${check.meta.map((item) => `<em>${item}</em>`).join("")}</div>
       <div class="impact-check__links">${check.links.map((link) => `<a href="${link.href}">${link.label}</a>`).join("")}</div>
     </article>
@@ -419,13 +420,7 @@ function renderProductImpactChecks(active) {
 
 function buildProductImpactChecks(active) {
   const context = getProductImpactContext(active);
-  const orderSummary = context.orders.length
-    ? context.orders.map((order) => order.id).join("、")
-    : "未关联生产订单";
-  const orderDetail = context.orders.length
-    ? context.orders.map((order) => `${order.status} / 评审 ${order.review || "待确认"} / 排程 ${order.schedule || "待确认"}`).join("；")
-    : "当前产品版本尚未被 ERP 工单引用，可先维护资料后进入订单评审。";
-  const orderRisks = context.orders.length ? context.orders.map((order) => order.materialGap || order.risk).filter(Boolean) : ["待订单下达"];
+  const orderSummary = buildOrderReferenceSummary(context.orders);
   const bomStatus = context.bom?.status || "未关联";
   const routingStatus = context.routing?.status || "未关联";
   const labelStatus = context.labelConfirmed ? "已确认" : "待确认";
@@ -434,12 +429,14 @@ function buildProductImpactChecks(active) {
 
   return [
     {
+      variant: "orders",
       title: "订单引用",
       status: context.orders.length ? "已关联" : "未关联",
       tone: context.orders.length ? "blue" : "orange",
-      primary: orderSummary,
-      detail: orderDetail,
-      meta: orderRisks,
+      primary: orderSummary.primary,
+      detail: orderSummary.detail,
+      body: orderSummary.body,
+      meta: orderSummary.meta,
       links: [{ label: "订单评审", href: "../orders/order-reviews.html" }],
     },
     {
@@ -488,6 +485,38 @@ function buildProductImpactChecks(active) {
       links: [{ label: "开工检查", href: "../dispatch/start-check.html" }, { label: "订单评审", href: "../orders/order-reviews.html" }],
     },
   ];
+}
+
+function buildOrderReferenceSummary(orders) {
+  if (!orders.length) {
+    return {
+      primary: "未关联生产订单",
+      detail: "当前产品版本尚未被 ERP 工单引用，可先维护资料后进入订单评审。",
+      body: "",
+      meta: ["待订单下达"],
+    };
+  }
+  const blocked = orders.filter((order) => /待评审|未排程|待排程|阻止|缺|冻结/.test(`${order.review || ""} ${order.schedule || ""} ${order.status || ""} ${order.materialGap || ""} ${order.risk || ""}`));
+  const executable = Math.max(0, orders.length - blocked.length);
+  const totalQty = orders.reduce((sum, order) => sum + Number(order.qty || 0), 0);
+  const doneQty = orders.reduce((sum, order) => sum + Number(order.done || 0), 0);
+  const earliestDue = orders.map((order) => order.due).filter(Boolean).sort()[0] || "待确认";
+  const priorities = [...new Set(orders.map((order) => order.priority).filter(Boolean))].join("、") || "常规";
+  const riskSummary = [...new Set(orders.map((order) => order.materialGap || order.risk).filter(Boolean))];
+  return {
+    primary: `${orders.length} 个订单引用`,
+    detail: `${executable} 个可继续执行 / ${blocked.length} 个需复核`,
+    body: `
+      <div class="impact-order-summary">
+        <span>总需求 <strong>${totalQty}</strong></span>
+        <span>已完成 <strong>${doneQty}</strong></span>
+        <span>最早交期 <strong>${earliestDue}</strong></span>
+        <span>优先级 <strong>${priorities}</strong></span>
+        <span>需复核 <strong>${blocked.length}</strong></span>
+      </div>
+    `,
+    meta: riskSummary.length ? riskSummary : ["无阻断项"],
+  };
 }
 
 function getProductImpactContext(active) {
