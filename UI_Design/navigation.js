@@ -150,7 +150,7 @@ function ensureMesFavicon() {
 
 function getMesNavBase() {
   const path = window.location.pathname;
-  return /\/UI_Design\/[^/]+\/[^/]+\.html$/.test(path) ? "../" : "./";
+  return /\/[^/]+\/[^/]+\.html$/.test(path) ? "../" : "./";
 }
 
 function resolveMesRoute(moduleId, entry) {

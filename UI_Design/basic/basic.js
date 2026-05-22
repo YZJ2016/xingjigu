@@ -1,5 +1,6 @@
 const pageConfig = window.BASIC_PAGE || { id: "products", title: "产品资料", eyebrow: "基础资料 / 产品资料" };
-const STORAGE_KEY = `xingjigu_mes_basic_${pageConfig.id}_v2`;
+const STORAGE_VERSION = "v3";
+const STORAGE_KEY = `xingjigu_mes_basic_${pageConfig.id}_${STORAGE_VERSION}`;
 
 const modules = [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
@@ -42,7 +43,7 @@ const pageDefinitions = {
     subtitle: "维护产品编码、版本、客户要求、标签策略和检验引用，是 ERP 工单进入 MES 校验的第一道门",
     user: "主数据工程师",
     metrics: ["产品档案", "已发布", "待审批", "影响订单"],
-    columns: ["产品编码", "产品 / 客户", "版本 / 来源", "关键引用", "执行状态", "下游校验", "责任人", "时间戳"],
+    columns: ["产品编码", "产品 / 客户", "版本 / 来源", "关键引用", "产品版本状态", "下游校验", "责任人", "时间戳"],
     tableTitle: "产品主数据与执行版本",
     tableHint: "来自 ERP/PLM 的产品资料经 MES 审批后，供订单评审、BOM、工艺、标签和追溯引用",
     cardTitle: "影响关系 / 下游引用检查",
@@ -52,8 +53,8 @@ const pageDefinitions = {
   materials: {
     subtitle: "维护料号、批次规则、IQC 策略、替代关系和库存口径，支撑 BOM、齐套、投料和追溯",
     user: "物料主数据员",
-    metrics: ["物料档案", "批次管控", "待补规则", "影响投料"],
-    columns: ["物料编码", "物料 / 类型", "批次与检验", "替代 / 供应", "执行状态", "下游校验", "责任人", "时间戳"],
+    metrics: ["物料档案", "可投料", "待补规则", "影响投料"],
+    columns: ["物料编码", "物料 / 类型", "批次与检验", "替代 / 供应", "投料准入状态", "下游校验", "责任人", "时间戳"],
     tableTitle: "物料主数据与批次规则",
     tableHint: "物料资料会传递给 WMS、IQC、线边库存、投料防错和成本核销",
     cardTitle: "物料资料驱动关系",
@@ -64,7 +65,7 @@ const pageDefinitions = {
     subtitle: "按产品版本维护制造 BOM、用量、损耗率、替代料和生效范围，是物料需求与投料防错的共同依据",
     user: "BOM 工程师",
     metrics: ["BOM 版本", "已发布", "待评估", "缺口风险"],
-    columns: ["BOM 编号", "产品 / 版本", "关键物料", "用量 / 损耗", "执行状态", "影响范围", "责任人", "时间戳"],
+    columns: ["BOM 编号", "产品 / 版本", "关键物料", "用量 / 损耗", "BOM版本状态", "影响范围", "责任人", "时间戳"],
     tableTitle: "制造 BOM 与用料口径",
     tableHint: "PLM 发布后由 MES 评估生效，向齐套检查、领料申请、投料确认和损耗分析传递同一口径",
     cardTitle: "BOM 驱动关系",
@@ -75,7 +76,7 @@ const pageDefinitions = {
     subtitle: "维护产品工艺路线、工序顺序、标准工时、SOP、参数规格和质量触发规则",
     user: "工艺工程师",
     metrics: ["路线版本", "已发布", "待签收", "开工拦截"],
-    columns: ["路线编号", "产品 / 版本", "工序链", "SOP / 检验", "执行状态", "现场约束", "责任人", "时间戳"],
+    columns: ["路线编号", "产品 / 版本", "工序链", "SOP / 检验", "工艺版本状态", "现场约束", "责任人", "时间戳"],
     tableTitle: "工艺路线与执行标准",
     tableHint: "工艺路线决定 APS 资源计算、派工单工序、工位终端指导、过程采集和质量触发",
     cardTitle: "工艺路线驱动关系",
@@ -83,12 +84,12 @@ const pageDefinitions = {
     simulationHint: "模拟外部工艺版本发布，不代表后台直接编辑 PLM 工艺文件",
   },
   stations: {
-    subtitle: "维护工序、工位、设备、终端、人员资质和开工准入规则，连接后台派工和现场执行",
+    subtitle: "维护工位档案、设备终端、人员资质、开工准入、数据采集和现场显示内容，连接后台派工和现场执行",
     user: "车间工艺员",
-    metrics: ["工位绑定", "可执行", "待复核", "准入拦截"],
-    columns: ["工位编码", "工序 / 产线", "设备 / 终端", "人员资质", "执行状态", "开工准入", "责任人", "时间戳"],
-    tableTitle: "工序工位与资源绑定",
-    tableHint: "后台维护工位资源模型，现场动作仍由工位终端、扫码枪、工牌/NFC、HMI 或 PLC 产生回执",
+    metrics: ["工位绑定", "已启用", "待复核", "准入拦截"],
+    columns: ["工位编码", "工位 / 工序", "设备 / 终端", "人员资质", "工位状态", "开工准入", "责任人", "时间戳"],
+    tableTitle: "工位档案与开工准入配置",
+    tableHint: "后台维护工位档案、设备终端绑定和准入规则，现场动作仍由工位终端、扫码枪、工牌/NFC、HMI 或 PLC 产生回执",
     cardTitle: "工序工位驱动关系",
     simulationTitle: "模拟设备 / 工位终端回执",
     simulationHint: "模拟设备 API、PLC 或工位终端状态回传，后台只更新准入状态和履历",
@@ -97,7 +98,7 @@ const pageDefinitions = {
     subtitle: "维护工厂、车间、产线、班组、班次、产能日历和数据权限，支撑排程与现场看板",
     user: "车间主任",
     metrics: ["产线资源", "可排程", "日历待审", "负荷风险"],
-    columns: ["资源编码", "车间 / 产线", "班次 / 日历", "能力约束", "执行状态", "排程影响", "责任人", "时间戳"],
+    columns: ["资源编码", "车间 / 产线", "班次 / 日历", "能力约束", "资源排程状态", "排程影响", "责任人", "时间戳"],
     tableTitle: "产线车间与产能模型",
     tableHint: "资源模型向 APS、产能负荷、派工、电子看板和班次交接提供统一现场结构",
     cardTitle: "产线车间驱动关系",
@@ -107,8 +108,8 @@ const pageDefinitions = {
   partners: {
     subtitle: "维护客户优先级、标签要求、供应商质量等级和追溯口径，影响订单、检验、包装和交付",
     user: "业务资料管理员",
-    metrics: ["伙伴档案", "已生效", "待复核", "影响交付"],
-    columns: ["伙伴编码", "客户 / 供应商", "等级 / 要求", "关联物料产品", "执行状态", "业务影响", "责任人", "时间戳"],
+    metrics: ["伙伴档案", "业务生效", "待复核", "影响交付"],
+    columns: ["伙伴编码", "客户 / 供应商", "等级 / 要求", "关联物料产品", "业务准入状态", "业务影响", "责任人", "时间戳"],
     tableTitle: "客户供应商与业务规则",
     tableHint: "客户和供应商资料承接 ERP/QMS 规则，向订单评审、IQC、成品标签和客户追溯报告传递约束",
     cardTitle: "客户供应商驱动关系",
@@ -125,10 +126,10 @@ const initialRows = {
     { id: "PRD-SRV-90", name: "伺服驱动板 SRV-90", version: "V1.4", source: "PLM 变更 ECN-2406", status: "影响评估中", ref: "BOM 替代料待签核", impact: "MO-202606-0010 需确认旧批次", owner: "工艺工程师 林澈", time: "06-18 15:20", scope: "B 客户 / Line-A", risk: "版本切换会影响在制批次追溯", downstream: "BOM 清单、投料确认、客户追溯报告" },
   ],
   materials: [
-    { id: "MAT-SEN-T100", name: "温度传感器", version: "批次必管", source: "ERP 物料 + WMS 库存", status: "已发布", ref: "IQC 合格后可投 / FIFO", impact: "TCU-100 需求缺 200 件", owner: "物料主数据员 吴琳", time: "06-18 09:35", scope: "BOM-TCU-100-V3.2", risk: "缺口影响 Line-A 第二批开工", downstream: "齐套检查、领料申请、线边库存、投料记录" },
-    { id: "MAT-PCB-TCU", name: "PCB 主板", version: "批次必管", source: "ERP 物料 + IQC 规则", status: "已发布", ref: "供应商 S-PCB-01 / AQL Ⅱ", impact: "SMT 首站投料防错", owner: "物料主数据员 吴琳", time: "06-18 10:05", scope: "TCU-100 / GW-240", risk: "批次与 SN 谱系必须绑定", downstream: "物料标签、投料确认、批次追溯" },
+    { id: "MAT-SEN-T100", name: "温度传感器", version: "批次必管", source: "ERP 物料 + WMS 库存", status: "可投料", ref: "IQC 合格后可投 / FIFO", impact: "TCU-100 需求缺 200 件", owner: "物料主数据员 吴琳", time: "06-18 09:35", scope: "BOM-TCU-100-V3.2", risk: "缺口影响 Line-A 第二批开工", downstream: "齐套检查、领料申请、线边库存、投料记录" },
+    { id: "MAT-PCB-TCU", name: "PCB 主板", version: "批次必管", source: "ERP 物料 + IQC 规则", status: "可投料", ref: "供应商 S-PCB-01 / AQL Ⅱ", impact: "SMT 首站投料防错", owner: "物料主数据员 吴琳", time: "06-18 10:05", scope: "TCU-100 / GW-240", risk: "批次与 SN 谱系必须绑定", downstream: "物料标签、投料确认、批次追溯" },
     { id: "MAT-PWR-IC60", name: "电源芯片", version: "客户指定批次", source: "ERP 物料 + QMS 冻结", status: "冻结待复核", ref: "PWRIC-L20260602", impact: "MO-202606-0005 缺料预警", owner: "质量员 孟可", time: "06-18 11:18", scope: "PCM-60 / Line-B", risk: "冻结批次不可投料，需替代料审批", downstream: "缺料处理、来料检验、库存冻结" },
-    { id: "MAT-BOX-I", name: "客户 I 包装盒", version: "按客户标签版本", source: "ERP 物料 + 客户模板", status: "已发布", ref: "BOXI-L20260614", impact: "MO-202606-0011 包装入库", owner: "包装工程师 李娟", time: "06-18 13:50", scope: "客户 I / PACK-C-02", risk: "多领余料需退回核销", downstream: "成品标签、包装作业、余料退回" },
+    { id: "MAT-BOX-I", name: "客户 I 包装盒", version: "按客户标签版本", source: "ERP 物料 + 客户模板", status: "可投料", ref: "BOXI-L20260614", impact: "MO-202606-0011 包装入库", owner: "包装工程师 李娟", time: "06-18 13:50", scope: "客户 I / PACK-C-02", risk: "多领余料需退回核销", downstream: "成品标签、包装作业、余料退回" },
   ],
   bom: [
     { id: "BOM-TCU-100-V3.2", name: "智能温控控制器 TCU-100", version: "V3.2", source: "PLM 发布 ECN-20260612", status: "已发布", ref: "7 个关键物料 / 损耗 1.5%", impact: "MO-202606-0001 齐套检查通过 800 台", owner: "BOM 工程师 王珂", time: "06-18 09:50", scope: "A 客户 / Line-A / 2026-06-18 生效", risk: "温度传感器二批待到货", downstream: "用料需求、领料申请、投料防错、物料损耗" },
@@ -143,20 +144,20 @@ const initialRows = {
     { id: "RT-SRV-90-V1.4", name: "SRV-90 加急路线", version: "V1.4", source: "PLM ECN-2406", status: "影响评估中", ref: "老化测试缩短需质量签核", impact: "MO-202606-0010 交期压缩", owner: "质量工程师 孟可", time: "06-18 15:42", scope: "Line-A / B 客户", risk: "检验放行条件未完成", downstream: "首件检验、计划调整、质量放行" },
   ],
   stations: [
-    { id: "SMT-WS-01", name: "SMT 贴片工位", version: "Line-A", source: "设备 API + 工位终端", status: "可执行", ref: "SMT-01 / 扫码枪 / Feeder 绑定", impact: "D-001 开工准入通过", owner: "车间工艺员 许诺", time: "06-18 08:55", scope: "SMT 贴片 / TCU-100", risk: "需校验首件放行和料站绑定", downstream: "扫码开工、投料确认、过程记录、设备履历" },
-    { id: "DIP-A-02", name: "DIP 插件工位", version: "Line-A", source: "MES 维护 + 班组签收", status: "待接单", ref: "DIP-Line-A / 工牌 NFC", impact: "D-002 13:00 计划开工", owner: "班组长 郑峰", time: "06-18 09:18", scope: "DIP 插件 / TCU-100", risk: "等待 SMT 批次转入", downstream: "班组任务、工序报工、交接班" },
-    { id: "TEST-B-01", name: "功能测试工位", version: "Line-B", source: "测试台 API", status: "负荷偏高", ref: "Test-B / 参数自动采集", impact: "GW-240 排队 2 个任务", owner: "设备工程师 周启", time: "06-18 10:32", scope: "功能测试 / GW-240", risk: "测试工位排队影响交期", downstream: "过程参数、过程检验、设备效率" },
+    { id: "SMT-WS-01", name: "SMT 贴片工位", version: "Line-A", source: "设备 API + 工位终端", status: "工位启用", ref: "SMT-01 / 扫码枪 / Feeder 绑定", impact: "D-001 开工准入通过", owner: "车间工艺员 许诺", time: "06-18 08:55", scope: "SMT 贴片 / TCU-100", risk: "需校验首件放行和料站绑定", downstream: "扫码开工、投料确认、过程记录、设备履历" },
+    { id: "DIP-A-02", name: "DIP 插件工位", version: "Line-A", source: "MES 维护 + 班组签收", status: "待转序接收", ref: "DIP-Line-A / 工牌 NFC", impact: "D-002 13:00 计划开工", owner: "班组长 郑峰", time: "06-18 09:18", scope: "DIP 插件 / TCU-100", risk: "等待 SMT 批次转入", downstream: "班组任务、工序报工、交接班" },
+    { id: "TEST-B-01", name: "功能测试工位", version: "Line-B", source: "测试台 API", status: "负荷预警", ref: "Test-B / 参数自动采集", impact: "GW-240 排队 2 个任务", owner: "设备工程师 周启", time: "06-18 10:32", scope: "功能测试 / GW-240", risk: "测试工位排队影响交期", downstream: "过程参数、过程检验、设备效率" },
     { id: "QC-FINAL", name: "FQC 成品检验位", version: "共用资源", source: "QMS 抽样方案", status: "待规范确认", ref: "AQL / FQC 规范", impact: "HMI-70 阻止排程", owner: "质量工程师 孟可", time: "06-18 14:30", scope: "FQC / 多产品", risk: "检验项目缺失会拦截入库", downstream: "成品检验、完工确认、客户追溯报告" },
   ],
   workshops: [
-    { id: "FAC-EAST-01", name: "华东一厂 · 电子装配车间", version: "2026 白班日历", source: "MES 资源模型", status: "已生效", ref: "Line-A / Line-B / Line-C", impact: "全部订单按车间权限展示", owner: "车间主任 陈伟", time: "06-18 08:20", scope: "电子装配车间", risk: "支持多产线并行和班次交接", downstream: "首页工作台、生产排程、电子看板" },
+    { id: "FAC-EAST-01", name: "华东一厂 · 电子装配车间", version: "2026 白班日历", source: "MES 资源模型", status: "资源启用", ref: "Line-A / Line-B / Line-C", impact: "全部订单按车间权限展示", owner: "车间主任 陈伟", time: "06-18 08:20", scope: "电子装配车间", risk: "支持多产线并行和班次交接", downstream: "首页工作台、生产排程、电子看板" },
     { id: "LINE-A", name: "Line-A 电子装配线", version: "白班 08:00-20:00", source: "APS 产能日历", status: "可排程", ref: "SMT-01 / DIP-Line-A / Pack-A", impact: "MO-202606-0001 与 0010 共用资源", owner: "计划主管 李敏", time: "06-18 08:35", scope: "TCU-100 / SRV-90", risk: "老化房为跨线瓶颈", downstream: "产能负荷、派工单、设备运行" },
     { id: "LINE-B", name: "Line-B 模块装配线", version: "白班 + 加班窗口", source: "APS + 设备保养计划", status: "负荷预警", ref: "Test-B / Assembly-B", impact: "GW-240 与 PCM-60 交期冲突", owner: "计划主管 李敏", time: "06-18 10:16", scope: "GW-240 / PCM-60 / HMI-100", risk: "功能测试与物料冻结双风险", downstream: "交期预警、缺料处理、设备效率" },
     { id: "LINE-C", name: "Line-C 包装与装配线", version: "白班 08:00-20:00", source: "MES 资源模型", status: "可排程", ref: "Assembly-C / Pack-C", impact: "MO-202606-0011 包装中", owner: "包装主管 李娟", time: "06-18 13:26", scope: "THS-10 / ENV-45 / HMI-70", risk: "HMI-70 工艺资料待签收", downstream: "包装作业、成品入库、交接班" },
   ],
   partners: [
-    { id: "CUS-A", name: "A 客户", version: "优先级高", source: "ERP 客户资料", status: "已生效", ref: "客户标签模板 A-V1.4", impact: "MO-202606-0001 按高优先级排程", owner: "业务资料管理员 沈清", time: "06-18 09:02", scope: "TCU-100 / 成品标签", risk: "标签补打需审批", downstream: "订单评审、成品标签、客户追溯报告" },
-    { id: "CUS-B", name: "B 客户", version: "交期敏感", source: "ERP 客户资料", status: "已生效", ref: "OTD 重点监控", impact: "GW-240 与 SRV-90 交期预警", owner: "计划主管 李敏", time: "06-18 10:08", scope: "GW-240 / SRV-90", risk: "交期压缩需计划调整", downstream: "交期预警、计划调整、交付达成" },
+    { id: "CUS-A", name: "A 客户", version: "优先级高", source: "ERP 客户资料", status: "业务生效", ref: "客户标签模板 A-V1.4", impact: "MO-202606-0001 按高优先级排程", owner: "业务资料管理员 沈清", time: "06-18 09:02", scope: "TCU-100 / 成品标签", risk: "标签补打需审批", downstream: "订单评审、成品标签、客户追溯报告" },
+    { id: "CUS-B", name: "B 客户", version: "交期敏感", source: "ERP 客户资料", status: "业务生效", ref: "OTD 重点监控", impact: "GW-240 与 SRV-90 交期预警", owner: "计划主管 李敏", time: "06-18 10:08", scope: "GW-240 / SRV-90", risk: "交期压缩需计划调整", downstream: "交期预警、计划调整、交付达成" },
     { id: "SUP-SEN-01", name: "传感器供应商 S-01", version: "A级供应商", source: "QMS 供应商档案", status: "待到货复核", ref: "SEN-L20260605 / IQC 加严", impact: "TCU-100 缺 200 件", owner: "采购跟单 袁青", time: "06-18 11:10", scope: "温度传感器", risk: "到货延迟影响第二批开工", downstream: "来料检验、缺料预警、批次追溯" },
     { id: "SUP-PWR-02", name: "电源芯片供应商 P-02", version: "质量观察", source: "QMS 冻结规则", status: "冻结待复核", ref: "PWRIC-L20260602", impact: "PCM-60 指定批次冻结", owner: "质量员 孟可", time: "06-18 11:42", scope: "电源芯片 / D 客户", risk: "需 MRB 或替代料审批", downstream: "来料检验、库存冻结、缺料处理" },
   ],
@@ -236,7 +237,7 @@ function getDefinition() {
 function getVisibleRows() {
   const keyword = state.search.trim().toLowerCase();
   return rows.filter((item) => {
-    const text = `${item.id} ${item.name} ${item.version} ${item.source} ${item.status} ${item.ref} ${item.impact} ${item.owner} ${item.scope} ${item.risk} ${item.downstream}`.toLowerCase();
+    const text = `${item.id} ${item.name} ${item.version} ${item.source} ${item.status} ${item.ref} ${item.impact} ${item.owner} ${item.scope} ${item.risk} ${item.downstream} ${item.factory || ""} ${item.workshop || ""} ${item.line || ""} ${item.operation || ""} ${item.equipment || ""} ${item.terminal || ""} ${item.qualification || ""} ${item.dataCapture || ""} ${item.display || ""}`.toLowerCase();
     const keywordMatch = !keyword || text.includes(keyword);
     const statusMatch = state.status === "all" || item.status === state.status;
     const sourceMatch = state.source === "all" || item.source.includes(state.source);
@@ -245,14 +246,19 @@ function getVisibleRows() {
 }
 
 function getActive() {
-  return rows.find((item) => item.id === state.activeId) || getVisibleRows()[0] || rows[0];
+  const visible = getVisibleRows();
+  return visible.find((item) => item.id === state.activeId) || visible[0] || rows.find((item) => item.id === state.activeId) || rows[0];
 }
 
 function statusStyle(status) {
   if (/缺|冻结|拦截|阻止|风险|负荷|不通过/.test(status)) return "red";
   if (/待|评估|复核|预警|签收|审批|观察/.test(status)) return "orange";
-  if (/已|可|生效|发布|通过/.test(status)) return "green";
+  if (/已|可|生效|发布|通过|启用|业务生效/.test(status)) return "green";
   return "blue";
+}
+
+function isReleasedStatus(status = "") {
+  return /已|可|生效|发布|通过|启用|业务生效/.test(status);
 }
 
 function renderPageChrome() {
@@ -268,6 +274,8 @@ function renderPageChrome() {
   $("#simulationTitle").textContent = def.simulationTitle;
   $("#simulationHint").textContent = def.simulationHint;
   $("#simulationInput").placeholder = `${def.simulationTitle}，例如 ${rows[0]?.id || "资料编码"} / ${rows[0]?.version || "版本号"}`;
+  $("#primaryActionBtn").textContent = pageConfig.id === "stations" ? "确认工位启用" : "发布到执行";
+  $("#secondaryActionBtn").textContent = pageConfig.id === "stations" ? "登记维护状态" : "登记影响评估";
   $("#statusFilter").innerHTML = `<option value="all">全部状态</option>${[...new Set(rows.map((item) => item.status))].map((status) => `<option value="${status}">${status}</option>`).join("")}`;
   const sourceOptions = ["ERP", "PLM", "WMS", "QMS", "MES", "APS", "设备"];
   $("#sourceFilter").innerHTML = `<option value="all">全部来源</option>${sourceOptions.map((source) => `<option value="${source}">${source}</option>`).join("")}`;
@@ -291,7 +299,7 @@ function renderMetrics() {
   const visible = getVisibleRows();
   const values = [
     visible.length,
-    visible.filter((item) => /已|可|生效|发布/.test(item.status)).length,
+    visible.filter((item) => isReleasedStatus(item.status)).length,
     visible.filter((item) => /待|评估|复核|签收|审批/.test(item.status)).length,
     visible.filter((item) => /缺|冻结|风险|阻止|负荷|拦截|待/.test(item.risk + item.impact + item.status)).length,
   ];
@@ -332,6 +340,18 @@ function renderTable() {
 }
 
 function buildCells(item) {
+  if (pageConfig.id === "stations") {
+    return [
+      item.id,
+      twoLine(item.name, `${item.operation || item.scope} / ${item.line || item.version}`),
+      twoLine(item.equipment || getRefPart(item, 0), item.terminal || item.source),
+      item.qualification || "资质待维护",
+      pill(item.status),
+      item.impact,
+      item.owner,
+      item.time,
+    ];
+  }
   return [
     item.id,
     twoLine(item.name, item.scope),
@@ -353,6 +373,7 @@ function pill(text) {
 }
 
 function buildRowActions(item) {
+  if (pageConfig.id === "stations") return buildStationRowActions(item);
   const disabled = /停用/.test(item.status);
   const buttons = [["edit", "编辑"]];
   if (disabled) {
@@ -362,9 +383,23 @@ function buildRowActions(item) {
   buttons.push(["copy", "复制版本"]);
   if (canResyncProduct(item)) buttons.push(["resync", "重新同步产品"]);
   if (/草稿|撤回|待|评估|复核|签收|观察/.test(item.status)) buttons.push(["approve", "提交审批"]);
-  if (!/已发布|已生效|可执行|可排程/.test(item.status)) buttons.push(["publish", "发布"]);
+  if (!/已发布|已生效|可执行|可排程|工位启用|可投料|资源启用|业务生效/.test(item.status)) buttons.push(["publish", "发布"]);
   if (/草稿|未生效|待审批|影响评估中/.test(item.status)) buttons.push(["withdraw", "撤回"]);
   buttons.push([disabled ? "enable" : "disable", disabled ? "启用" : "停用"]);
+  return buildRowActionMenu(item, buttons);
+}
+
+function buildStationRowActions(item) {
+  const disabled = /停用/.test(item.status);
+  const buttons = [["edit", "编辑"]];
+  if (disabled) {
+    buttons.push(["enable", "启用"]);
+    return buildRowActionMenu(item, buttons);
+  }
+  buttons.push(["copy", "复制工位"]);
+  if (/待点检|待转序接收|维护中|负荷预警/.test(item.status)) buttons.push(["approve", "提交点检"]);
+  if (!/工位启用/.test(item.status)) buttons.push(["publish", "确认启用"]);
+  buttons.push(["disable", "停用"]);
   return buildRowActionMenu(item, buttons);
 }
 
@@ -392,6 +427,10 @@ function renderCards() {
     renderProductImpactChecks(active);
     return;
   }
+  if (pageConfig.id === "stations") {
+    renderStationCards(active);
+    return;
+  }
   $("#basicCards").className = "basic-card-grid";
   const cards = [
     ["上游来源", active.source, "保留 ERP、PLM、WMS、QMS 或设备回传来源"],
@@ -400,6 +439,27 @@ function renderCards() {
   ];
   $("#basicCards").innerHTML = cards.map(([label, value, hint]) => `
     <div class="basic-card">
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <em>${hint}</em>
+    </div>
+  `).join("");
+}
+
+function renderStationCards(active) {
+  const accessRules = getStationAccessRules(active);
+  const passed = accessRules.filter((rule) => !/待|未|异常|拦截|离线|缺/.test(rule)).length;
+  $("#basicCards").className = "station-card-grid";
+  const cards = [
+    ["工位归属", `${active.factory || "华东一厂"} / ${active.workshop || "电子装配车间"} / ${active.line || active.version}`, "用于数据权限、排程资源和现场看板定位"],
+    ["设备终端", `${active.equipment || getRefPart(active, 0)} / ${active.terminal || getRefPart(active, 1)}`, active.equipmentStatus || "状态随设备 API 或人工点检回传"],
+    ["人员资质", active.qualification || "资质待维护", "开工前由工牌/NFC、班组任务或权限资质配置校验"],
+    ["准入规则", `${passed}/${accessRules.length || 0} 项可通过`, active.impact || "待开工检查复核"],
+    ["采集方式", active.dataCapture || getBoundaryText(), "所有现场动作均为模拟回执或外部设备信号"],
+    ["追溯结果", active.trace || active.downstream, "工位履历会绑定工单、工序、设备、人员和时间戳"],
+  ];
+  $("#basicCards").innerHTML = cards.map(([label, value, hint]) => `
+    <div class="basic-card station-card">
       <span>${label}</span>
       <strong>${value}</strong>
       <em>${hint}</em>
@@ -689,31 +749,59 @@ function renderDetail() {
   $("#detailStatus").textContent = active.status;
   $("#detailTitle").textContent = active.id;
   $("#detailSubtitle").textContent = `${active.name} · ${active.version}`;
-  $("#detailKv").innerHTML = [
+  const detailRows = pageConfig.id === "stations" ? [
+    ["工厂/车间/产线", `${active.factory || "华东一厂"} / ${active.workshop || "电子装配车间"} / ${active.line || active.version}`],
+    ["绑定设备", `${active.equipment || getRefPart(active, 0)} / ${active.equipmentStatus || "状态待回传"}`],
+    ["绑定终端", active.terminal || getRefPart(active, 1)],
+    ["人员资质要求", active.qualification || "资质待维护"],
+    ["数据采集方式", active.dataCapture || "模拟扫码枪/HMI/PDA/设备回传"],
+    ["现场显示内容", active.display || "任务卡、SOP、物料清单、检验要求和异常提示"],
+    ["风险说明", active.risk],
+  ] : [
     ["资料范围", active.scope],
     ["上游来源", active.source],
     ["关键引用", active.ref],
     ["责任人", active.owner],
     ["时间戳", active.time],
     ["风险说明", active.risk],
-  ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  ];
+  $("#detailKv").innerHTML = detailRows.map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  const timelineTitle = $("#timelineList")?.closest(".basic-detail")?.querySelector("h3");
+  if (timelineTitle) timelineTitle.textContent = pageConfig.id === "stations" ? "工位维护履历" : "版本与审批履历";
   $("#timelineList").innerHTML = buildTimeline(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   renderLogs();
 }
 
 function buildTimeline(active) {
+  if (pageConfig.id === "stations") {
+    return [
+      ["状态来源", `${active.source} 已维护 ${active.id}`],
+      ["准入校验", /工位启用/.test(active.status) ? "工位档案、设备终端、人员资质和准入规则可被开工检查引用" : "需完成点检、转序接收、维护解除或负荷确认"],
+      ["维护留痕", `${active.owner} 于 ${active.time} 维护 / 复核`],
+      ["追溯引用", `${active.id} / ${active.line || active.version} 将写入工单、工序、设备和人员履历`],
+    ];
+  }
   return [
     ["同步接收", `${active.source} 已同步 ${active.id}`],
-    ["校验结果", active.status.includes("已") || active.status.includes("可") ? "编码、版本、生效范围、责任人校验通过" : "存在待审批、待签收或影响评估事项"],
+    ["校验结果", isReleasedStatus(active.status) ? "编码、版本、生效范围、责任人校验通过" : "存在待审批、待签收或影响评估事项"],
     ["审批留痕", `${active.owner} 于 ${active.time} 维护 / 复核`],
     ["追溯引用", `${active.id} / ${active.version} 将写入订单、批次或工位履历`],
   ];
 }
 
 function buildActions(active) {
+  if (pageConfig.id === "stations") {
+    return [
+      ["准入控制", /工位启用/.test(active.status) ? "允许派工和开工检查引用该工位，现场动作仍由终端、扫码枪、HMI 或设备信号产生" : "阻止或提示现场开工引用，需完成点检、维护解除或转序接收"],
+      ["准入结果", active.impact],
+      ["异常闭环", /缺|冻结|待|风险|负荷|维护|预警/.test(active.risk + active.status) ? "需生成工位异常、设备点检、班组交接或计划调整记录" : "当前无阻断项，继续保留工位履历"],
+      ["下游联动", active.downstream],
+      ["准入校验", "开工前校验人员资质、设备状态、工位绑定、班组班次和终端签收"],
+    ];
+  }
   const actions = [
-    ["发布控制", active.status.includes("已") || active.status.includes("可") ? "允许下游订单和现场任务引用当前版本" : "阻止或提示下游使用，需完成审批后发布"],
+    ["发布控制", isReleasedStatus(active.status) ? "允许下游订单和现场任务引用当前版本" : "阻止或提示下游使用，需完成审批后发布"],
     ["影响评估", active.impact],
     ["异常闭环", /缺|冻结|待|评估|风险|负荷/.test(active.risk + active.status) ? "需生成资料异常、质量复核、计划调整或缺料处置" : "当前无阻断项，继续保留版本履历"],
     ["下游联动", active.downstream],
@@ -722,7 +810,6 @@ function buildActions(active) {
   if (pageConfig.id === "bom") actions.push(["明细维护入口", "维护制造用量、损耗率、替代料和版本明细摘要，不编辑 PLM 设计 BOM"]);
   if (pageConfig.id === "routing") actions.push(["现场签收", "SOP、参数规格和检验触发规则需下发到工位终端"]);
   if (pageConfig.id === "routing") actions.push(["明细维护入口", "维护工序顺序、标准工时、SOP 引用和检验触发摘要，不编辑 PLM 工艺文件"]);
-  if (pageConfig.id === "stations") actions.push(["准入校验", "开工前校验人员资质、设备状态、工位绑定、班组班次和终端签收"]);
   if (pageConfig.id === "workshops") actions.push(["资源准入", "产线、班组、班次和产能日历发布后才允许 APS 排程与现场看板引用"]);
   if (pageConfig.id === "partners") actions.push(["业务规则", "客户标签要求、供应商质量等级和追溯口径发布后进入订单、IQC 和包装校验"]);
   return actions;
@@ -739,6 +826,7 @@ function renderAll() {
   renderTable();
   renderBomLines();
   renderRoutingLayers();
+  renderStationProfile();
   renderCards();
   renderDetail();
 }
@@ -800,6 +888,93 @@ function renderRoutingLayers() {
   `).join("") : `
     <div class="basic-empty"><strong>当前路线还没有执行标准引用</strong><span>需要绑定 SOP、参数规格、检验规范或图纸版本后，才能支持开工检查、工艺指导和质量放行。</span></div>
   `;
+}
+
+function renderStationProfile() {
+  if (pageConfig.id !== "stations" || !$("#stationProfile")) return;
+  const active = getActive();
+  if (!active) {
+    $("#stationProfile").innerHTML = `<div class="basic-empty"><strong>当前没有工位档案</strong><span>请新增工位并维护设备、终端、资质和开工准入规则。</span></div>`;
+    return;
+  }
+  const accessRules = getStationAccessRules(active);
+  const captureItems = splitStationText(active.dataCapture || "模拟扫码枪/HMI/PDA/设备回传");
+  const displayItems = splitStationText(active.display || "任务卡、SOP、物料清单、检验要求、异常提示");
+  $("#stationProfile").innerHTML = `
+    <div class="station-profile">
+      <section class="station-profile__hero">
+        <div>
+          <span>${active.operation || "工序待维护"}</span>
+          <h4>${active.name}</h4>
+          <p>${active.factory || "华东一厂"} / ${active.workshop || "电子装配车间"} / ${active.line || active.version}</p>
+        </div>
+        ${pill(active.status)}
+      </section>
+      <section class="station-profile__grid">
+        ${buildStationKv("工位编码", active.id)}
+        ${buildStationKv("工位名称", active.name)}
+        ${buildStationKv("绑定设备", `${active.equipment || getRefPart(active, 0)} / ${active.equipmentStatus || "状态待回传"}`)}
+        ${buildStationKv("绑定终端", active.terminal || getRefPart(active, 1))}
+        ${buildStationKv("人员资质", active.qualification || "资质待维护")}
+        ${buildStationKv("责任人/时间", `${active.owner} / ${active.time}`)}
+      </section>
+      <section class="station-access">
+        <div class="station-section-title">
+          <h4>开工准入规则</h4>
+          <span>${accessRules.length} 项校验</span>
+        </div>
+        <div class="station-access__list">
+          ${accessRules.map((rule) => {
+            const blocked = /待|未|异常|拦截|离线|缺/.test(rule);
+            return `<div class="station-access__item ${blocked ? "is-warning" : "is-pass"}"><span>${blocked ? "待" : "过"}</span><strong>${rule}</strong></div>`;
+          }).join("")}
+        </div>
+      </section>
+      <section class="station-profile__twocol">
+        <div>
+          <div class="station-section-title"><h4>数据采集方式</h4><span>模拟现场回执</span></div>
+          <div class="station-chip-list">${captureItems.map((item) => `<span>${item}</span>`).join("")}</div>
+        </div>
+        <div>
+          <div class="station-section-title"><h4>现场显示内容</h4><span>工位终端/HMI</span></div>
+          <div class="station-chip-list">${displayItems.map((item) => `<span>${item}</span>`).join("")}</div>
+        </div>
+      </section>
+      <section class="station-trace">
+        <div>
+          <span>追溯关联</span>
+          <strong>${active.trace || "后续生产履历可绑定工序、工位、设备、人员和时间"}</strong>
+        </div>
+        <div>
+          <span>下游闭环</span>
+          <strong>${active.downstream}</strong>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function getStationAccessRules(active) {
+  if (Array.isArray(active?.accessRules)) return active.accessRules;
+  const fallback = [
+    `${active?.impact || "派工单已下达"}`,
+    `${active?.qualification || "人员资质"} 有效`,
+    `${active?.equipment || "设备"} 状态可用`,
+    "SOP 版本已签收",
+    "物料齐套或前序状态满足准入",
+  ];
+  return fallback.filter(Boolean);
+}
+
+function splitStationText(text) {
+  return String(text)
+    .split(/[、，,+/]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function buildStationKv(label, value) {
+  return `<div><span>${label}</span><strong>${value || "待维护"}</strong></div>`;
 }
 
 function getRoutingDetail(active) {
@@ -868,8 +1043,11 @@ function updateActiveStatus(status, message) {
   if (!active) return;
   active.status = status;
   active.time = formatNow();
-  if (status === "已发布") active.impact = "已允许下游执行引用";
+  if (status === "已发布" || status === "工位启用" || status === "可投料" || status === "资源启用" || status === "可排程" || status === "业务生效") {
+    active.impact = pageConfig.id === "stations" ? "已允许开工检查引用" : "已允许下游执行引用";
+  }
   if (status === "影响评估中") active.impact = "已生成资料影响评估任务";
+  if (status === "维护中") active.impact = "已登记工位维护，维护解除前不允许现场开工引用";
   appendLog(message || `${active.id} 状态更新为 ${status}`, active);
   saveState();
   renderAll();
@@ -894,7 +1072,11 @@ function formatNow() {
 
 function simulateStatus() {
   const value = $("#simulationInput").value.trim();
-  updateActiveStatus("已发布", `${getActive().id} 已记录${getDefinition().simulationTitle}${value ? `：${value}` : ""}，MES 仅形成执行快照和审批留痕`);
+  const nextStatus = getPublishedStatus();
+  const message = pageConfig.id === "stations"
+    ? `${getActive().id} 已记录${getDefinition().simulationTitle}${value ? `：${value}` : ""}，MES 仅形成工位状态回执和准入履历`
+    : `${getActive().id} 已记录${getDefinition().simulationTitle}${value ? `：${value}` : ""}，MES 仅形成执行快照和审批留痕`;
+  updateActiveStatus(nextStatus, message);
   showToast("模拟同步已记录");
 }
 
@@ -1003,8 +1185,16 @@ function mountMaintenanceDialogs() {
 }
 
 function getStatusOptions() {
-  const base = ["草稿", "待审批", "影响评估中", "已发布", "已生效", "停用"];
-  return [...new Set([...base, ...rows.map((row) => row.status)])];
+  const options = {
+    products: ["草稿", "待审批", "影响评估中", "已发布", "停用"],
+    materials: ["可投料", "待IQC放行", "替代料评估中", "冻结待复核", "停用"],
+    bom: ["草稿", "待审批", "影响评估中", "已发布", "停用"],
+    routing: ["草稿", "待审批", "待现场签收", "影响评估中", "已发布", "停用"],
+    stations: ["工位启用", "待点检", "待转序接收", "维护中", "负荷预警", "停用"],
+    workshops: ["资源启用", "可排程", "日历待复核", "负荷预警", "停用"],
+    partners: ["业务生效", "待资料复核", "待到货复核", "冻结待复核", "停用"],
+  };
+  return [...new Set([...(options[pageConfig.id] || ["草稿", "待审批", "已发布", "停用"]), ...rows.map((row) => row.status)])];
 }
 
 function getSourceOptions(extra = "") {
@@ -1024,7 +1214,13 @@ function getFormDomainNote() {
   const notes = {
     bom: "BOM 明细入口只维护制造用量摘要、损耗率、替代料和版本明细摘要，不作为 PLM 设计 BOM 编辑器。",
     routing: "工艺路线明细入口只维护工序链、SOP 引用、参数规格和现场签收摘要，不作为 PLM 工艺文件编辑器。",
-    stations: "工序工位需维护设备、终端、班组、资质和开工准入规则；真实开工仍由现场终端、扫码枪、工牌/NFC 或设备回执产生。",
+    products: "产品版本状态描述产品资料从草稿、审批、影响评估到已发布的生命周期；已发布后才允许订单评审、BOM、工艺路线、标签和追溯引用。",
+    materials: "投料准入状态描述物料是否允许进入齐套检查、领料和投料；可投料、待IQC放行、替代料评估中、冻结待复核比通用审批状态更贴近现场。",
+    bom: "BOM版本状态描述制造 BOM 从草稿、审批、影响评估到已发布的生命周期；已发布后才允许齐套、领料和投料防错引用。",
+    routing: "工艺版本状态描述工艺路线从草稿、审批、现场签收到已发布的生命周期；现场签收和质量触发未完成时不允许开工准入通过。",
+    stations: "工序工位状态描述现场资源是否可被引用，例如工位启用、待点检、待转序接收、维护中、负荷预警；草稿、待审批、影响评估中属于资料发布生命周期，不作为工位状态使用。",
+    workshops: "资源排程状态描述车间、产线、班组和日历是否可被 APS、派工和现场看板引用，例如资源启用、可排程、日历待复核、负荷预警。",
+    partners: "业务准入状态描述客户或供应商规则是否可被订单评审、IQC、标签和追溯引用，例如业务生效、待资料复核、待到货复核、冻结待复核。",
     workshops: "产线车间需维护车间、产线、班组、班次和产能日历；MES 不直接控制现场产线。",
     partners: "客户供应商需维护标签要求、供应商质量等级和追溯口径，并保留 ERP/QMS 模拟同步来源。",
   };
@@ -1056,9 +1252,9 @@ function openMasterDataDialog(row = null) {
   const selectedSource = row?.source || "MES 手工维护";
   $("#formSource").innerHTML = getSourceOptions(selectedSource).map((source) => `<option value="${source}">${source}</option>`).join("");
   $("#formSource").value = selectedSource;
-  $("#formStatus").value = row?.status || "草稿";
+  $("#formStatus").value = row?.status || (pageConfig.id === "stations" ? "待点检" : "草稿");
   $("#formRef").value = row?.ref || getDefaultRef();
-  $("#formImpact").value = row?.impact || "待提交审批，暂不允许下游执行引用";
+  $("#formImpact").value = row?.impact || (pageConfig.id === "stations" ? "待点检复核，暂不允许开工引用" : "待提交审批，暂不允许下游执行引用");
   $("#formOwner").value = row?.owner || getDefinition().user;
   $("#formScope").value = row?.scope || getDefaultScope();
   $("#formRisk").value = row?.risk || "需完成编码、版本、生效范围和下游影响校验";
@@ -1101,7 +1297,7 @@ function saveMasterDataForm(event) {
     appendLog(`${next.id} 已编辑，更新执行快照、影响范围和审批责任人`, next);
   } else {
     rows.unshift(next);
-    appendLog(`${next.id} 已新增，状态为草稿，等待提交审批`, next);
+    appendLog(pageConfig.id === "stations" ? `${next.id} 已新增，状态为待点检，等待设备、终端和准入规则复核` : `${next.id} 已新增，状态为草稿，等待提交审批`, next);
   }
   window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, next, editingId ? "编辑主数据" : "新增主数据", { status: next.status, owner: next.owner, impact: next.impact });
   state.activeId = next.id;
@@ -1117,30 +1313,30 @@ function copyVersion(row) {
     ...row,
     id: `${row.id}-COPY-${String(Date.now()).slice(-4)}`,
     version: nextVersion(row.version),
-    status: "草稿",
-    impact: "复制版本待评估，未发布前不允许现场执行引用",
-    risk: `${row.risk}；复制版本需重新审批`,
+    status: pageConfig.id === "stations" ? "待点检" : "草稿",
+    impact: pageConfig.id === "stations" ? "复制工位配置待点检，确认前不允许开工引用" : "复制版本待评估，未发布前不允许现场执行引用",
+    risk: pageConfig.id === "stations" ? `${row.risk}；复制工位需复核设备、终端和准入规则` : `${row.risk}；复制版本需重新审批`,
     time: formatNow(),
   };
   rows.unshift(copy);
   state.activeId = copy.id;
-  appendLog(`${row.id} 已复制为 ${copy.id}，形成未生效版本`, copy);
+  appendLog(pageConfig.id === "stations" ? `${row.id} 已复制为 ${copy.id}，形成待复核工位档案` : `${row.id} 已复制为 ${copy.id}，形成未生效版本`, copy);
   saveState();
   renderPageChrome();
   renderAll();
-  showToast("复制版本已生成");
+  showToast(pageConfig.id === "stations" ? "复制工位已生成" : "复制版本已生成");
 }
 
 function submitApproval(row) {
-  row.status = "待审批";
+  row.status = pageConfig.id === "stations" ? "待点检" : "待审批";
   row.time = formatNow();
-  row.impact = "已提交审批，发布前下游仅可查看不可执行引用";
-  appendLog(`${row.id} 已提交审批，等待责任人复核生效范围和下游影响`, row);
-  window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, row, "提交审批", { status: row.status, owner: row.owner, impact: row.impact });
+  row.impact = pageConfig.id === "stations" ? "已提交工位复核，点检和准入确认前不允许现场开工引用" : "已提交审批，发布前下游仅可查看不可执行引用";
+  appendLog(pageConfig.id === "stations" ? `${row.id} 已提交工位复核，等待设备、终端和准入规则确认` : `${row.id} 已提交审批，等待责任人复核生效范围和下游影响`, row);
+  window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, row, pageConfig.id === "stations" ? "提交工位点检" : "提交审批", { status: row.status, owner: row.owner, impact: row.impact });
   saveState();
   renderPageChrome();
   renderAll();
-  showToast("审批已提交");
+  showToast(pageConfig.id === "stations" ? "工位点检已提交" : "审批已提交");
 }
 
 function resyncProductVersion(row) {
@@ -1200,6 +1396,10 @@ function applyUpstreamProductSnapshot(row, upstream) {
 }
 
 function publishRow(row) {
+  if (pageConfig.id === "stations") {
+    publishStationRow(row);
+    return;
+  }
   openConfirmDialog({
     title: `确认发布 ${row.id}？`,
     message: `发布后 ${pageConfig.title} 将作为 MES 执行快照下发给计划、现场终端、质量或仓储校验；外部 ERP/PLM/QMS/WMS 原始资料不会被改写。`,
@@ -1215,6 +1415,26 @@ function publishRow(row) {
       renderPageChrome();
       renderAll();
       showToast("已发布到执行");
+    },
+  });
+}
+
+function publishStationRow(row) {
+  openConfirmDialog({
+    title: `确认启用 ${row.id}？`,
+    message: "确认后该工位可被派工、开工检查和现场终端引用；现场开工仍必须通过人员资质、设备状态、物料和工序顺序校验。",
+    okText: "确认启用",
+    meta: [row.name, row.scope, row.downstream],
+    onConfirm: () => {
+      row.status = getPublishedStatus();
+      row.time = formatNow();
+      row.impact = "已允许开工检查引用";
+      appendLog(`${row.id} 已确认工位启用，影响范围：${row.scope}`, row);
+      window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, row, "确认工位启用", { status: row.status, owner: row.owner, impact: row.impact });
+      saveState();
+      renderPageChrome();
+      renderAll();
+      showToast("工位已启用");
     },
   });
 }
@@ -1241,11 +1461,11 @@ function withdrawRow(row) {
 }
 
 function toggleRow(row, enabled) {
-  const nextStatus = enabled ? "待审批" : "停用";
+  const nextStatus = enabled ? (pageConfig.id === "stations" ? "待点检" : "待审批") : "停用";
   openConfirmDialog({
     title: `${enabled ? "确认启用" : "确认停用"} ${row.id}？`,
     message: enabled
-      ? `启用后仍需重新审批，${pageConfig.title} 不会立即被现场执行引用。`
+      ? (pageConfig.id === "stations" ? `启用后仍需完成点检和准入复核，${pageConfig.title} 不会立即被现场开工引用。` : `启用后仍需重新审批，${pageConfig.title} 不会立即被现场执行引用。`)
       : `停用后该资料不能被新订单、派工、现场终端、PDA 或质量/仓储校验继续引用，历史追溯记录保留。`,
     okText: enabled ? "确认启用" : "确认停用",
     tone: enabled ? "blue" : "red",
@@ -1253,13 +1473,13 @@ function toggleRow(row, enabled) {
     onConfirm: () => {
       row.status = nextStatus;
       row.time = formatNow();
-      row.impact = enabled ? "已恢复为待审批，发布前不可执行引用" : "已停用，阻止新业务引用";
-      appendLog(`${row.id} 已${enabled ? "启用并进入待审批" : "停用"}，影响范围：${row.scope}`, row);
-      window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, row, enabled ? "启用待审批" : "停用主数据", { status: row.status, owner: row.owner, impact: row.impact });
+      row.impact = enabled ? (pageConfig.id === "stations" ? "已恢复为待点检，确认前不可开工引用" : "已恢复为待审批，发布前不可执行引用") : "已停用，阻止新业务引用";
+      appendLog(`${row.id} 已${enabled ? (pageConfig.id === "stations" ? "启用并进入待点检" : "启用并进入待审批") : "停用"}，影响范围：${row.scope}`, row);
+      window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, row, enabled ? (pageConfig.id === "stations" ? "启用待点检" : "启用待审批") : "停用主数据", { status: row.status, owner: row.owner, impact: row.impact });
       saveState();
       renderPageChrome();
       renderAll();
-      showToast(enabled ? "已启用，等待审批" : "已停用");
+      showToast(enabled ? (pageConfig.id === "stations" ? "已启用，等待点检" : "已启用，等待审批") : "已停用");
     },
   });
 }
@@ -1270,18 +1490,18 @@ function mockImport() {
     name: `模拟导入${pageConfig.title}`,
     version: "V1.0",
     source: getMockSourceLabel(),
-    status: "待审批",
+    status: pageConfig.id === "stations" ? "待点检" : "待审批",
     ref: getDefaultRef(),
-    impact: "模拟导入待审批，暂不允许下游执行引用",
+    impact: pageConfig.id === "stations" ? "模拟导入待点检，暂不允许开工引用" : "模拟导入待审批，暂不允许下游执行引用",
     owner: getDefinition().user,
     time: formatNow(),
     scope: getDefaultScope(),
-    risk: "模拟外部同步资料需完成影响评估",
+    risk: pageConfig.id === "stations" ? "模拟外部同步工位资料需完成点检和准入复核" : "模拟外部同步资料需完成影响评估",
     downstream: getDefaultDownstream(),
   };
   rows.unshift(row);
   state.activeId = row.id;
-  appendLog(`${row.id} 已完成导入模拟，等待审批和执行发布`, row);
+  appendLog(pageConfig.id === "stations" ? `${row.id} 已完成导入模拟，等待工位点检和准入复核` : `${row.id} 已完成导入模拟，等待审批和执行发布`, row);
   saveState();
   renderPageChrome();
   renderAll();
@@ -1309,9 +1529,10 @@ function closeConfirmDialog() {
 }
 
 function getPublishedStatus() {
-  if (pageConfig.id === "stations") return "可执行";
-  if (pageConfig.id === "workshops") return "可排程";
-  if (pageConfig.id === "partners") return "已生效";
+  if (pageConfig.id === "stations") return "工位启用";
+  if (pageConfig.id === "materials") return "可投料";
+  if (pageConfig.id === "workshops") return "资源启用";
+  if (pageConfig.id === "partners") return "业务生效";
   return "已发布";
 }
 
@@ -1401,6 +1622,11 @@ function bindEvents() {
   $("#simulateBtn").addEventListener("click", simulateStatus);
   $("#primaryActionBtn").addEventListener("click", () => publishRow(getActive()));
   $("#secondaryActionBtn").addEventListener("click", () => {
+    if (pageConfig.id === "stations") {
+      updateActiveStatus("维护中", `${getActive().id} 已登记工位维护，等待设备、终端和准入规则复核`);
+      showToast("维护状态已登记");
+      return;
+    }
     updateActiveStatus("影响评估中", `${getActive().id} 已登记影响评估，等待责任人审批和下游确认`);
     showToast("影响评估已登记");
   });
