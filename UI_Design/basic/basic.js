@@ -210,12 +210,19 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!saved) return;
-    rows = saved.rows || rows;
+    rows = mergeRowsWithInitial(saved.rows || [], initialRows[pageConfig.id] || []);
     logs = saved.logs || logs;
     state = { ...state, ...(saved.state || {}) };
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+}
+
+function mergeRowsWithInitial(savedRows, latestRows) {
+  const savedMap = new Map(savedRows.map((row) => [row.id, row]));
+  const merged = latestRows.map((row) => savedMap.get(row.id) || row);
+  const customRows = savedRows.filter((row) => !latestRows.some((latest) => latest.id === row.id));
+  return [...merged, ...customRows];
 }
 
 function saveState() {
@@ -398,6 +405,80 @@ function renderCards() {
       <em>${hint}</em>
     </div>
   `).join("");
+}
+
+function renderBomLines() {
+  if (pageConfig.id !== "bom" || !$("#bomLinesPanel")) return;
+  const active = getActive();
+  const lines = getBomLines(active);
+  const totalNeedPer = lines.reduce((sum, line) => sum + Number(line.needPer || 0), 0);
+  const controlledCount = lines.filter((line) => /批次|指定/.test(line.batchControl || "")).length;
+  const shortageCount = lines.filter((line) => getBomLineGap(line, active) > 0).length;
+  const substituteCount = lines.filter((line) => line.substitute && line.substitute !== "无").length;
+  $("#bomLinesHint").textContent = active
+    ? `${active.id} · ${active.name} · 当前版本 ${active.version}，明细来自 PLM 发布后 MES 执行快照`
+    : "查看当前 BOM 版本的子项物料、用量、工序、批次管控和投料防错要求";
+  $("#bomLinesSummary").innerHTML = [
+    ["子项物料", `${lines.length} 项`],
+    ["单台标准用量", `${totalNeedPer || "-"} PCS`],
+    ["批次管控", `${controlledCount} 项`],
+    ["缺口风险", `${shortageCount} 项`],
+    ["替代料", `${substituteCount} 项`],
+  ].map(([label, value]) => `<span><em>${label}</em><strong>${value}</strong></span>`).join("");
+  $("#bomLinesBody").innerHTML = lines.length ? lines.map((line) => `
+    <tr>
+      <td>${twoLine(line.materialNo, line.name)}</td>
+      <td>${twoLine(line.usageRule || `${line.needPer || "-"} ${line.unit || "PCS"}/台`, `损耗 ${line.lossRate || "按 BOM 版本"}`)}</td>
+      <td>${twoLine(line.operation || "工序待维护", line.station || "工位待绑定")}</td>
+      <td>${pill(line.batchControl || "按物料规则")}</td>
+      <td>${line.substitute || "无"}</td>
+      <td>${buildBomInventoryCell(line, active)}</td>
+      <td>${twoLine(line.antiError || "料号、批次、数量校验", getBomMaterialMasterText(line))}</td>
+    </tr>
+  `).join("") : `
+    <tr>
+      <td colspan="7">
+        <div class="basic-empty">
+          <strong>当前 BOM 版本还没有结构化物料明细</strong>
+          <span>请在 BOM 维护中补齐子项物料、用量、工序、防错规则和替代料摘要；物料规格本身仍在物料资料菜单维护。</span>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function getBomMaterialMasterText(line) {
+  const material = (window.MES_MASTER_DATA?.materials || []).find((item) => item.id === line.materialNo);
+  if (!material) return "缺物料资料，禁止发布为可执行 BOM";
+  return `物料资料已建档：${material.batchRule} / ${material.status}`;
+}
+
+function getBomLines(active) {
+  const masterLines = window.MES_MASTER_DATA?.bomLines?.[active?.id];
+  if (Array.isArray(masterLines)) return masterLines;
+  return [];
+}
+
+function getBomLineGap(line, active) {
+  const available = Number(line.available || 0);
+  const transit = Number(line.transit || 0);
+  const required = Number(line.required || line.need || getBomRequiredQty(active) * Number(line.needPer || 0));
+  return Math.max(0, required - available - transit);
+}
+
+function getBomRequiredQty(active) {
+  const bomHeader = (window.MES_MASTER_DATA?.bomHeaders || []).find((item) => item.id === active?.id);
+  const order = (window.MES_MASTER_DATA?.orders || []).find((item) => item.productCode === bomHeader?.productCode);
+  return Number(order?.qty || 1000);
+}
+
+function buildBomInventoryCell(line, active) {
+  const gap = getBomLineGap(line, active);
+  const status = gap ? `缺 ${gap}` : "可支持";
+  return `
+    <strong>${Number(line.available || 0)} ${line.unit || "PCS"} / ${status}</strong>
+    <small>${line.eta || "到货时间待确认"}</small>
+  `;
 }
 
 function renderProductImpactChecks(active) {
@@ -656,8 +737,130 @@ function renderLogs() {
 function renderAll() {
   renderMetrics();
   renderTable();
+  renderBomLines();
+  renderRoutingLayers();
   renderCards();
   renderDetail();
+}
+
+function renderRoutingLayers() {
+  if (pageConfig.id !== "routing" || !$("#routingOverview")) return;
+  const active = getActive();
+  const detail = getRoutingDetail(active);
+  const blockedCount = detail.steps.filter((step) => /拦截|待|未|风险|瓶颈/.test(`${step.access} ${step.handoff} ${step.status}`)).length;
+  const signedCount = detail.standards.filter((standard) => /已签收|已下发|可引用|已生效/.test(standard.signoff)).length;
+  $("#routingOverviewHint").textContent = `${active.id} · ${active.name} · 当前版本 ${active.version}，MES 展示 PLM 发布后的现场执行快照`;
+  $("#routingOverview").innerHTML = [
+    ["适用产品", detail.product, detail.scope],
+    ["工序数量", `${detail.steps.length} 道`, `${blockedCount ? `${blockedCount} 道存在准入或转序风险` : "工序链完整，可供派工展开"}`],
+    ["执行标准", `${detail.standards.length} 项`, `${signedCount} 项已完成现场签收或可引用`],
+    ["下发状态", detail.release, detail.trace],
+  ].map(([label, value, hint]) => `
+    <article>
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <em>${hint}</em>
+    </article>
+  `).join("");
+
+  $("#routingSteps").innerHTML = detail.steps.length ? detail.steps.map((step) => `
+    <article class="routing-step">
+      <div class="routing-step__seq">${String(step.seq).padStart(2, "0")}</div>
+      <div class="routing-step__body">
+        <div class="routing-step__head">
+          <div><strong>${step.name}</strong><span>${step.workCenter} / ${step.station}</span></div>
+          ${pill(step.status)}
+        </div>
+        <div class="routing-step__grid">
+          <span><em>设备/终端</em><strong>${step.equipment}</strong></span>
+          <span><em>标准工时</em><strong>${step.stdTime}</strong></span>
+          <span><em>准入校验</em><strong>${step.access}</strong></span>
+          <span><em>转序条件</em><strong>${step.handoff}</strong></span>
+        </div>
+      </div>
+    </article>
+  `).join("") : `
+    <div class="basic-empty"><strong>当前路线还没有结构化工序明细</strong><span>请补齐工序顺序、工作中心、工位设备、准入校验和转序条件；MES 只维护执行快照，不编辑 PLM 原始工艺文件。</span></div>
+  `;
+
+  $("#routingStandards").innerHTML = detail.standards.length ? detail.standards.map((standard) => `
+    <article class="routing-standard routing-standard--${statusStyle(standard.signoff)}">
+      <div class="routing-standard__head">
+        <div><span>${standard.type}</span><strong>${standard.no}</strong></div>
+        ${pill(standard.signoff)}
+      </div>
+      <p>${standard.name}</p>
+      <div class="routing-standard__meta">
+        <span>来源：${standard.source}</span>
+        <span>版本：${standard.version}</span>
+        <span>范围：${standard.scope}</span>
+        <span>引用：${standard.trace}</span>
+      </div>
+    </article>
+  `).join("") : `
+    <div class="basic-empty"><strong>当前路线还没有执行标准引用</strong><span>需要绑定 SOP、参数规格、检验规范或图纸版本后，才能支持开工检查、工艺指导和质量放行。</span></div>
+  `;
+}
+
+function getRoutingDetail(active) {
+  const masterRouting = (window.MES_MASTER_DATA?.routings || []).find((item) => item.id === active?.id);
+  const productCode = masterRouting?.productCode || active?.scope?.split("/")?.[0]?.trim() || getProductCode(active);
+  const steps = getRoutingSteps(active, masterRouting);
+  return {
+    product: `${productCode || active?.name || "产品待关联"} / ${active.version}`,
+    scope: active.scope,
+    release: /已发布/.test(active.status) ? "已发布到执行" : active.status,
+    trace: `责任人 ${active.owner} / ${active.time} / ${active.downstream}`,
+    steps,
+    standards: getRoutingStandards(active, masterRouting, steps),
+  };
+}
+
+function getRoutingSteps(active, masterRouting) {
+  const routeSteps = window.MES_MASTER_DATA?.routingSteps?.[active?.id];
+  if (Array.isArray(routeSteps)) return routeSteps;
+  const names = (masterRouting?.steps || active?.ref?.split("/")?.[0] || "").split(">").map((item) => item.trim()).filter(Boolean);
+  const stationMap = {
+    SMT: ["SMT 中心", "SMT-WS-01", "SMT-01 / 扫码枪 / Feeder 绑定", "首件放行 + 料站绑定"],
+    DIP: ["DIP 插件线", "DIP-A-02", "DIP-A1 / 工牌 NFC / HMI", "上道 SMT 批次转入"],
+    烧录: ["程序烧录区", "PRG-A-01", "烧录治具 / 程序版本校验", "程序版本与产品 SN 匹配"],
+    装配: ["整机装配线", "ASM-A-01", "装配工位终端 / 扭矩工具", "BOM 物料批次和外观件版本校验"],
+    测试: ["功能测试区", "TEST-B-01", "测试台 API / 参数自动采集", "测试程序版本和参数规格有效"],
+    功能测试: ["功能测试区", "TEST-B-01", "测试台 API / 参数自动采集", "测试程序版本和参数规格有效"],
+    老化: ["老化房", "AGING-A-01", "老化柜 / 温度曲线采集", "老化时长与温度曲线达标"],
+    FQC: ["成品检验区", "QC-FINAL", "QMS 抽样方案 / 检验台", "FQC 检验合格或质量放行"],
+    包装: ["包装线", "PACK-A-01", "包装工位 / 标签打印机", "成品标签和箱码托盘码绑定"],
+  };
+  return names.map((name, index) => {
+    const matchedKey = Object.keys(stationMap).find((key) => name.includes(key));
+    const [workCenter, station, equipment, access] = stationMap[matchedKey] || ["工序中心待维护", "工位待绑定", "终端/设备待绑定", "准入规则待维护"];
+    const isRisk = /待现场签收|影响评估|待质量|拦截/.test(active.status + active.risk);
+    return {
+      seq: index + 1,
+      name,
+      workCenter,
+      station,
+      equipment,
+      stdTime: index === 0 ? "18 分/批" : matchedKey === "老化" ? "240 分/批" : "12 分/批",
+      access,
+      handoff: index === names.length - 1 ? "完工确认后进入包装/入库" : `合格后转 ${names[index + 1]}`,
+      status: isRisk && index >= Math.max(0, names.length - 2) ? "待复核" : "可执行",
+    };
+  });
+}
+
+function getRoutingStandards(active, masterRouting, steps) {
+  const routeStandards = window.MES_MASTER_DATA?.routingStandards?.[active?.id];
+  if (Array.isArray(routeStandards)) return routeStandards;
+  const sop = masterRouting?.sop || active?.ref?.split("/")?.map((item) => item.trim()).find((item) => item.includes("SOP")) || "SOP 待绑定";
+  const productCode = masterRouting?.productCode || active?.scope?.split("/")?.[0]?.trim() || "产品";
+  const isBlocked = /待现场签收|待质量|影响评估|拦截|未/.test(active.status + active.risk);
+  return [
+    { type: "电子 SOP", no: sop, name: `${productCode} 工位作业指导书`, source: "PLM 文档库", version: active.version, scope: steps.map((step) => step.name).slice(0, 4).join("、") || "全路线", signoff: isBlocked ? "待现场签收" : "已签收", trace: "工艺指导 / 派工单任务卡" },
+    { type: "工艺参数", no: `PAR-${productCode}-${active.version}`, name: "关键参数上下限、测试程序和老化曲线", source: "PLM 参数规格 + 设备程序库", version: active.version, scope: "测试、老化、过程监控", signoff: isBlocked ? "待复核" : "可引用", trace: "过程记录 / 工艺参数趋势" },
+    { type: "检验规范", no: `QCP-${productCode}-${active.version}`, name: "首件、过程检验、FQC 检验计划", source: "QMS / PLM 检验规范", version: active.version, scope: "首件、IPQC、FQC", signoff: /待质量|影响评估/.test(active.status + active.risk) ? "待质量签核" : "已生效", trace: "首件检验 / 成品检验" },
+    { type: "图纸/包装", no: `DWG-${productCode}-${active.version}`, name: "装配图纸、铭牌位置和包装规范", source: "PLM 图纸 + 客户标签规则", version: active.version, scope: "装配、FQC、包装", signoff: isBlocked ? "待下发" : "已下发", trace: "工位签收 / 客户追溯报告" },
+  ];
 }
 
 function updateActiveStatus(status, message) {

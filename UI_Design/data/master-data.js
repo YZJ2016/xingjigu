@@ -11,9 +11,19 @@ window.MES_MASTER_DATA = (() => {
     { id: "MAT-PCB-TCU", name: "PCB 主板", type: "关键电子料", batchRule: "批次必管", source: "ERP 物料 + IQC 规则", status: "已发布", supplier: "SUP-PCB-01", supplierName: "苏州精密电路", iqc: "AQL II / 关键尺寸", batch: "PCB-L20260608", owner: "物料主数据员 吴琳", time: "06-18 10:05", risk: "批次与 SN 谱系必须绑定", downstream: "物料标签、投料确认、批次追溯" },
     { id: "MAT-SEN-T100", name: "温度传感器", type: "关键外购件", batchRule: "批次必管", source: "ERP 物料 + WMS 库存", status: "已发布", supplier: "SUP-SEN-01", supplierName: "传感器供应商 S-01", iqc: "IQC 合格后可投 / FIFO", batch: "SEN-L20260605", owner: "物料主数据员 吴琳", time: "06-18 09:35", risk: "TCU-100 第二批缺 200 件", downstream: "齐套检查、领料申请、线边库存、投料记录" },
     { id: "MAT-CASE-TOP", name: "外壳上盖", type: "结构件", batchRule: "批次必管", source: "ERP 物料 + WMS 库存", status: "已发布", supplier: "SUP-CASE-01", supplierName: "昆山注塑件厂", iqc: "外观 / 尺寸抽检", batch: "CASE-TOP-L20260612", owner: "物料主数据员 吴琳", time: "06-18 10:18", risk: "装配工序需校验颜色和客户版本", downstream: "用料需求、投料确认、成品追溯" },
+    { id: "MAT-CASE-BOT", name: "外壳下盖", type: "结构件", batchRule: "批次必管", source: "ERP 物料 + WMS 库存", status: "已发布", supplier: "SUP-CASE-01", supplierName: "昆山注塑件厂", iqc: "外观 / 尺寸抽检", batch: "CASE-BOT-L20260612", owner: "物料主数据员 吴琳", time: "06-18 10:20", risk: "需与外壳上盖成套追溯", downstream: "用料需求、投料确认、成品追溯" },
     { id: "MAT-DISPLAY-24", name: "显示屏", type: "外购显示模块", batchRule: "批次必管", source: "ERP 物料 + QMS 规则", status: "已发布", supplier: "SUP-DSP-03", supplierName: "上海显示模组", iqc: "点亮测试 / 外观", batch: "DSP-L20260610", owner: "质量员 孟可", time: "06-18 10:48", risk: "来料需保留亮点抽检记录", downstream: "来料检验、过程检验、客户报告" },
     { id: "MAT-PWR-IC60", name: "电源芯片", type: "客户指定料", batchRule: "客户指定批次", source: "ERP 物料 + QMS 冻结", status: "冻结待复核", supplier: "SUP-PWR-02", supplierName: "电源芯片供应商 P-02", iqc: "MRB 复判后可投", batch: "PWRIC-L20260602", owner: "质量员 孟可", time: "06-18 11:18", risk: "冻结批次不可投料，需替代料审批", downstream: "缺料处理、来料检验、库存冻结" },
+    { id: "MAT-SCREW-M3", name: "螺丝 M3", type: "标准件", batchRule: "可选批次", source: "ERP 物料 + WMS 库存", status: "已发布", supplier: "SUP-STD-01", supplierName: "标准件供应商 S-01", iqc: "尺寸抽检 / 免批次强控", batch: "SCR-L20260611", owner: "物料主数据员 吴琳", time: "06-18 10:52", risk: "按工单标准用量核销，异常超耗需复核", downstream: "用料需求、投料确认、物料损耗" },
     { id: "MAT-BOX-A", name: "客户 A 包装盒", type: "包装材料", batchRule: "按客户标签版本", source: "ERP 物料 + 客户模板", status: "已发布", supplier: "SUP-PKG-01", supplierName: "包装供应商 P-01", iqc: "箱唛版本核对", batch: "BOXA-L20260614", owner: "包装工程师 李娟", time: "06-18 13:50", risk: "标签模板变更需重新复核", downstream: "成品标签、包装作业、余料退回" },
+    { id: "MAT-PCB-GW", name: "网关控制板", type: "关键电子料", batchRule: "批次必管", source: "ERP 物料 + IQC 规则", status: "已发布", supplier: "SUP-PCB-01", supplierName: "苏州精密电路", iqc: "AQL II / 程序版本核对", batch: "GWPCB-L20260608", owner: "物料主数据员 吴琳", time: "06-18 10:58", risk: "需与烧录程序版本绑定", downstream: "BOM、投料确认、产品追溯" },
+    { id: "MAT-RES-10K", name: "10K 电阻卷料", type: "电子标准料", batchRule: "卷料批次", source: "ERP 物料 + WMS 库存", status: "已发布", supplier: "SUP-ELE-02", supplierName: "电子料供应商 E-02", iqc: "阻值抽检 / 卷料标签", batch: "RES10K-L20260609", owner: "物料主数据员 吴琳", time: "06-18 11:02", risk: "替代料已批准，需保留替代审批号", downstream: "BOM、SMT 投料、防错追溯" },
+    { id: "MAT-BOX-B", name: "客户 B 包装盒", type: "包装材料", batchRule: "按客户标签版本", source: "ERP 物料 + 客户模板", status: "已发布", supplier: "SUP-PKG-01", supplierName: "包装供应商 P-01", iqc: "箱唛版本核对", batch: "BOXB-L20260614", owner: "包装工程师 李娟", time: "06-18 13:54", risk: "客户 B 标签模板需按订单版本打印", downstream: "成品标签、包装作业、客户追溯报告" },
+    { id: "MAT-HMI-PCB", name: "HMI 控制板", type: "关键电子料", batchRule: "批次必管", source: "ERP 物料 + IQC 规则", status: "已发布", supplier: "SUP-PCB-01", supplierName: "苏州精密电路", iqc: "AQL II / 程序版本核对", batch: "HMIPCB-L20260613", owner: "物料主数据员 吴琳", time: "06-18 14:10", risk: "首版产品需保留程序版本追溯", downstream: "BOM、装配投料、产品追溯" },
+    { id: "MAT-DISPLAY-70", name: "7 寸显示屏", type: "外购显示模块", batchRule: "批次必管", source: "ERP 物料 + QMS 规则", status: "已发布", supplier: "SUP-DSP-03", supplierName: "上海显示模组", iqc: "点亮测试 / 外观", batch: "DSP70-L20260613", owner: "质量员 孟可", time: "06-18 14:12", risk: "检验规范待签核前只允许试产评估", downstream: "来料检验、装配投料、成品检验" },
+    { id: "MAT-BOX-E", name: "客户 E 包装盒", type: "包装材料", batchRule: "按客户标签版本", source: "ERP 物料 + 客户模板", status: "已发布", supplier: "SUP-PKG-01", supplierName: "包装供应商 P-01", iqc: "箱唛版本核对", batch: "BOXE-L20260614", owner: "包装工程师 李娟", time: "06-18 14:15", risk: "客户 E 标签模板待质量确认后放行", downstream: "成品标签、包装作业、客户追溯报告" },
+    { id: "MAT-SRV-PCB", name: "伺服驱动 PCB", type: "关键电子料", batchRule: "批次必管", source: "ERP 物料 + IQC 规则", status: "已发布", supplier: "SUP-PCB-01", supplierName: "苏州精密电路", iqc: "AQL II / 老化批次核对", batch: "SRVPCB-L20260615", owner: "物料主数据员 吴琳", time: "06-18 15:05", risk: "版本切换时需锁定旧版在制批次", downstream: "BOM、SMT 投料、客户追溯报告" },
+    { id: "MAT-DRV-IC", name: "驱动芯片", type: "关键电子料", batchRule: "批次必管", source: "ERP 物料 + QMS 规则", status: "已发布", supplier: "SUP-ELE-03", supplierName: "驱动芯片供应商 D-03", iqc: "功能抽检 / 批次 COA", batch: "DRVIC-L20260615", owner: "质量员 孟可", time: "06-18 15:08", risk: "替代料评估中，未放行前不可混用", downstream: "BOM、投料确认、客户追溯报告" },
   ];
 
   const bomHeaders = [
@@ -26,16 +36,33 @@ window.MES_MASTER_DATA = (() => {
 
   const bomLines = {
     "BOM-TCU-100-V3.2": [
-      { materialNo: "MAT-PCB-TCU", name: "PCB 主板", needPer: 1, available: 1080, transit: 0, eta: "库存可用", substitute: "无" },
-      { materialNo: "MAT-SEN-T100", name: "温度传感器", needPer: 1, available: 800, transit: 0, eta: "06-21 14:00", substitute: "可评估 SEN-T100B" },
-      { materialNo: "MAT-CASE-TOP", name: "外壳上盖", needPer: 1, available: 880, transit: 0, eta: "库存可用", substitute: "无" },
-      { materialNo: "MAT-DISPLAY-24", name: "显示屏", needPer: 1, available: 1020, transit: 0, eta: "库存可用", substitute: "无" },
-      { materialNo: "MAT-BOX-A", name: "客户 A 包装盒", needPer: 1, available: 1060, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-PCB-TCU", name: "PCB 主板", needPer: 1, unit: "PCS", operation: "10 SMT 贴片", station: "SMT-WS-01", usageRule: "1 PCS/台", lossRate: "0.8%", batchControl: "批次必扫", antiError: "料号 + 批次 + Feeder 位校验", available: 1080, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-SEN-T100", name: "温度传感器", needPer: 1, unit: "PCS", operation: "20 DIP 插件", station: "DIP-A-02", usageRule: "1 PCS/台", lossRate: "1.2%", batchControl: "批次必扫", antiError: "批次/IQC/线边库位校验", available: 800, transit: 0, eta: "06-21 14:00", substitute: "可评估 SEN-T100B" },
+      { materialNo: "MAT-CASE-TOP", name: "外壳上盖", needPer: 1, unit: "PCS", operation: "40 整机装配", station: "ASM-A-01", usageRule: "1 PCS/台", lossRate: "1.0%", batchControl: "批次必扫", antiError: "颜色 + 客户版本校验", available: 1080, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-CASE-BOT", name: "外壳下盖", needPer: 1, unit: "PCS", operation: "40 整机装配", station: "ASM-A-01", usageRule: "1 PCS/台", lossRate: "1.0%", batchControl: "批次必扫", antiError: "结构件批次 + 成套关系校验", available: 1050, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-DISPLAY-24", name: "显示屏", needPer: 1, unit: "PCS", operation: "40 整机装配", station: "ASM-A-01", usageRule: "1 PCS/台", lossRate: "0.6%", batchControl: "批次必扫", antiError: "点亮测试记录 + 批次校验", available: 1020, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-SCREW-M3", name: "螺丝 M3", needPer: 4, unit: "PCS", operation: "40 整机装配", station: "ASM-A-01", usageRule: "4 PCS/台", lossRate: "2.0%", batchControl: "可选批次", antiError: "标准件用量核销", available: 5200, transit: 0, eta: "库存可用", substitute: "同规格 M3-08" },
+      { materialNo: "MAT-BOX-A", name: "客户 A 包装盒", needPer: 1, unit: "PCS", operation: "80 包装", station: "PACK-A-01", usageRule: "1 PCS/台", lossRate: "0.5%", batchControl: "批次必扫", antiError: "客户标签版本 + 包装工位校验", available: 1060, transit: 0, eta: "库存可用", substitute: "无" },
+    ],
+    "BOM-GW-240-V2.1": [
+      { materialNo: "MAT-PCB-GW", name: "网关控制板", needPer: 1, unit: "PCS", operation: "10 SMT 贴片", station: "SMT-B-01", usageRule: "1 PCS/台", lossRate: "0.8%", batchControl: "批次必扫", antiError: "料号 + 批次 + 程序版本校验", available: 680, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-RES-10K", name: "10K 电阻卷料", needPer: 6, unit: "PCS", operation: "10 SMT 贴片", station: "SMT-B-01", usageRule: "6 PCS/台", lossRate: "1.8%", batchControl: "卷料批次", antiError: "Feeder 位 + 替代料放行校验", available: 4200, transit: 0, eta: "库存可用", substitute: "MAT-RES-10K-B 已批准" },
+      { materialNo: "MAT-BOX-B", name: "客户 B 包装盒", needPer: 1, unit: "PCS", operation: "50 包装", station: "PACK-B-01", usageRule: "1 PCS/台", lossRate: "0.5%", batchControl: "批次必扫", antiError: "客户标签模板 + 箱码规则校验", available: 720, transit: 0, eta: "库存可用", substitute: "无" },
     ],
     "BOM-PCM-60-V1.8": [
-      { materialNo: "MAT-PCB-TCU", name: "PCB 主板", needPer: 1, available: 980, transit: 0, eta: "库存可用", substitute: "无" },
-      { materialNo: "MAT-PWR-IC60", name: "电源芯片", needPer: 1, available: 740, transit: 0, eta: "待 MRB 复判", substitute: "PWR-IC60B 待审批" },
-      { materialNo: "MAT-CASE-TOP", name: "外壳上盖", needPer: 1, available: 920, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-PCB-TCU", name: "PCB 主板", needPer: 1, unit: "PCS", operation: "10 SMT 贴片", station: "SMT-WS-01", usageRule: "1 PCS/台", lossRate: "0.8%", batchControl: "批次必扫", antiError: "料号 + 批次 + Feeder 位校验", available: 980, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-PWR-IC60", name: "电源芯片", needPer: 1, unit: "PCS", operation: "20 DIP 插件", station: "DIP-B-01", usageRule: "1 PCS/台", lossRate: "1.5%", batchControl: "客户指定批次", antiError: "指定批次 + MRB 放行校验", available: 740, transit: 0, eta: "待 MRB 复判", substitute: "PWR-IC60B 待审批" },
+      { materialNo: "MAT-CASE-TOP", name: "外壳上盖", needPer: 1, unit: "PCS", operation: "40 整机装配", station: "ASM-B-01", usageRule: "1 PCS/台", lossRate: "1.0%", batchControl: "批次必扫", antiError: "颜色 + 客户版本校验", available: 920, transit: 0, eta: "库存可用", substitute: "无" },
+    ],
+    "BOM-HMI-70-V1.0": [
+      { materialNo: "MAT-HMI-PCB", name: "HMI 控制板", needPer: 1, unit: "PCS", operation: "10 装配", station: "ASM-C-01", usageRule: "1 PCS/台", lossRate: "0.8%", batchControl: "批次必扫", antiError: "料号 + 批次 + 程序版本校验", available: 1060, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-DISPLAY-70", name: "7 寸显示屏", needPer: 1, unit: "PCS", operation: "10 装配", station: "ASM-C-01", usageRule: "1 PCS/台", lossRate: "0.7%", batchControl: "批次必扫", antiError: "点亮测试记录待质量确认", available: 1040, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-BOX-E", name: "客户 E 包装盒", needPer: 1, unit: "PCS", operation: "40 包装", station: "PACK-C-02", usageRule: "1 PCS/台", lossRate: "0.5%", batchControl: "批次必扫", antiError: "客户标签模板待确认", available: 1080, transit: 0, eta: "库存可用", substitute: "无" },
+    ],
+    "BOM-SRV-90-V1.4": [
+      { materialNo: "MAT-SRV-PCB", name: "伺服驱动 PCB", needPer: 1, unit: "PCS", operation: "10 SMT 贴片", station: "SMT-WS-01", usageRule: "1 PCS/台", lossRate: "0.9%", batchControl: "批次必扫", antiError: "料号 + 批次 + 旧版锁定校验", available: 1080, transit: 0, eta: "库存可用", substitute: "无" },
+      { materialNo: "MAT-DRV-IC", name: "驱动芯片", needPer: 1, unit: "PCS", operation: "10 SMT 贴片", station: "SMT-WS-01", usageRule: "1 PCS/台", lossRate: "1.2%", batchControl: "批次必扫", antiError: "替代料影响评估未完成", available: 1040, transit: 0, eta: "库存可用", substitute: "DRV-IC-B 评估中" },
+      { materialNo: "MAT-BOX-B", name: "客户 B 包装盒", needPer: 1, unit: "PCS", operation: "40 FQC 后包装", station: "PACK-A-01", usageRule: "1 PCS/台", lossRate: "0.5%", batchControl: "批次必扫", antiError: "客户标签模板 + 版本切换校验", available: 1100, transit: 0, eta: "库存可用", substitute: "无" },
     ],
   };
 
