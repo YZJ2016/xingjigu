@@ -275,7 +275,7 @@ function renderTable() {
         <td>${adjustment.reason}</td>
         <td><span class="adjustment-impact-cell" title="${adjustment.impact.map((item) => `${item.label}:${item.status}`).join(" / ")}">${adjustment.impact.map((item) => item.status).join(" / ")}</span></td>
         <td><span class="pill pill--${blocked ? "orange" : "green"}">${blocked ? "待会签" : "可确认"}</span></td>
-        <td><div class="table-actions"><button type="button" data-action="approve" data-order-id="${order.id}">确认</button></div></td>
+        <td><div class="table-actions"><button type="button" data-action="approve" data-order-id="${order.id}">同步准备</button></div></td>
       </tr>
     `;
   }).join("") : `<tr><td colspan="8">当前筛选条件下没有计划调整单</td></tr>`;

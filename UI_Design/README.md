@@ -442,6 +442,8 @@ UI_Design/orders/plan-adjustment.html
 UI_Design/orders/kit-check.html
 ```
 
+齐套检查已接入 `UI_Design/data/mes-backend.js` 作为 localStorage 模拟后端，按生产订单、BOM 展开、库存分层、锁库、替代审批、缺料异常和审计日志计算齐套结果；页面不再只用前端临时数据判断齐套。
+
 派工单工作台：
 
 ```text
