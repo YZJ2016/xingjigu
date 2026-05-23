@@ -18,28 +18,15 @@ const modules = [
   { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "角色权限", "审批设置", "单据同步", "消息提醒", "操作记录", "数据备份"] },
 ];
 
-const initialOrders = [
-  { id: "MO-202606-0001", product: "智能温控控制器 TCU-100", customer: "A 客户", qty: 1000, done: 428, due: "2026-06-30", line: "Line-A", status: "已下达", priority: "高", risk: "缺料", review: "已通过", schedule: "已确认", kit: "缺 200 件", batchPlan: "800 + 200", planner: "周计划", materialGap: "温度传感器缺 200 件" },
-  { id: "MO-202606-0002", product: "工业网关 GW-240", customer: "B 客户", qty: 600, done: 315, due: "2026-06-28", line: "Line-B", status: "生产中", priority: "高", risk: "交期", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "600", planner: "李计划", materialGap: "齐套" },
-  { id: "MO-202606-0003", product: "边缘采集器 ECU-80", customer: "C 客户", qty: 1200, done: 760, due: "2026-07-02", line: "Line-C", status: "生产中", priority: "中", risk: "设备", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "1200", planner: "周计划", materialGap: "老化房容量接近上限" },
-  { id: "MO-202606-0004", product: "智能传感节点 SEN-20", customer: "A 客户", qty: 2000, done: 1280, due: "2026-07-05", line: "Line-A", status: "待检", priority: "中", risk: "质量", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "2000", planner: "王计划", materialGap: "齐套" },
-  { id: "MO-202606-0005", product: "电源控制模块 PCM-60", customer: "D 客户", qty: 900, done: 120, due: "2026-06-27", line: "Line-B", status: "待备料", priority: "紧急", risk: "缺料", review: "已通过", schedule: "待调整", kit: "缺 160 件", batchPlan: "500 + 400", planner: "李计划", materialGap: "电源芯片缺 160 件" },
-  { id: "MO-202606-0006", product: "显示控制面板 HMI-70", customer: "E 客户", qty: 500, done: 0, due: "2026-07-01", line: "Line-C", status: "待评审", priority: "中", risk: "资料", review: "待评审", schedule: "未排程", kit: "待检查", batchPlan: "未拆批", planner: "待分配", materialGap: "检验要求未确认" },
-  { id: "MO-202606-0007", product: "无线采集终端 WDT-30", customer: "F 客户", qty: 1500, done: 980, due: "2026-07-03", line: "Line-A", status: "生产中", priority: "中", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "1500", planner: "王计划", materialGap: "齐套" },
-  { id: "MO-202606-0008", product: "智能继电控制器 RLY-12", customer: "G 客户", qty: 750, done: 470, due: "2026-06-29", line: "Line-B", status: "生产中", priority: "高", risk: "设备", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "750", planner: "李计划", materialGap: "SMT-02 需保养确认" },
-  { id: "MO-202606-0009", product: "环境监测模块 ENV-45", customer: "H 客户", qty: 1100, done: 220, due: "2026-07-06", line: "Line-C", status: "已排程", priority: "中", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "1100", planner: "周计划", materialGap: "齐套" },
-  { id: "MO-202606-0010", product: "伺服驱动板 SRV-90", customer: "B 客户", qty: 420, done: 260, due: "2026-06-26", line: "Line-A", status: "生产中", priority: "紧急", risk: "交期", review: "已通过", schedule: "待调整", kit: "齐套", batchPlan: "420", planner: "王计划", materialGap: "齐套" },
-  { id: "MO-202606-0011", product: "温湿度采集器 THS-10", customer: "I 客户", qty: 1800, done: 1480, due: "2026-07-08", line: "Line-C", status: "包装中", priority: "低", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "1800", planner: "周计划", materialGap: "齐套" },
-  { id: "MO-202606-0012", product: "工业触控终端 HMI-100", customer: "J 客户", qty: 320, done: 80, due: "2026-06-30", line: "Line-B", status: "待首检", priority: "高", risk: "质量", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "320", planner: "李计划", materialGap: "首件尺寸项待确认" },
-];
+const initialOrders = window.MES_MASTER_DATA?.orders || [];
 
-let orders = structuredClone(window.MES_MASTER_DATA?.orders || initialOrders);
+let orders = structuredClone(window.MES_BUSINESS_FLOW?.read?.().orders || initialOrders);
 let integrationLogs = [];
 let reviewMaterials = {};
 let state = {
   activeOrderId: "MO-202606-0006",
   search: "",
-  review: "all",
+  review: "待评审",
   risk: "all",
 };
 
@@ -115,6 +102,9 @@ function loadState() {
     integrationLogs = flowState?.logs ? flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time })) : saved.integrationLogs || integrationLogs;
     reviewMaterials = saved.reviewMaterials || reviewMaterials;
     state = { ...state, ...(saved.reviewState || {}) };
+    if (!orders.some((order) => order.id === state.activeOrderId)) {
+      state.activeOrderId = orders.find((order) => order.review !== "已通过")?.id || orders[0]?.id || "";
+    }
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -122,7 +112,8 @@ function loadState() {
 
 function saveState() {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || {};
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, orders, integrationLogs, reviewMaterials, reviewState: state }));
+  const flowOrders = window.MES_BUSINESS_FLOW?.read?.().orders;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, orders: flowOrders || orders, integrationLogs, reviewMaterials, reviewState: state }));
 }
 
 function getActiveOrder() {
@@ -132,36 +123,68 @@ function getActiveOrder() {
 function getReviewScope(order) {
   const flowReview = window.MES_BUSINESS_FLOW?.read?.().reviews?.[order.id];
   if (flowReview?.gates?.length) {
-    const gates = flowReview.gates.map((gate) => ({ label: gate.label, desc: gate.ref, status: gate.status }));
+    const gates = flowReview.gates.map((gate) => ({ label: gate.label, desc: gate.ref, status: gate.status, owner: gate.owner || getGateOwner(gate.label) }));
     const blocked = gates.filter((gate) => !["通过", "已发布", "可承诺", "已配置"].includes(gate.status));
     return { gates, blocked };
   }
   const materials = getReviewMaterials(order);
   const gates = [
-    { label: "产品主数据", desc: order.product, status: order.review === "已通过" ? "通过" : "待确认" },
-    { label: "BOM 与工艺", desc: "BOM、工艺路线、标准工时", status: getMaterialGateStatus(materials, ["bom", "route"]) },
-    { label: "交期承诺", desc: `${order.customer} · ${order.due}`, status: order.risk === "交期" ? "需计划确认" : "可承诺" },
-    { label: "物料齐套", desc: `${order.kit} · ${order.materialGap}`, status: order.risk === "缺料" ? "需物料会签" : "通过" },
-    { label: "质量要求", desc: "首件 / IPQC / FQC", status: getMaterialGateStatus(materials, ["quality"]) },
-    { label: "设备能力", desc: `${order.line} 产能与设备日历`, status: order.risk === "设备" ? "需设备确认" : "通过" },
+    { label: "产品主数据", desc: order.product, status: order.review === "已通过" ? "通过" : "待确认", owner: "基础资料" },
+    { label: "BOM 与工艺", desc: "BOM、工艺路线、标准工时", status: getMaterialGateStatus(materials, ["bom", "route"]), owner: "工艺" },
+    { label: "交期承诺", desc: `${order.customer} · ${order.due}`, status: order.risk === "交期" ? "需计划确认" : "可承诺", owner: "计划" },
+    { label: "物料齐套", desc: `${order.kit} · ${order.materialGap}`, status: order.risk === "缺料" ? "需物料会签" : "通过", owner: "物料" },
+    { label: "质量要求", desc: "首件 / IPQC / FQC", status: getMaterialGateStatus(materials, ["quality"]), owner: "质量" },
+    { label: "设备能力", desc: `${order.line} 产能与设备日历`, status: order.risk === "设备" ? "需设备确认" : "通过", owner: "设备" },
   ];
   const blocked = gates.filter((gate) => !["通过", "已发布", "可承诺", "已配置"].includes(gate.status));
   return { gates, blocked };
 }
 
+function getGateOwner(label) {
+  if (label.includes("产品")) return "基础资料";
+  if (label.includes("BOM")) return "BOM 工程";
+  if (label.includes("工艺") || label.includes("SOP")) return "工艺";
+  if (label.includes("质量") || label.includes("检验")) return "质量";
+  if (label.includes("物料") || label.includes("齐套")) return "物料";
+  if (label.includes("设备") || label.includes("产线")) return "设备";
+  return "MES";
+}
+
+function getMasterContext(order) {
+  const master = window.MES_MASTER_DATA || {};
+  const productCode = order.productCode || String(order.product || "").split(" ").at(-1);
+  const product = master.productByCode?.(productCode);
+  const bom = master.bomByProduct?.(productCode);
+  const routing = master.routingByProduct?.(productCode);
+  const materials = master.getBomMaterials?.(productCode, order.qty) || [];
+  const line = (master.workshops || []).find((item) => item.id === order.line || item.name?.includes(order.line));
+  const flowState = window.MES_BUSINESS_FLOW?.read?.();
+  const kit = flowState?.kitChecks?.[order.id];
+  return { productCode, product, bom, routing, materials, line, kit };
+}
+
+function toReviewStatus(sourceStatus, fallback = "已确认") {
+  if (!sourceStatus) return "待关联";
+  if (["已发布", "业务生效", "可排程", "资源启用", "齐套已确认"].includes(sourceStatus)) return fallback;
+  if (sourceStatus.includes("已配置")) return fallback;
+  if (sourceStatus.includes("待") || sourceStatus.includes("冻结") || sourceStatus.includes("评估") || sourceStatus.includes("预警")) return "待确认";
+  return fallback;
+}
+
 function getReviewMaterials(order) {
   if (!reviewMaterials[order.id]) {
-    const dataRisk = order.risk === "资料";
-    const qualityRisk = order.risk === "质量";
+    const { productCode, product, bom, routing, materials, line, kit } = getMasterContext(order);
+    const materialGap = materials.reduce((sum, item) => sum + item.gap, 0);
+    const gapItems = materials.filter((item) => item.gap > 0);
     reviewMaterials[order.id] = [
-      { id: "order", name: "订单资料", desc: `${order.customer} / ${order.qty} 台 / ${order.due}`, owner: "计划", status: "已确认" },
-      { id: "product", name: "产品资料", desc: `${order.product} / 当前有效版本`, owner: "基础资料", status: dataRisk ? "待确认" : "已确认" },
-      { id: "bom", name: "BOM", desc: "BOM-2026.06 / 用量与替代料", owner: "工艺", status: dataRisk ? "待补充" : "已确认" },
-      { id: "route", name: "工艺路线", desc: `${order.line} / SMT-DIP-测试-包装`, owner: "工艺", status: dataRisk ? "待确认" : "已确认" },
-      { id: "sop", name: "SOP / 图纸", desc: "作业指导书、包装规范、标签规则", owner: "工艺", status: dataRisk ? "待补充" : "已确认" },
-      { id: "quality", name: "检验标准", desc: "首件、过程检验、成品放行要求", owner: "质量", status: dataRisk || qualityRisk ? "待确认" : "已确认" },
-      { id: "material", name: "物料资料", desc: order.materialGap, owner: "物料", status: order.risk === "缺料" ? "待确认" : "已确认" },
-      { id: "equipment", name: "设备能力", desc: `${order.line} 设备日历与保养窗口`, owner: "设备", status: order.risk === "设备" ? "待确认" : "已确认" },
+      { id: "order", name: "订单资料", desc: `${order.id} / ${order.customer} / ${order.qty} 台 / 交期 ${order.due}`, owner: "计划", status: "已确认", source: "生产订单" },
+      { id: "product", name: "产品资料", desc: product ? `${product.id} / ${product.version} / ${product.source}` : `${productCode} 未匹配产品资料`, owner: product?.owner || "基础资料", status: toReviewStatus(product?.status), source: "基础资料 / 产品资料" },
+      { id: "bom", name: "制造 BOM", desc: bom ? `${bom.id} / ${bom.version} / ${bom.source}` : `${productCode} 未匹配 BOM`, owner: bom?.owner || "BOM 工程", status: toReviewStatus(bom?.status), source: "基础资料 / BOM 清单" },
+      { id: "route", name: "工艺路线", desc: routing ? `${routing.id} / ${routing.version} / ${routing.steps}` : `${productCode} 未匹配工艺路线`, owner: routing?.owner || "工艺", status: toReviewStatus(routing?.status), source: "基础资料 / 工艺路线" },
+      { id: "sop", name: "SOP / 标签模板", desc: `${routing?.sop || "SOP 待关联"} / ${product?.labelTemplate || "标签模板待配置"}`, owner: routing?.owner || product?.owner || "工艺", status: toReviewStatus(routing?.status && product?.labelTemplate ? routing.status : "待确认"), source: "基础资料 / 工艺路线 + 产品资料" },
+      { id: "quality", name: "检验规范", desc: product?.inspection || "检验规范待配置", owner: product?.owner || "质量", status: toReviewStatus(product?.inspection?.includes("待") ? "待确认" : product?.status), source: "基础资料 / 产品资料" },
+      { id: "material", name: "物料齐套", desc: gapItems.length ? `${gapItems.map((item) => `${item.materialNo} 缺 ${item.gap}`).join("、")}` : `${materials.length} 项 BOM 物料满足初判`, owner: "物料", status: materialGap > 0 || kit?.status?.includes("缺") ? "待确认" : "已确认", source: "基础资料 / BOM 清单 + 齐套检查" },
+      { id: "equipment", name: "产线能力", desc: line ? `${line.id} / ${line.capacityModel || line.capacity} / ${line.source}` : `${order.line} 产线资料待维护`, owner: line?.owner || "设备", status: toReviewStatus(line?.status), source: "基础资料 / 产线车间" },
     ];
   }
   return reviewMaterials[order.id];
@@ -183,6 +206,93 @@ function getFilteredOrders() {
   });
 }
 
+function getDecision(order, blocked) {
+  if (order.review === "已通过" && order.schedule !== "已确认") {
+    return {
+      label: "可转排程",
+      tone: "green",
+      summary: "评审已通过，等待计划员确认排程窗口和齐套放行。",
+    };
+  }
+  if (order.review === "已通过") {
+    return {
+      label: "已放行",
+      tone: "blue",
+      summary: "评审资料已闭环，订单已进入下游排程或执行链路。",
+    };
+  }
+  if (blocked.length) {
+    return {
+      label: `${blocked.length} 项阻断`,
+      tone: "red",
+      summary: `${blocked.map((item) => item.label).join("、")} 未闭环，暂不可转入排程。`,
+    };
+  }
+  return {
+    label: "待主管确认",
+    tone: "orange",
+    summary: "资料和会签未发现阻断，等待计划主管确认评审结论。",
+  };
+}
+
+function getStatusTone(status) {
+  if (["通过", "已发布", "可承诺", "已配置", "已确认"].includes(status)) return "green";
+  if (["需物料会签", "需设备确认", "需计划确认", "需确认", "需会签", "待补充"].includes(status)) return "red";
+  return "orange";
+}
+
+function getQueueRank(order) {
+  const riskRank = { 交期: 0, 资料: 1, 缺料: 2, 质量: 3, 设备: 4, 正常: 5 };
+  const reviewRank = order.review === "已通过" ? 2 : 0;
+  const priorityRank = { 紧急: 0, 高: 1, 中: 2, 低: 3 };
+  return [
+    reviewRank,
+    riskRank[order.risk] ?? 6,
+    priorityRank[order.priority] ?? 4,
+    order.due,
+  ].join("|");
+}
+
+function getBlockers(order, blocked) {
+  const materialIssues = getReviewMaterials(order)
+    .filter((item) => item.status !== "已确认")
+    .map((item) => ({
+      type: "资料",
+      owner: item.owner,
+      desc: `${item.name}：${item.desc}`,
+      status: item.status,
+      source: item.source,
+      action: item.status === "待补充" ? "退回补资料" : "确认资料",
+    }));
+  const countersignIssues = order.risk === "资料" ? [] : getCountersigns(order)
+    .filter((item) => item.status !== "已确认")
+    .map((item) => ({
+      type: "会签",
+      owner: item.owner,
+      desc: item.desc,
+      status: item.status,
+      source: "评审会签",
+      action: "责任人确认",
+    }));
+  const gateIssues = blocked
+    .filter((gate) => ![...materialIssues, ...countersignIssues].some((item) => item.desc.includes(gate.label) || gate.desc.includes(item.desc.split("：").pop())))
+    .map((gate) => ({
+      type: "准入",
+      owner: gate.owner,
+      desc: `${gate.label}：${gate.desc}`,
+      status: gate.status,
+      source: "统一业务流 / 准入关卡",
+      action: "关闭阻断",
+    }));
+  const seen = new Set();
+  return [...materialIssues, ...countersignIssues, ...gateIssues].filter((item) => {
+    const key = `${item.owner}-${item.desc}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 6);
+}
+
 function renderAll() {
   renderMetrics();
   renderTable();
@@ -198,36 +308,41 @@ function renderMetrics() {
 }
 
 function renderTable() {
-  const visible = getFilteredOrders();
+  const visible = getFilteredOrders().sort((a, b) => getQueueRank(a).localeCompare(getQueueRank(b)));
   $("#reviewTableBody").innerHTML = visible.length
     ? visible.map((order) => {
       const { blocked } = getReviewScope(order);
       const conclusion = order.review === "已通过"
         ? "已通过，可进入排程或下达"
         : blocked.length ? blocked.map((item) => item.label).join("、") : "资料齐备，待确认";
+      const decision = getDecision(order, blocked);
       return `
-        <tr class="${order.id === state.activeOrderId ? "is-active" : ""}" data-order-id="${order.id}">
-          <td class="order-no">${order.id}</td>
-          <td class="product-cell"><strong>${order.product}</strong><span>${order.qty} 台 · ${order.line} · ${order.due}</span></td>
-          <td>${order.customer}</td>
-          <td><span class="pill pill--${order.review === "已通过" ? "green" : "orange"}">${order.review}</span></td>
-          <td><span class="pill pill--${getRiskStyle(order.risk)}">${order.risk}</span></td>
-          <td>${order.planner}</td>
-          <td>${conclusion}</td>
-          <td>
-            <div class="table-actions">
-              <button type="button" data-action="pass" data-order-id="${order.id}">通过</button>
-              <button type="button" data-action="return" data-order-id="${order.id}">退回</button>
-            </div>
-          </td>
-        </tr>
+        <article class="review-queue-card ${order.id === state.activeOrderId ? "is-active" : ""}" data-order-id="${order.id}">
+          <div class="queue-card-head">
+            <span class="pill pill--${decision.tone}">${decision.label}</span>
+            <span class="pill pill--${getRiskStyle(order.risk)}">${order.risk}</span>
+          </div>
+          <strong>${order.id}</strong>
+          <p>${order.product}</p>
+          <div class="queue-card-meta">
+            <span>${order.customer}</span>
+            <span>${order.qty} 台</span>
+            <span>${order.due}</span>
+            <span>${order.planner}</span>
+          </div>
+          <em>${conclusion}</em>
+          <div class="table-actions">
+            <button type="button" data-action="pass" data-order-id="${order.id}">通过</button>
+            <button type="button" data-action="return" data-order-id="${order.id}">退回</button>
+          </div>
+        </article>
       `;
     }).join("")
-    : `<tr><td colspan="8">当前筛选条件下没有订单评审记录</td></tr>`;
+    : `<div class="review-empty">当前筛选条件下没有订单评审记录</div>`;
 
-  document.querySelectorAll("#reviewTableBody tr[data-order-id]").forEach((row) => {
-    row.addEventListener("click", () => {
-      state.activeOrderId = row.dataset.orderId;
+  document.querySelectorAll("#reviewTableBody [data-order-id]").forEach((card) => {
+    card.addEventListener("click", () => {
+      state.activeOrderId = card.dataset.orderId;
       saveState();
       renderAll();
     });
@@ -245,7 +360,21 @@ function renderTable() {
 function renderDetail() {
   const order = getActiveOrder();
   if (!order) return;
-  const { gates } = getReviewScope(order);
+  const { gates, blocked } = getReviewScope(order);
+  const decision = getDecision(order, blocked);
+  const blockers = getBlockers(order, blocked);
+  $("#decisionBadge").textContent = decision.label;
+  $("#decisionBadge").className = `decision-badge decision-badge--${decision.tone}`;
+  $("#decisionOrderTitle").textContent = `${order.id} · ${order.product}`;
+  $("#decisionSummary").textContent = decision.summary;
+  $("#decisionMeta").innerHTML = [
+    ["客户", order.customer],
+    ["数量", `${order.qty} 台`],
+    ["交期", order.due],
+    ["产线", order.line],
+    ["优先级", order.priority],
+    ["计划员", order.planner],
+  ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   $("#detailReviewStatus").textContent = order.review;
   $("#detailOrderId").textContent = order.id;
   $("#detailProduct").textContent = order.product;
@@ -263,20 +392,31 @@ function renderDetail() {
   renderReviewMaterials(order);
 
   $("#gateChecklist").innerHTML = gates.map((gate) => `
-    <div>
+    <article class="gate-card gate-card--${getStatusTone(gate.status)}">
       <span>${gate.label}</span>
-      <strong>${gate.desc}</strong>
-      <em>${gate.status}</em>
-    </div>
+      <strong>${gate.status}</strong>
+      <p>${gate.desc}</p>
+      <em>${gate.owner}</em>
+    </article>
   `).join("");
 
-  $("#countersignList").innerHTML = getCountersigns(order).map((item) => `
-    <div>
-      <span>${item.owner}</span>
-      <strong>${item.desc}</strong>
-      <em>${item.status}</em>
-    </div>
-  `).join("");
+  $("#reviewBlockerList").innerHTML = blockers.length
+    ? blockers.map((item) => `
+      <article>
+        <span>${item.type}</span>
+        <strong>${item.desc}</strong>
+        <em>${item.source} · ${item.owner} · ${item.status}</em>
+        <button type="button" data-blocker-action="${item.type}">${item.action}</button>
+      </article>
+    `).join("")
+    : `<div class="review-clearance"><strong>当前订单无阻断项</strong><span>可由计划主管评审通过，进入生产排程和齐套检查。</span></div>`;
+
+  $("#reviewBlockerList").querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (button.dataset.blockerAction === "资料") confirmAllMaterials(order.id);
+      else updateOrder(order.id, { risk: order.risk === "资料" ? "正常" : order.risk }, "会签阻断已记录责任人确认");
+    });
+  });
 }
 
 function renderReviewMaterials(order) {
@@ -284,7 +424,7 @@ function renderReviewMaterials(order) {
     <div>
       <span>${item.name}</span>
       <strong>${item.desc}</strong>
-      <em>${item.owner} · ${item.status}</em>
+      <em>${item.source} · ${item.owner} · ${item.status}</em>
       <button type="button" data-material-action="${item.status === "已确认" ? "flag" : "confirm"}" data-material-id="${item.id}">
         ${item.status === "已确认" ? "标记问题" : "确认"}
       </button>
@@ -335,10 +475,32 @@ function updateOrder(orderId, patch, message) {
   if (index < 0) return;
   orders[index] = { ...orders[index], ...patch };
   state.activeOrderId = orderId;
+  syncReviewOrder(orderId, patch, message);
   recordIntegration(orderId, message);
+  loadState();
   saveState();
   renderAll();
   showToast(message);
+}
+
+function syncReviewOrder(orderId, patch, message) {
+  const flow = window.MES_BUSINESS_FLOW;
+  if (!flow) return;
+  const order = orders.find((item) => item.id === orderId);
+  if (!order) return;
+  if (patch.review === "已通过" || message.includes("评审通过")) {
+    flow.upsertOrder?.(order, { action: message });
+    flow.applyAction?.(orderId, "approveReview", { owner: getOrder(orderId)?.planner || "计划主管" });
+    return;
+  }
+  if (message.includes("转入待排程")) {
+    flow.upsertOrder?.(order, { action: message });
+    flow.applyAction?.(orderId, "approveReview", { owner: getOrder(orderId)?.planner || "计划主管" });
+    return;
+  }
+  if (message.includes("退回") || patch.review === "待评审" || patch.risk) {
+    flow.upsertOrder?.(order, { action: message });
+  }
 }
 
 function getOrder(orderId) {
@@ -430,21 +592,25 @@ function bindEvents() {
       order.review = "已通过";
       order.status = "待排程";
       if (order.risk === "资料") order.risk = "正常";
+      window.MES_BUSINESS_FLOW?.upsertOrder?.(order, { action: "低风险订单批量评审通过" });
+      window.MES_BUSINESS_FLOW?.applyAction?.(order.id, "approveReview", { owner: order.planner || "计划主管" });
       recordIntegration(order.id, "低风险订单批量评审通过");
     });
     state.activeOrderId = targets[0].id;
+    loadState();
     saveState();
     renderAll();
     showToast(`已批量通过 ${targets.length} 个订单`);
   });
   $("#resetReviewPageBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
-    orders = structuredClone(initialOrders);
+    const flowState = window.MES_BUSINESS_FLOW?.reset?.();
+    orders = structuredClone(flowState?.orders || window.MES_MASTER_DATA?.orders || initialOrders);
     integrationLogs = [];
     reviewMaterials = {};
-    state = { activeOrderId: "MO-202606-0006", search: "", review: "all", risk: "all" };
+    state = { activeOrderId: orders.find((order) => order.review !== "已通过")?.id || orders[0]?.id || "", search: "", review: "待评审", risk: "all" };
     $("#reviewSearch").value = "";
-    $("#reviewFilter").value = "all";
+    $("#reviewFilter").value = "待评审";
     $("#riskFilter").value = "all";
     renderAll();
     showToast("评审演示已重置");

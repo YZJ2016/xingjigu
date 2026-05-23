@@ -18,24 +18,10 @@ const modules = [
   { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "角色权限", "审批设置", "单据同步", "消息提醒", "操作记录", "数据备份"] },
 ];
 
-const initialOrders = [
-  { id: "MO-202606-0001", product: "智能温控控制器 TCU-100", customer: "A 客户", qty: 1000, done: 428, due: "2026-06-30", line: "Line-A", status: "已下达", priority: "高", risk: "缺料", review: "已通过", schedule: "已确认", kit: "缺 200 件", batchPlan: "800 + 200", planner: "周计划", materialGap: "温度传感器缺 200 件" },
-  { id: "MO-202606-0002", product: "工业网关 GW-240", customer: "B 客户", qty: 600, done: 315, due: "2026-06-28", line: "Line-B", status: "生产中", priority: "高", risk: "交期", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "600", planner: "李计划", materialGap: "齐套" },
-  { id: "MO-202606-0003", product: "边缘采集器 ECU-80", customer: "C 客户", qty: 1200, done: 760, due: "2026-07-02", line: "Line-C", status: "生产中", priority: "中", risk: "设备", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "1200", planner: "周计划", materialGap: "老化房容量接近上限" },
-  { id: "MO-202606-0004", product: "智能传感节点 SEN-20", customer: "A 客户", qty: 2000, done: 1280, due: "2026-07-05", line: "Line-A", status: "待检", priority: "中", risk: "质量", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "2000", planner: "王计划", materialGap: "齐套" },
-  { id: "MO-202606-0005", product: "电源控制模块 PCM-60", customer: "D 客户", qty: 900, done: 120, due: "2026-06-27", line: "Line-B", status: "待备料", priority: "紧急", risk: "缺料", review: "已通过", schedule: "待调整", kit: "缺 160 件", batchPlan: "500 + 400", planner: "李计划", materialGap: "电源芯片缺 160 件" },
-  { id: "MO-202606-0006", product: "显示控制面板 HMI-70", customer: "E 客户", qty: 500, done: 0, due: "2026-07-01", line: "Line-C", status: "待评审", priority: "中", risk: "资料", review: "待评审", schedule: "未排程", kit: "待检查", batchPlan: "未拆批", planner: "待分配", materialGap: "检验要求未确认" },
-  { id: "MO-202606-0007", product: "无线采集终端 WDT-30", customer: "F 客户", qty: 1500, done: 980, due: "2026-07-03", line: "Line-A", status: "生产中", priority: "中", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "1500", planner: "王计划", materialGap: "齐套" },
-  { id: "MO-202606-0008", product: "智能继电控制器 RLY-12", customer: "G 客户", qty: 750, done: 470, due: "2026-06-29", line: "Line-B", status: "生产中", priority: "高", risk: "设备", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "750", planner: "李计划", materialGap: "SMT-02 需保养确认" },
-  { id: "MO-202606-0009", product: "环境监测模块 ENV-45", customer: "H 客户", qty: 1100, done: 220, due: "2026-07-06", line: "Line-C", status: "已排程", priority: "中", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "1100", planner: "周计划", materialGap: "齐套" },
-  { id: "MO-202606-0010", product: "伺服驱动板 SRV-90", customer: "B 客户", qty: 420, done: 260, due: "2026-06-26", line: "Line-A", status: "生产中", priority: "紧急", risk: "交期", review: "已通过", schedule: "待调整", kit: "齐套", batchPlan: "420", planner: "王计划", materialGap: "齐套" },
-  { id: "MO-202606-0011", product: "温湿度采集器 THS-10", customer: "I 客户", qty: 1800, done: 1480, due: "2026-07-08", line: "Line-C", status: "包装中", priority: "低", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "1800", planner: "周计划", materialGap: "齐套" },
-  { id: "MO-202606-0012", product: "工业触控终端 HMI-100", customer: "J 客户", qty: 320, done: 80, due: "2026-06-30", line: "Line-B", status: "待首检", priority: "高", risk: "质量", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "320", planner: "李计划", materialGap: "首件尺寸项待确认" },
-];
-
 const planDays = ["06-20", "06-21", "06-22", "06-23", "06-24", "06-25", "06-26"];
 const baseDate = new Date("2026-06-20T00:00:00");
-let orders = structuredClone(window.MES_MASTER_DATA?.orders || initialOrders);
+const getMasterOrders = () => structuredClone(window.MES_MASTER_DATA?.orders || []);
+let orders = getMasterOrders();
 let schedulePlans = {};
 let integrationLogs = [];
 let state = {
@@ -110,21 +96,24 @@ function loadState() {
     if (flowState?.orders) {
       orders = flowState.orders;
       integrationLogs = flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time }));
+    } else {
+      orders = getMasterOrders();
     }
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!saved) return;
-    orders = flowState?.orders || saved.orders || orders;
     schedulePlans = saved.schedulePlans || schedulePlans;
     integrationLogs = flowState?.logs ? flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time })) : saved.integrationLogs || integrationLogs;
     state = { ...state, ...(saved.deliveryWarningState || {}) };
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
+    orders = getMasterOrders();
   }
 }
 
 function saveState() {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || {};
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, orders, schedulePlans, integrationLogs, deliveryWarningState: state }));
+  const { orders: _ignoredOrders, ...pageState } = saved;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...pageState, schedulePlans, integrationLogs, deliveryWarningState: state }));
 }
 
 function getPlan(order) {
@@ -362,7 +351,15 @@ function getLevelStyle(level) {
 function updateOrder(orderId, patch, message) {
   const index = orders.findIndex((order) => order.id === orderId);
   if (index < 0) return;
-  orders[index] = { ...orders[index], ...patch };
+  const nextOrder = { ...orders[index], ...patch };
+  if (window.MES_BUSINESS_FLOW?.upsertOrder) {
+    window.MES_BUSINESS_FLOW.upsertOrder(nextOrder, { action: message });
+    const flowState = window.MES_BUSINESS_FLOW.read();
+    orders = flowState.orders;
+    integrationLogs = flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time }));
+  } else {
+    orders[index] = nextOrder;
+  }
   state.activeOrderId = orderId;
   recordIntegration(orderId, message);
   saveState();
@@ -439,9 +436,10 @@ function bindEvents() {
   $("#qualityHoldBtn").addEventListener("click", () => updateOrder(getActiveWarning().order.id, { risk: "质量", materialGap: "检验放行要求需质量会签" }, "质量会签已发起"));
   $("#resetWarningPageBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
-    orders = structuredClone(initialOrders);
+    const flowState = window.MES_BUSINESS_FLOW?.reset?.();
+    orders = flowState?.orders || getMasterOrders();
     schedulePlans = {};
-    integrationLogs = [];
+    integrationLogs = flowState?.logs?.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time })) || [];
     state = { activeOrderId: "MO-202606-0005", search: "", level: "all", reason: "all" };
     $("#warningSearch").value = "";
     $("#levelFilter").value = "all";

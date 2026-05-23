@@ -44,7 +44,7 @@
             <h1>计划调整工作台</h1>
           </div>
           <div class="topbar-actions">
-            <button id="createAdjustmentBtn" class="primary-action" type="button">生成调整建议</button>
+            <button id="createAdjustmentBtn" class="primary-action" type="button">模拟生成调整建议</button>
             <button id="resetAdjustmentPageBtn" class="secondary-action" type="button">重置调整演示</button>
             <a class="secondary-link" href="./delivery-warning.html">交期预警</a>
             <a class="secondary-link" href="./production-schedule.html">生产排程</a>
@@ -165,7 +165,7 @@
             <section class="detail-section">
               <div class="section-title">
                 <h3>影响评估</h3>
-                <button id="approveAdjustmentBtn" type="button">确认调整</button>
+                <button id="approveAdjustmentBtn" type="button">同步排程准备</button>
               </div>
               <div id="impactList" class="impact-list"></div>
             </section>
@@ -173,7 +173,7 @@
             <section class="detail-section">
               <div class="section-title">
                 <h3>会签状态</h3>
-                <button id="confirmCountersignBtn" type="button">会签完成</button>
+                <button id="confirmCountersignBtn" type="button">模拟会签完成</button>
               </div>
               <div id="countersignList" class="countersign-list"></div>
             </section>
@@ -183,9 +183,9 @@
                 <h3>调整动作</h3>
               </div>
               <div class="action-grid adjustment-actions">
-                <button id="moveEarlierBtn" type="button">提前 1 天</button>
-                <button id="moveLaterBtn" type="button">后移 1 天</button>
-                <button id="splitBatchBtn" type="button">拆分批次</button>
+                <button id="moveEarlierBtn" type="button">方案提前 1 天</button>
+                <button id="moveLaterBtn" type="button">方案后移 1 天</button>
+                <button id="splitBatchBtn" type="button">方案拆分批次</button>
                 <button id="rollbackAdjustBtn" class="danger-action" type="button">退回待调整</button>
               </div>
             </section>

@@ -35,17 +35,47 @@ const initialOrders = [
 
 const planDays = ["06-20", "06-21", "06-22", "06-23", "06-24", "06-25", "06-26"];
 const resources = [
-  { id: "Line-A", name: "Line-A", type: "line", label: "装配产线", dailyHours: 20 },
-  { id: "Line-B", name: "Line-B", type: "line", label: "装配产线", dailyHours: 18 },
-  { id: "Line-C", name: "Line-C", type: "line", label: "装配产线", dailyHours: 18 },
-  { id: "Test-A", name: "功能测试", type: "bottleneck", label: "测试工位", dailyHours: 14 },
-  { id: "Aging-Room-1", name: "老化房", type: "bottleneck", label: "瓶颈资源", dailyHours: 16 },
-  { id: "QC-Final", name: "FQC", type: "bottleneck", label: "质量检验", dailyHours: 12 },
+  { id: "Line-A", name: "Line-A", type: "line", label: "装配产线", dailyHours: 12, calendar: "CAL-LINE-A-202606", source: "APS 产能日历 / 产线车间", owner: "计划主管 李敏", exceptions: { "06-21": -2, "06-22": -1 }, note: "白班 08:00-20:00；老化房保养不释放装配产能" },
+  { id: "Line-B", name: "Line-B", type: "line", label: "装配产线", dailyHours: 14, calendar: "CAL-LINE-B-202606", source: "APS + 设备保养计划", owner: "计划主管 李敏", exceptions: { "06-20": -2, "06-24": 2 }, note: "白班 08:00-20:00 / 加班 20:00-22:00；测试故障复测扣减" },
+  { id: "Line-C", name: "Line-C", type: "line", label: "装配产线", dailyHours: 10, calendar: "CAL-LINE-C-202606", source: "MES 资源模型", owner: "包装主管 李娟", exceptions: { "06-23": -2 }, note: "白班 08:00-18:00；客户稽核预留窗口扣减" },
+  { id: "Test-A", name: "功能测试", type: "bottleneck", label: "测试工位", dailyHours: 14, calendar: "CAL-TEST-A-202606", source: "工序工位 / 测试台 API", owner: "测试工程师 周启", exceptions: { "06-22": -1 }, note: "Test-A 测试台 2 工位并行，程序切换计入换型" },
+  { id: "Test-B", name: "功能测试 B", type: "bottleneck", label: "测试工位", dailyHours: 12, calendar: "CAL-TEST-B-202606", source: "工序工位 / 设备保养计划", owner: "设备工程师 周启", exceptions: { "06-20": -2, "06-24": 2 }, note: "Test-B2 故障复测窗口暂不释放；加班需车间主任确认" },
+  { id: "Aging-Room-1", name: "老化房", type: "bottleneck", label: "瓶颈资源", dailyHours: 16, calendar: "CAL-AGING-202606", source: "APS 产能日历 / 老化房 HMI", owner: "设备员 赵宁", exceptions: { "06-21": -2 }, note: "按老化批次占用房间小时，容量 800 台/批" },
+  { id: "QC-Final", name: "FQC", type: "bottleneck", label: "质量检验", dailyHours: 12, calendar: "CAL-QC-FINAL-202606", source: "QMS 抽样计划 / 检验终端", owner: "质量工程师 孟可", exceptions: { "06-23": -1 }, note: "按抽样方案和放行复核折算检验工时" },
 ];
+
+const lineOperations = {
+  "Line-A": [
+    { code: "SMT", name: "SMT 贴片", station: "SMT-WS-01", setup: 1.2, cycleMin: 0.42, parallel: 1, source: "工艺路线 + SMT 节拍" },
+    { code: "DIP", name: "DIP 插件", station: "DIP-A-02", setup: 0.8, cycleMin: 0.36, parallel: 1, source: "工艺路线 + 工位节拍" },
+    { code: "烧录", name: "程序烧录", station: "BURN-A-01", setup: 0.6, cycleMin: 0.18, parallel: 2, source: "烧录设备 API" },
+    { code: "装配", name: "整机装配", station: "ASM-A-01", setup: 1, cycleMin: 0.52, parallel: 2, source: "装配工位标准工时" },
+    { code: "包装", name: "包装入库", station: "PACK-A-01", setup: 0.4, cycleMin: 0.16, parallel: 1, source: "包装工位标准工时" },
+  ],
+  "Line-B": [
+    { code: "SMT", name: "SMT 贴片", station: "SMT-B-01", setup: 1, cycleMin: 0.38, parallel: 1, source: "工艺路线 + SMT-B 节拍" },
+    { code: "DIP", name: "DIP 插件", station: "DIP-B-01", setup: 0.7, cycleMin: 0.32, parallel: 1, source: "插件工位标准工时" },
+    { code: "烧录", name: "程序烧录", station: "BURN-B-01", setup: 0.5, cycleMin: 0.16, parallel: 2, source: "烧录设备 API" },
+    { code: "装配", name: "整机装配", station: "ASM-B-01", setup: 0.8, cycleMin: 0.44, parallel: 2, source: "装配工位标准工时" },
+    { code: "包装", name: "包装入库", station: "PACK-B-01", setup: 0.4, cycleMin: 0.14, parallel: 1, source: "包装工位标准工时" },
+  ],
+  "Line-C": [
+    { code: "装配", name: "装配", station: "ASM-C-01", setup: 0.7, cycleMin: 0.5, parallel: 1, source: "装配工位标准工时" },
+    { code: "包装", name: "包装", station: "PACK-C-02", setup: 0.4, cycleMin: 0.18, parallel: 1, source: "包装工位标准工时" },
+  ],
+};
+
+const bottleneckOperations = {
+  测试: { resourceByLine: { "Line-A": "Test-A", "Line-B": "Test-B", "Line-C": "Test-A" }, setup: 0.7, cycleMin: 0.82, parallel: 2, reworkRate: 0.04, source: "测试程序版本 + 测试台 API" },
+  功能测试: { resourceByLine: { "Line-A": "Test-A", "Line-B": "Test-B", "Line-C": "Test-A" }, setup: 0.7, cycleMin: 0.82, parallel: 2, reworkRate: 0.04, source: "测试程序版本 + 测试台 API" },
+  老化: { resourceId: "Aging-Room-1", setup: 0.5, chamberCapacity: 800, holdHours: 8, source: "老化曲线规格 + 老化房 HMI" },
+  FQC: { resourceId: "QC-Final", setup: 0.6, sampleRate: 0.12, cycleMin: 4, recheckRate: 0.03, source: "QMS 抽样方案 + FQC 检验终端" },
+};
 
 let orders = structuredClone(window.MES_MASTER_DATA?.orders || initialOrders);
 let schedulePlans = {};
 let integrationLogs = [];
+let capacityConfig = { calendarOverrides: [], resourceConstraints: {}, balanceAdvices: [] };
 let state = {
   activeResourceId: "Aging-Room-1",
   search: "",
@@ -124,6 +154,7 @@ function loadState() {
     orders = flowState?.orders || saved.orders || orders;
     schedulePlans = saved.schedulePlans || schedulePlans;
     integrationLogs = flowState?.logs ? flowState.logs.map((item) => ({ orderId: item.orderId, action: item.stage + "：" + item.action + " - " + item.result, time: item.time })) : saved.integrationLogs || integrationLogs;
+    capacityConfig = { ...capacityConfig, ...(saved.capacityConfig || {}) };
     state = { ...state, ...(saved.capacityState || {}) };
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
@@ -132,7 +163,7 @@ function loadState() {
 
 function saveState() {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || {};
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, orders, schedulePlans, integrationLogs, capacityState: state }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, orders, schedulePlans, integrationLogs, capacityConfig, capacityState: state }));
 }
 
 function getPlan(order) {
@@ -169,13 +200,115 @@ function getOrderDuration(order) {
   return 1;
 }
 
+function getProductCode(order) {
+  if (order.productCode) return order.productCode;
+  const product = window.MES_MASTER_DATA?.products?.find((item) => order.product?.includes(item.code) || item.name === order.product);
+  return product?.code || order.product?.match(/[A-Z]{2,4}-\d+/)?.[0] || "";
+}
+
+function getRoutingSteps(order) {
+  const routing = window.MES_MASTER_DATA?.routingByProduct?.(getProductCode(order));
+  return (routing?.steps || defaultRoutingSteps(order)).split(">").map((item) => item.trim()).filter(Boolean);
+}
+
+function defaultRoutingSteps(order) {
+  if (order.line === "Line-C") return "装配>测试>FQC>包装";
+  if (order.line === "Line-B") return "SMT>烧录>功能测试>FQC>包装";
+  return "SMT>DIP>烧录>装配>测试>老化>FQC>包装";
+}
+
+function getEffectiveHours(resource, day) {
+  const overrides = (capacityConfig.calendarOverrides || []).filter((item) => item.resourceId === resource.id && item.day === day && item.status !== "已撤回");
+  const maintainedDelta = overrides.reduce((sum, item) => sum + Number(item.hoursDelta || 0), 0);
+  return Math.max(0, resource.dailyHours + (resource.exceptions?.[day] || 0) + maintainedDelta);
+}
+
+function getAvailableHours(resource) {
+  return planDays.reduce((sum, day) => sum + getEffectiveHours(resource, day), 0);
+}
+
+function getBatchQty(order) {
+  const plan = getPlan(order);
+  const batchText = plan.batchPlan || order.batchPlan || "";
+  const firstBatch = Number(String(batchText).match(/\d+/)?.[0]);
+  if (Number.isFinite(firstBatch) && firstBatch > 0) return Math.min(order.qty, firstBatch);
+  return order.qty;
+}
+
+function roundHours(value) {
+  return Math.round(value * 10) / 10;
+}
+
+function calcOperationHours(order, operation) {
+  const constrained = getConstrainedOperation(operation);
+  const batchQty = getBatchQty(order);
+  if (constrained.chamberCapacity) {
+    const batches = Math.max(1, Math.ceil(batchQty / constrained.chamberCapacity));
+    return roundHours(constrained.setup + (batches * constrained.holdHours));
+  }
+  const adjustedQty = constrained.reworkRate ? Math.ceil(batchQty * (1 + constrained.reworkRate)) : batchQty;
+  const sampledQty = constrained.sampleRate ? Math.max(1, Math.ceil(adjustedQty * constrained.sampleRate)) : adjustedQty;
+  return roundHours(constrained.setup + ((sampledQty * constrained.cycleMin) / 60 / (constrained.parallel || 1)));
+}
+
+function getConstrainedOperation(operation) {
+  const resourceId = operation.resourceId || "";
+  const constraint = resourceId ? capacityConfig.resourceConstraints?.[resourceId] : null;
+  if (!constraint) return operation;
+  return {
+    ...operation,
+    parallel: Number(constraint.parallel || operation.parallel || 1),
+    chamberCapacity: Number(constraint.chamberCapacity || operation.chamberCapacity || 0) || operation.chamberCapacity,
+    holdHours: Number(constraint.holdHours || operation.holdHours || 0) || operation.holdHours,
+    sampleRate: Number(constraint.sampleRate || operation.sampleRate || 0) || operation.sampleRate,
+    source: `${operation.source} + 计划资源约束`,
+  };
+}
+
+function getOperationAllocations(order) {
+  const steps = getRoutingSteps(order);
+  const allocations = [];
+  steps.forEach((step) => {
+    if (step === "FQC") {
+      const operation = { ...bottleneckOperations.FQC };
+      allocations.push({ resourceId: operation.resourceId, step, station: "QC-FINAL", hours: calcOperationHours(order, operation), source: operation.source });
+      return;
+    }
+    const bottleneck = bottleneckOperations[step];
+    if (bottleneck) {
+      const resourceId = bottleneck.resourceId || bottleneck.resourceByLine?.[order.line] || "Test-A";
+      const operation = { ...bottleneck, resourceId };
+      const station = step.includes("测试") || step === "测试" ? `${resourceId}-01` : resourceId;
+      allocations.push({ resourceId, step, station, hours: calcOperationHours(order, operation), source: operation.source });
+      return;
+    }
+    const lineOp = (lineOperations[order.line] || []).find((item) => item.code === step || item.name.includes(step) || step.includes(item.code));
+    if (lineOp) {
+      allocations.push({ resourceId: order.line, step, station: lineOp.station, hours: calcOperationHours(order, lineOp), source: lineOp.source });
+    }
+  });
+  if (!allocations.some((item) => item.resourceId === order.line)) {
+    const fallback = (lineOperations[order.line] || lineOperations["Line-A"])[0];
+    allocations.unshift({ resourceId: order.line, step: fallback.code, station: fallback.station, hours: calcOperationHours(order, fallback), source: fallback.source });
+  }
+  return allocations;
+}
+
+function getResourceOrderAllocation(order, resource) {
+  const allocations = getOperationAllocations(order).filter((item) => item.resourceId === resource.id);
+  if (!allocations.length) return null;
+  const hours = roundHours(allocations.reduce((sum, item) => sum + item.hours, 0));
+  return {
+    order,
+    hours,
+    steps: allocations.map((item) => item.step),
+    stations: allocations.map((item) => item.station),
+    sources: [...new Set(allocations.map((item) => item.source))],
+  };
+}
+
 function getOrderHours(order, resource) {
-  const base = Math.max(2, Math.round(order.qty / 120));
-  if (resource.type === "line") return order.line === resource.id ? base + (order.priority === "紧急" ? 2 : 0) : 0;
-  if (resource.id === "Test-A") return Math.max(1, Math.round(order.qty / 180));
-  if (resource.id === "Aging-Room-1") return order.qty >= 800 ? Math.max(4, Math.round(order.qty / 110)) : Math.max(2, Math.round(order.qty / 220));
-  if (resource.id === "QC-Final") return Math.max(1, Math.round(order.qty / 260));
-  return 0;
+  return getResourceOrderAllocation(order, resource)?.hours || 0;
 }
 
 function getScheduledOrders() {
@@ -183,18 +316,19 @@ function getScheduledOrders() {
 }
 
 function getResourceLoads(resource) {
-  const loads = planDays.map((day) => ({ day, used: 0, orders: [] }));
+  const loads = planDays.map((day) => ({ day, used: 0, available: getEffectiveHours(resource, day), orders: [], operations: [] }));
   getScheduledOrders().forEach((order) => {
     const plan = getPlan(order);
-    const totalHours = getOrderHours(order, resource);
-    if (!totalHours) return;
-    const perDay = Math.ceil(totalHours / plan.duration);
+    const allocation = getResourceOrderAllocation(order, resource);
+    if (!allocation?.hours) return;
+    const perDay = Math.ceil((allocation.hours / plan.duration) * 10) / 10;
     for (let index = plan.dayOffset; index < Math.min(planDays.length, plan.dayOffset + plan.duration); index += 1) {
       loads[index].used += perDay;
       loads[index].orders.push(order);
+      loads[index].operations.push({ orderId: order.id, steps: allocation.steps, stations: allocation.stations, hours: perDay });
     }
   });
-  return loads.map((item) => ({ ...item, percent: Math.round((item.used / resource.dailyHours) * 100), status: getLoadStatus(item.used / resource.dailyHours) }));
+  return loads.map((item) => ({ ...item, used: roundHours(item.used), percent: item.available ? Math.round((item.used / item.available) * 100) : 0, status: getLoadStatus(item.available ? item.used / item.available : 0) }));
 }
 
 function getLoadStatus(rate) {
@@ -232,7 +366,7 @@ function renderMetrics() {
     return { resource, peak };
   }).sort((a, b) => b.peak - a.peak)[0];
   const slack = resources.reduce((sum, resource) => {
-    return sum + getResourceLoads(resource).reduce((inner, item) => inner + Math.max(0, resource.dailyHours - item.used), 0);
+    return sum + getResourceLoads(resource).reduce((inner, item) => inner + Math.max(0, item.available - item.used), 0);
   }, 0);
   $("#metricAvgLoad").textContent = `${average}%`;
   $("#metricOverload").textContent = overload;
@@ -253,12 +387,12 @@ function renderMatrix() {
         <div class="load-row">
           <button class="load-resource${resource.id === state.activeResourceId ? " is-active" : ""}" type="button" data-resource-id="${resource.id}">
             <strong>${resource.name}</strong>
-            <span>${resource.label} · ${resource.dailyHours}h/日</span>
+            <span>${resource.label} · ${resource.calendar}</span>
           </button>
           ${loads.map((item) => `
             <div class="load-cell is-${item.status}">
               <strong>${item.percent}%</strong>
-              <span>${item.used}/${resource.dailyHours}h · ${item.orders.length} 单</span>
+              <span>${item.used}/${item.available}h · ${item.orders.length} 单</span>
               <div class="load-bar" style="--load:${item.percent}%"><i></i></div>
             </div>
           `).join("")}
@@ -284,18 +418,21 @@ function renderOrderTable() {
     return;
   }
   const rows = getScheduledOrders().filter((order) => {
-    const text = `${order.id} ${order.product} ${order.customer} ${order.line} ${resource.name}`.toLowerCase();
+    const allocation = getResourceOrderAllocation(order, resource);
+    const text = `${order.id} ${order.product} ${order.customer} ${order.line} ${resource.name} ${allocation?.steps.join(" ") || ""} ${allocation?.stations.join(" ") || ""}`.toLowerCase();
     return getOrderHours(order, resource) > 0 && (!keyword || text.includes(keyword));
   });
   $("#loadOrderBody").innerHTML = rows.length ? rows.map((order) => {
     const plan = getPlan(order);
-    const hours = getOrderHours(order, resource);
-    const impact = Math.round((hours / (resource.dailyHours * plan.duration)) * 100);
+    const allocation = getResourceOrderAllocation(order, resource);
+    const hours = allocation.hours;
+    const planAvailable = planDays.slice(plan.dayOffset, Math.min(planDays.length, plan.dayOffset + plan.duration)).reduce((sum, day) => sum + getEffectiveHours(resource, day), 0);
+    const impact = Math.round((hours / Math.max(1, planAvailable)) * 100);
     return `
       <tr>
         <td class="order-no">${order.id}</td>
         <td class="product-cell"><strong>${order.product}</strong><span>${order.customer} · ${order.qty} 台</span></td>
-        <td>${resource.name}</td>
+        <td><strong>${allocation.steps.join(" / ")}</strong><span>${allocation.stations.join("、")}</span></td>
         <td>${plan.window}</td>
         <td>${hours}h</td>
         <td><span class="pill pill--${impact > 85 ? "red" : impact > 65 ? "orange" : "green"}">${impact}%</span></td>
@@ -321,20 +458,20 @@ function renderDetail() {
   const average = Math.round(loads.reduce((sum, item) => sum + item.percent, 0) / loads.length);
   $("#detailResourceType").textContent = resource.type === "line" ? "产线" : "关键资源";
   $("#detailResourceName").textContent = resource.name;
-  $("#detailResourceMeta").textContent = `${resource.label} · 标准可用 ${resource.dailyHours}h/日`;
+  $("#detailResourceMeta").textContent = `${resource.label} · ${resource.source}`;
   $("#detailGrid").innerHTML = [
     ["平均负荷", `${average}%`],
     ["峰值日期", peak.day],
     ["峰值负荷", `${peak.percent}%`],
     ["超载天数", `${loads.filter((item) => item.status === "over").length} 天`],
-    ["偏紧天数", `${loads.filter((item) => item.status === "tight").length} 天`],
+    ["有效产能", `${getAvailableHours(resource)}h`],
     ["占用订单", `${new Set(loads.flatMap((item) => item.orders.map((order) => order.id))).size} 单`],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
 
   $("#dailyLoadList").innerHTML = loads.map((item) => `
     <div>
       <span>${item.day}</span>
-      <strong>${item.used}/${resource.dailyHours}h · ${item.orders.map((order) => order.id).join("、") || "无订单"}</strong>
+      <strong>${item.used}/${item.available}h · ${item.operations.flatMap((operation) => operation.steps).join("、") || "无占用"}</strong>
       <em>${getStatusText(item.status)}</em>
     </div>
   `).join("");
@@ -365,10 +502,15 @@ function getStatusText(status) {
 
 function getConstraints(resource, loads) {
   const peak = loads.reduce((max, item) => item.percent > max.percent ? item : max, loads[0]);
+  const maintainedDays = (capacityConfig.calendarOverrides || []).filter((item) => item.resourceId === resource.id && item.status !== "已撤回").map((item) => item.day);
+  const exceptionDays = [...new Set([...planDays.filter((day) => resource.exceptions?.[day]), ...maintainedDays])];
+  const topSteps = loads.flatMap((item) => item.operations).flatMap((item) => item.steps);
+  const constraint = capacityConfig.resourceConstraints?.[resource.id];
   return [
     { label: "峰值", desc: `${peak.day} 达到 ${peak.percent}%`, status: peak.status === "over" ? "需调整" : "可控" },
-    { label: "班次", desc: `${resource.dailyHours}h/日，白班为主`, status: peak.percent > 90 ? "可加班" : "正常" },
-    { label: "瓶颈", desc: resource.type === "bottleneck" ? "需优先保护关键资源" : "可跨线均衡", status: resource.type === "bottleneck" ? "重点看护" : "可调整" },
+    { label: "日历", desc: `${resource.calendar}，基准 ${resource.dailyHours}h/日`, status: exceptionDays.length ? `${exceptionDays.join("、")} 例外` : "正常" },
+    { label: "约束", desc: constraint?.summary || resource.note, status: constraint?.owner || resource.owner },
+    { label: "工序", desc: [...new Set(topSteps)].join("、") || "无占用", status: resource.type === "bottleneck" ? "重点看护" : "可跨线均衡" },
   ];
 }
 
@@ -376,19 +518,25 @@ function getSuggestions(resource, loads) {
   const over = loads.find((item) => item.status === "over");
   const idle = loads.find((item) => item.status === "idle");
   if (over) {
+    const maintainedAdvice = (capacityConfig.balanceAdvices || []).find((item) => item.resourceId === resource.id && item.status !== "已关闭");
     return [
+      ...(maintainedAdvice ? [{ type: "已登记", desc: maintainedAdvice.summary, owner: maintainedAdvice.owner }] : []),
       { type: "移峰", desc: `${over.day} 超载，建议将低优先级订单后移 1 天`, owner: "计划" },
       { type: "拆批", desc: "大批量订单拆为首批生产和补料后续批", owner: "计划 / 物料" },
       { type: "加班", desc: `临时扩展 ${resource.name} 可用产能`, owner: "车间" },
     ];
   }
   if (idle) {
+    const maintainedAdvice = (capacityConfig.balanceAdvices || []).find((item) => item.resourceId === resource.id && item.status !== "已关闭");
     return [
+      ...(maintainedAdvice ? [{ type: "已登记", desc: maintainedAdvice.summary, owner: maintainedAdvice.owner }] : []),
       { type: "补产", desc: `${idle.day} 产能富余，可承接待调整订单`, owner: "计划" },
       { type: "提前", desc: "将已确认低风险订单提前释放备料", owner: "计划 / 仓储" },
     ];
   }
+  const maintainedAdvice = (capacityConfig.balanceAdvices || []).find((item) => item.resourceId === resource.id && item.status !== "已关闭");
   return [
+    ...(maintainedAdvice ? [{ type: "已登记", desc: maintainedAdvice.summary, owner: maintainedAdvice.owner }] : []),
     { type: "维持", desc: "当前负荷均衡，按确认排程下发派工准备", owner: "计划" },
     { type: "监控", desc: "持续跟踪缺料和设备保养窗口", owner: "计划 / 设备" },
   ];
@@ -448,6 +596,7 @@ function bindEvents() {
     orders = structuredClone(initialOrders);
     schedulePlans = {};
     integrationLogs = [];
+    capacityConfig = { calendarOverrides: [], resourceConstraints: {}, balanceAdvices: [] };
     state = { activeResourceId: "Aging-Room-1", search: "", resourceType: "all", load: "all" };
     $("#capacitySearch").value = "";
     $("#resourceFilter").value = "all";

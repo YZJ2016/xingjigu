@@ -1,5 +1,5 @@
 const pageConfig = window.BASIC_PAGE || { id: "products", title: "产品资料", eyebrow: "基础资料 / 产品资料" };
-const STORAGE_VERSION = "v3";
+const STORAGE_VERSION = pageConfig.id === "partners" ? "v4" : pageConfig.id === "workshops" ? "v4" : "v3";
 const STORAGE_KEY = `xingjigu_mes_basic_${pageConfig.id}_${STORAGE_VERSION}`;
 
 const modules = [
@@ -51,12 +51,12 @@ const pageDefinitions = {
     simulationHint: "模拟外部主数据同步，不代表后台直接修改 ERP 或 PLM 原始资料",
   },
   materials: {
-    subtitle: "维护料号、批次规则、IQC 策略、替代关系和库存口径，支撑 BOM、齐套、投料和追溯",
+    subtitle: "维护料号、批次规则、IQC 策略、替代关系和合格供应商引用，支撑 BOM、齐套、投料和追溯",
     user: "物料主数据员",
     metrics: ["物料档案", "可投料", "待补规则", "影响投料"],
-    columns: ["物料编码", "物料 / 类型", "批次与检验", "替代 / 供应", "投料准入状态", "下游校验", "责任人", "时间戳"],
-    tableTitle: "物料主数据与批次规则",
-    tableHint: "物料资料会传递给 WMS、IQC、线边库存、投料防错和成本核销",
+    columns: ["物料编码", "物料 / 类型", "批次与检验", "合格供应商", "投料准入状态", "下游校验", "责任人", "时间戳"],
+    tableTitle: "物料主数据、批次规则与供应商引用",
+    tableHint: "物料资料维护料号、批次和检验口径，并引用客户供应商中的合格供方档案；库存、领料和线边执行仍进入物料与线边库",
     cardTitle: "物料资料驱动关系",
     simulationTitle: "模拟 ERP / WMS 物料同步",
     simulationHint: "模拟外部物料、库存或供应商规则回传，后台只做校验和审批记录",
@@ -106,12 +106,12 @@ const pageDefinitions = {
     simulationHint: "模拟排程或设备停机日历同步，后台不直接控制现场产线",
   },
   partners: {
-    subtitle: "维护客户优先级、标签要求、供应商质量等级和追溯口径，影响订单、检验、包装和交付",
+    subtitle: "按客户与供应商分型维护业务伙伴档案；供应商侧聚焦供货资质、可供物料、批次追溯和来料检验策略引用",
     user: "业务资料管理员",
-    metrics: ["伙伴档案", "业务生效", "待复核", "影响交付"],
-    columns: ["伙伴编码", "客户 / 供应商", "等级 / 要求", "关联物料产品", "业务准入状态", "业务影响", "责任人", "时间戳"],
+    metrics: ["伙伴档案", "业务生效", "待复核", "供应风险"],
+    columns: ["伙伴编码", "角色 / 名称", "状态 / 资质", "规则引用范围", "业务准入状态", "业务影响", "责任人", "时间戳"],
     tableTitle: "客户供应商与业务规则",
-    tableHint: "客户和供应商资料承接 ERP/QMS 规则，向订单评审、IQC、成品标签和客户追溯报告传递约束",
+    tableHint: "客户侧传递订单、标签和交付要求；供应商侧传递合格供方、可供物料、IQC 策略和批次追溯约束",
     cardTitle: "客户供应商驱动关系",
     simulationTitle: "模拟 ERP / QMS 伙伴同步",
     simulationHint: "模拟客户优先级或供应商质量等级同步，页面只记录 MES 生效与影响范围",
@@ -150,16 +150,16 @@ const initialRows = {
     { id: "QC-FINAL", name: "FQC 成品检验位", version: "共用资源", source: "QMS 抽样方案", status: "待规范确认", ref: "AQL / FQC 规范", impact: "HMI-70 阻止排程", owner: "质量工程师 孟可", time: "06-18 14:30", scope: "FQC / 多产品", risk: "检验项目缺失会拦截入库", downstream: "成品检验、完工确认、客户追溯报告" },
   ],
   workshops: [
-    { id: "FAC-EAST-01", name: "华东一厂 · 电子装配车间", version: "2026 白班日历", source: "MES 资源模型", status: "资源启用", ref: "Line-A / Line-B / Line-C", impact: "全部订单按车间权限展示", owner: "车间主任 陈伟", time: "06-18 08:20", scope: "电子装配车间", risk: "支持多产线并行和班次交接", downstream: "首页工作台、生产排程、电子看板" },
-    { id: "LINE-A", name: "Line-A 电子装配线", version: "白班 08:00-20:00", source: "APS 产能日历", status: "可排程", ref: "SMT-01 / DIP-Line-A / Pack-A", impact: "MO-202606-0001 与 0010 共用资源", owner: "计划主管 李敏", time: "06-18 08:35", scope: "TCU-100 / SRV-90", risk: "老化房为跨线瓶颈", downstream: "产能负荷、派工单、设备运行" },
-    { id: "LINE-B", name: "Line-B 模块装配线", version: "白班 + 加班窗口", source: "APS + 设备保养计划", status: "负荷预警", ref: "Test-B / Assembly-B", impact: "GW-240 与 PCM-60 交期冲突", owner: "计划主管 李敏", time: "06-18 10:16", scope: "GW-240 / PCM-60 / HMI-100", risk: "功能测试与物料冻结双风险", downstream: "交期预警、缺料处理、设备效率" },
-    { id: "LINE-C", name: "Line-C 包装与装配线", version: "白班 08:00-20:00", source: "MES 资源模型", status: "可排程", ref: "Assembly-C / Pack-C", impact: "MO-202606-0011 包装中", owner: "包装主管 李娟", time: "06-18 13:26", scope: "THS-10 / ENV-45 / HMI-70", risk: "HMI-70 工艺资料待签收", downstream: "包装作业、成品入库、交接班" },
+    { id: "FAC-EAST-01", level: "车间", name: "华东一厂 · 电子装配车间", version: "白班 08:00-20:00 / 夜班 20:00-08:00", calendarId: "CAL-WKS-EC-202606", parentCalendar: "工厂工作日历", calendarRange: "2026-06-20 至 2026-06-23", calendarMode: "车间基准日历", source: "MES 资源模型", status: "资源启用", ref: "Line-A / Line-B / Line-C", capacityModel: "车间每日 36h 基准，产线可继承或覆盖", exceptions: "06-22 夜班检修窗口 02:00-04:00", impact: "全部订单按车间权限展示", owner: "车间主任 陈伟", time: "06-18 08:20", scope: "车间 / 华东一厂 · 电子装配车间", risk: "车间日历只定义车间可生产窗口，产线仍需独立确认班次、停线和瓶颈资源", downstream: "首页工作台、生产排程、电子看板" },
+    { id: "LINE-A", level: "产线", workshop: "电子装配车间", name: "Line-A 电子装配线", version: "白班 08:00-20:00", calendarId: "CAL-LINE-A-202606", parentCalendar: "CAL-WKS-EC-202606", calendarRange: "2026-06-20 至 2026-06-23", calendarMode: "继承车间白班，覆盖老化瓶颈窗口", source: "APS 产能日历", status: "可排程", ref: "SMT-01 / DIP-Line-A / Burn-01 / Assembly-A / Test-A / Aging-Room-1 / QC-Final / Pack-A", capacityModel: "首批 800 台；老化房 1 为瓶颈资源；线边库 LS-A 已启用", exceptions: "06-21 18:00-20:00 Aging-Room-1 预留保养，不占用装配工位", impact: "MO-202606-0001 与 0010 共用资源", owner: "计划主管 李敏", time: "06-18 08:35", scope: "产线 / TCU-100 / SRV-90", risk: "TCU-100 首批可排程，但老化测试需锁定容量和时长", downstream: "产能负荷、派工单、设备运行" },
+    { id: "LINE-B", level: "产线", workshop: "电子装配车间", name: "Line-B 模块装配线", version: "白班 08:00-20:00 / 加班 20:00-22:00", calendarId: "CAL-LINE-B-202606", parentCalendar: "CAL-WKS-EC-202606", calendarRange: "2026-06-20 至 2026-06-23", calendarMode: "继承车间日历，追加加班窗口", source: "APS + 设备保养计划", status: "负荷预警", ref: "SMT-B / Test-B / Assembly-B / Pack-B", capacityModel: "测试台 B2 为瓶颈；加班窗口需车间主任确认", exceptions: "06-20 15:00-17:00 Test-B2 故障复测，APS 暂不释放", impact: "GW-240 与 PCM-60 交期冲突", owner: "计划主管 李敏", time: "06-18 10:16", scope: "产线 / GW-240 / PCM-60 / HMI-100", risk: "功能测试与物料冻结双风险", downstream: "交期预警、缺料处理、设备效率" },
+    { id: "LINE-C", level: "产线", workshop: "电子装配车间", name: "Line-C 包装与装配线", version: "白班 08:00-18:00", calendarId: "CAL-LINE-C-202606", parentCalendar: "CAL-WKS-EC-202606", calendarRange: "2026-06-20 至 2026-06-23", calendarMode: "继承车间日历，缩短包装线班次", source: "MES 资源模型", status: "可排程", ref: "Assembly-C / Aging-C / Pack-C", capacityModel: "包装节拍优先，HMI-70 资料未签收时不释放", exceptions: "06-23 16:00-18:00 包装线客户稽核预留", impact: "MO-202606-0011 包装中", owner: "包装主管 李娟", time: "06-18 13:26", scope: "产线 / THS-10 / ENV-45 / HMI-70", risk: "HMI-70 工艺资料待签收", downstream: "包装作业、成品入库、交接班" },
   ],
   partners: [
-    { id: "CUS-A", name: "A 客户", version: "优先级高", source: "ERP 客户资料", status: "业务生效", ref: "客户标签模板 A-V1.4", impact: "MO-202606-0001 按高优先级排程", owner: "业务资料管理员 沈清", time: "06-18 09:02", scope: "TCU-100 / 成品标签", risk: "标签补打需审批", downstream: "订单评审、成品标签、客户追溯报告" },
-    { id: "CUS-B", name: "B 客户", version: "交期敏感", source: "ERP 客户资料", status: "业务生效", ref: "OTD 重点监控", impact: "GW-240 与 SRV-90 交期预警", owner: "计划主管 李敏", time: "06-18 10:08", scope: "GW-240 / SRV-90", risk: "交期压缩需计划调整", downstream: "交期预警、计划调整、交付达成" },
-    { id: "SUP-SEN-01", name: "传感器供应商 S-01", version: "A级供应商", source: "QMS 供应商档案", status: "待到货复核", ref: "SEN-L20260605 / IQC 加严", impact: "TCU-100 缺 200 件", owner: "采购跟单 袁青", time: "06-18 11:10", scope: "温度传感器", risk: "到货延迟影响第二批开工", downstream: "来料检验、缺料预警、批次追溯" },
-    { id: "SUP-PWR-02", name: "电源芯片供应商 P-02", version: "质量观察", source: "QMS 冻结规则", status: "冻结待复核", ref: "PWRIC-L20260602", impact: "PCM-60 指定批次冻结", owner: "质量员 孟可", time: "06-18 11:42", scope: "电源芯片 / D 客户", risk: "需 MRB 或替代料审批", downstream: "来料检验、库存冻结、缺料处理" },
+    { id: "CUS-A", partnerType: "客户", name: "A 客户", version: "优先级高", source: "ERP 客户资料", status: "业务生效", qualification: "年度框架订单有效", qualityLevel: "交付优先级 A", ref: "客户标签模板 A-V1.4", supplyScope: "TCU-100 / 客户 A 包装盒", traceRule: "按成品 SN、箱码、托盘码生成客户追溯报告", iqcPolicy: "不适用，客户侧引用 FQC / OQC 要求", impact: "MO-202606-0001 按高优先级排程", owner: "业务资料管理员 沈清", time: "06-18 09:02", scope: "客户 / TCU-100 / 成品标签", risk: "标签补打需审批", downstream: "订单评审、成品标签、客户追溯报告" },
+    { id: "CUS-B", partnerType: "客户", name: "B 客户", version: "交期敏感", source: "ERP 客户资料", status: "业务生效", qualification: "重点客户有效", qualityLevel: "OTD 重点监控", ref: "OTD 重点监控 / 客户 B 标签模板", supplyScope: "GW-240 / SRV-90", traceRule: "按订单交付批次生成受控追溯资料", iqcPolicy: "不适用，客户侧引用 OQC 放行策略", impact: "GW-240 与 SRV-90 交期预警", owner: "计划主管 李敏", time: "06-18 10:08", scope: "客户 / GW-240 / SRV-90", risk: "交期压缩需计划调整", downstream: "交期预警、计划调整、交付达成" },
+    { id: "SUP-SEN-01", partnerType: "供应商", name: "传感器供应商 S-01", version: "A级供应商", source: "QMS 供应商档案", status: "待到货复核", qualification: "合格供方 / 资质有效至 2026-12-31", qualityLevel: "A级 / 近 3 批 IQC 合格率 98.8%", ref: "IQC-SEN-AQL-II / SEN-L20260605", supplyScope: "MAT-SEN-T100 温度传感器；可供 TCU-100、SEN-20", traceRule: "供应商批次 + 来料批次必填，投料后绑定工单、工序和成品 SN", iqcPolicy: "正常检验；逾期到货自动转加严复核", impact: "TCU-100 第二批缺 200 件，需跟踪到货和 IQC 放行", owner: "采购跟单 袁青", time: "06-18 11:10", scope: "供应商 / 温度传感器 / TCU-100", risk: "到货延迟影响第二批开工", downstream: "来料检验、缺料预警、批次追溯" },
+    { id: "SUP-PWR-02", partnerType: "供应商", name: "电源芯片供应商 P-02", version: "质量观察", source: "QMS 冻结规则", status: "冻结待复核", qualification: "临时放行需 MRB 审批", qualityLevel: "观察级 / 近期失效率超阈值", ref: "MRB-PWR-202606 / PWRIC-L20260602", supplyScope: "MAT-PWR-IC60 电源芯片；仅限 PCM-60 指定批次", traceRule: "客户指定批次 + MRB 放行号必填，冻结批次禁止进入投料准入", iqcPolicy: "加严检验；功能项全检后才允许库存解冻", impact: "PCM-60 指定批次冻结，影响 MO-202606-0005 备料", owner: "质量员 孟可", time: "06-18 11:42", scope: "供应商 / 电源芯片 / D 客户", risk: "需 MRB 或替代料审批", downstream: "来料检验、库存冻结、缺料处理" },
   ],
 };
 
@@ -221,7 +221,7 @@ function loadState() {
 
 function mergeRowsWithInitial(savedRows, latestRows) {
   const savedMap = new Map(savedRows.map((row) => [row.id, row]));
-  const merged = latestRows.map((row) => savedMap.get(row.id) || row);
+  const merged = latestRows.map((row) => savedMap.has(row.id) ? { ...row, ...savedMap.get(row.id) } : row);
   const customRows = savedRows.filter((row) => !latestRows.some((latest) => latest.id === row.id));
   return [...merged, ...customRows];
 }
@@ -352,6 +352,34 @@ function buildCells(item) {
       item.time,
     ];
   }
+  if (pageConfig.id === "partners") {
+    const role = getPartnerType(item);
+    const ruleScope = role === "供应商"
+      ? `${item.supplyScope || item.scope} / ${item.iqcPolicy || item.ref}`
+      : `${item.ref} / ${item.traceRule || item.scope}`;
+    return [
+      item.id,
+      twoLine(role, item.name),
+      twoLine(item.status, item.qualification || item.version),
+      ruleScope,
+      pill(item.status),
+      item.impact,
+      item.owner,
+      item.time,
+    ];
+  }
+  if (pageConfig.id === "materials") {
+    return [
+      item.id,
+      twoLine(item.name, item.materialType || item.scope),
+      twoLine(item.version, item.ref),
+      twoLine(item.supplierName || "供应商待维护", `${item.supplierId || "无供应商编码"} / ${item.supplierStatus || "状态待同步"}`),
+      pill(item.status),
+      item.impact,
+      item.owner,
+      item.time,
+    ];
+  }
   return [
     item.id,
     twoLine(item.name, item.scope),
@@ -431,6 +459,18 @@ function renderCards() {
     renderStationCards(active);
     return;
   }
+  if (pageConfig.id === "workshops") {
+    renderWorkshopCards(active);
+    return;
+  }
+  if (pageConfig.id === "partners") {
+    renderPartnerCards(active);
+    return;
+  }
+  if (pageConfig.id === "materials") {
+    renderMaterialCards(active);
+    return;
+  }
   $("#basicCards").className = "basic-card-grid";
   const cards = [
     ["上游来源", active.source, "保留 ERP、PLM、WMS、QMS 或设备回传来源"],
@@ -439,6 +479,24 @@ function renderCards() {
   ];
   $("#basicCards").innerHTML = cards.map(([label, value, hint]) => `
     <div class="basic-card">
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <em>${hint}</em>
+    </div>
+  `).join("");
+}
+
+function renderWorkshopCards(active) {
+  const checks = getWorkshopAccessChecks(active);
+  const passed = checks.filter((check) => check.status === "通过").length;
+  $("#basicCards").className = "workshop-check-grid";
+  $("#basicCards").innerHTML = [
+    ["日历层级", `${active.level || "资源"} · ${active.calendarId || active.id}`, active.parentCalendar ? `上级日历：${active.parentCalendar}` : "车间基准日历"],
+    ["班次窗口", active.version, active.calendarRange || "覆盖日期待维护"],
+    ["产能模型", active.capacityModel || active.ref, active.exceptions || "无例外窗口"],
+    ["TCU-100 准入", `${passed}/${checks.length} 项通过`, checks.find((check) => check.status !== "通过")?.desc || "Line-A 首批排程资源已具备"],
+  ].map(([label, value, hint]) => `
+    <div class="basic-card workshop-card">
       <span>${label}</span>
       <strong>${value}</strong>
       <em>${hint}</em>
@@ -460,6 +518,46 @@ function renderStationCards(active) {
   ];
   $("#basicCards").innerHTML = cards.map(([label, value, hint]) => `
     <div class="basic-card station-card">
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <em>${hint}</em>
+    </div>
+  `).join("");
+}
+
+function renderPartnerCards(active) {
+  const role = getPartnerType(active);
+  $("#basicCards").className = "basic-card-grid partner-card-grid";
+  const cards = role === "供应商" ? [
+    ["供应商状态与资质", `${active.status} / ${active.qualification || active.version}`, active.qualityLevel || "质量等级待维护"],
+    ["可供物料范围", active.supplyScope || active.scope, "这里维护合格供方范围，不维护库存、领料或线边库"],
+    ["批次追溯规则", active.traceRule || active.ref, "用于来料批次、投料记录、生产履历和反向追溯"],
+    ["来料检验策略", active.iqcPolicy || active.ref, "引用 QMS/IQC 策略，MES 只记录执行准入口径"],
+  ] : [
+    ["客户状态与要求", `${active.status} / ${active.qualification || active.version}`, active.qualityLevel || "客户等级待维护"],
+    ["产品与标签范围", active.supplyScope || active.scope, "客户侧维护标签、交付和报告要求"],
+    ["追溯报告口径", active.traceRule || active.ref, "用于出货随附资料、客诉和客户稽核"],
+    ["质量放行引用", active.iqcPolicy || "引用 FQC / OQC 策略", "不在客户档案中执行现场检验动作"],
+  ];
+  $("#basicCards").innerHTML = cards.map(([label, value, hint]) => `
+    <div class="basic-card">
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <em>${hint}</em>
+    </div>
+  `).join("");
+}
+
+function renderMaterialCards(active) {
+  $("#basicCards").className = "basic-card-grid material-card-grid";
+  const cards = [
+    ["物料批次与检验", `${active.version} / ${active.ref}`, "物料自身的批次管控、IQC 口径和投料准入规则"],
+    ["合格供应商引用", `${active.supplierName || "供应商待维护"} / ${active.supplierId || "无编码"}`, active.supplierQualification || "供应商资质待维护"],
+    ["供应商质量等级", `${active.supplierStatus || "状态待同步"} / ${active.supplierQualityLevel || "质量等级待维护"}`, "来自客户供应商档案，不在物料资料里直接维护供应商资质"],
+    ["供应商追溯与 IQC", active.supplierTraceRule || active.supplierIqcPolicy || "规则待维护", active.supplierIqcPolicy || "IQC 策略待维护"],
+  ];
+  $("#basicCards").innerHTML = cards.map(([label, value, hint]) => `
+    <div class="basic-card">
       <span>${label}</span>
       <strong>${value}</strong>
       <em>${hint}</em>
@@ -737,6 +835,7 @@ function getBoundaryText() {
   if (pageConfig.id === "stations") return "工位终端、扫码枪、工牌/NFC、设备 HMI 或 PLC 产生模拟现场回执";
   if (pageConfig.id === "workshops") return "APS、设备保养和班次日历提供资源状态，MES 不直接控制产线";
   if (pageConfig.id === "materials") return "ERP/WMS/IQC 提供物料事实，MES 维护生产投料校验口径";
+  if (pageConfig.id === "partners") return "ERP/QMS 提供客户和供应商事实，MES 维护执行引用、准入、生效和追溯口径";
   return "PLM/ERP 提供定义，MES 负责发布到现场执行版本并留痕";
 }
 
@@ -757,6 +856,41 @@ function renderDetail() {
     ["数据采集方式", active.dataCapture || "模拟扫码枪/HMI/PDA/设备回传"],
     ["现场显示内容", active.display || "任务卡、SOP、物料清单、检验要求和异常提示"],
     ["风险说明", active.risk],
+  ] : pageConfig.id === "workshops" ? [
+    ["资源层级", active.level || "资源"],
+    ["日历编码", active.calendarId || "待维护"],
+    ["上级日历", active.parentCalendar || "无"],
+    ["班次窗口", active.version],
+    ["覆盖日期", active.calendarRange || "待维护"],
+    ["继承/覆盖规则", active.calendarMode || "待维护"],
+    ["产能模型", active.capacityModel || active.ref],
+    ["例外窗口", active.exceptions || "无"],
+    ["责任人", active.owner],
+    ["风险说明", active.risk],
+  ] : pageConfig.id === "partners" ? [
+    ["伙伴角色", getPartnerType(active)],
+    ["业务状态", active.status],
+    ["资质/要求", active.qualification || active.version],
+    ["质量等级", active.qualityLevel || active.version],
+    [getPartnerType(active) === "供应商" ? "可供物料范围" : "产品/标签范围", active.supplyScope || active.scope],
+    ["批次追溯规则", active.traceRule || active.ref],
+    ["来料/放行策略", active.iqcPolicy || active.ref],
+    ["责任人", active.owner],
+    ["时间戳", active.time],
+    ["风险说明", active.risk],
+  ] : pageConfig.id === "materials" ? [
+    ["物料类型", active.materialType || active.scope],
+    ["批次/检验规则", active.ref],
+    ["供应商编码", active.supplierId || "待维护"],
+    ["供应商名称", active.supplierName || "供应商待维护"],
+    ["供应商状态", active.supplierStatus || "状态待同步"],
+    ["供应商资质", active.supplierQualification || "资质待维护"],
+    ["供应商质量等级", active.supplierQualityLevel || "质量等级待维护"],
+    ["供应商追溯规则", active.supplierTraceRule || "追溯规则待维护"],
+    ["来料检验策略", active.supplierIqcPolicy || active.ref],
+    ["责任人", active.owner],
+    ["时间戳", active.time],
+    ["风险说明", active.risk],
   ] : [
     ["资料范围", active.scope],
     ["上游来源", active.source],
@@ -770,7 +904,44 @@ function renderDetail() {
   if (timelineTitle) timelineTitle.textContent = pageConfig.id === "stations" ? "工位维护履历" : "版本与审批履历";
   $("#timelineList").innerHTML = buildTimeline(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  renderQuickLinks(active);
   renderLogs();
+}
+
+function renderQuickLinks(active) {
+  const quickLinks = $(".quick-links");
+  if (!quickLinks) return;
+  const links = getQuickLinks(active);
+  quickLinks.innerHTML = links.map(([label, href]) => `<a href="${href}">${label}</a>`).join("");
+}
+
+function getQuickLinks(active) {
+  if (pageConfig.id === "partners" && getPartnerType(active) === "供应商") {
+    return [
+      ["来料检验", "../quality/incoming-inspection.html"],
+      ["缺料预警", "../materials/shortage-alerts.html"],
+      ["批次追溯", "../traceability/batch-trace.html"],
+    ];
+  }
+  if (pageConfig.id === "partners") {
+    return [
+      ["订单评审", "../orders/order-reviews.html"],
+      ["成品标签", "../barcode/finished-labels.html"],
+      ["客户追溯报告", "../traceability/customer-report.html"],
+    ];
+  }
+  if (pageConfig.id === "materials") {
+    return [
+      ["客户供应商", "./partners.html"],
+      ["来料检验", "../quality/incoming-inspection.html"],
+      ["物料去向", "../traceability/material-flow.html"],
+    ];
+  }
+  return [
+    ["成品标签", "../barcode/finished-labels.html"],
+    ["客户追溯报告", "../traceability/customer-report.html"],
+    ["交付达成", "../reports/delivery-attainment.html"],
+  ];
 }
 
 function buildTimeline(active) {
@@ -780,6 +951,24 @@ function buildTimeline(active) {
       ["准入校验", /工位启用/.test(active.status) ? "工位档案、设备终端、人员资质和准入规则可被开工检查引用" : "需完成点检、转序接收、维护解除或负荷确认"],
       ["维护留痕", `${active.owner} 于 ${active.time} 维护 / 复核`],
       ["追溯引用", `${active.id} / ${active.line || active.version} 将写入工单、工序、设备和人员履历`],
+    ];
+  }
+  if (pageConfig.id === "partners") {
+    const role = getPartnerType(active);
+    return [
+      ["状态来源", `${active.source} 已同步 ${active.id}`],
+      ["准入校验", role === "供应商" ? `${active.qualification || active.version}，${active.iqcPolicy || "IQC 策略待维护"}` : `${active.qualification || active.version}，客户标签和报告口径已校验`],
+      ["维护留痕", `${active.owner} 于 ${active.time} 维护 / 复核`],
+      ["追溯引用", role === "供应商" ? `${active.id} 将写入来料批次、IQC、投料和反向追溯` : `${active.id} 将写入订单、包装标签和客户追溯报告`],
+    ];
+  }
+  if (pageConfig.id === "materials") {
+    return [
+      ["状态来源", `${active.source} 已同步 ${active.id}`],
+      ["供应商引用", `${active.supplierId || "待维护"} / ${active.supplierName || "供应商待维护"}`],
+      ["准入校验", `${active.status}；${active.supplierStatus || "供应商状态待同步"}；${active.supplierIqcPolicy || active.ref}`],
+      ["维护留痕", `${active.owner} 于 ${active.time} 维护 / 复核`],
+      ["追溯引用", `${active.id} 将与 ${active.supplierId || "供应商"}、来料批次、投料记录和成品谱系关联`],
     ];
   }
   return [
@@ -800,6 +989,8 @@ function buildActions(active) {
       ["准入校验", "开工前校验人员资质、设备状态、工位绑定、班组班次和终端签收"],
     ];
   }
+  if (pageConfig.id === "partners") return buildPartnerActions(active);
+  if (pageConfig.id === "materials") return buildMaterialActions(active);
   const actions = [
     ["发布控制", isReleasedStatus(active.status) ? "允许下游订单和现场任务引用当前版本" : "阻止或提示下游使用，需完成审批后发布"],
     ["影响评估", active.impact],
@@ -811,8 +1002,45 @@ function buildActions(active) {
   if (pageConfig.id === "routing") actions.push(["现场签收", "SOP、参数规格和检验触发规则需下发到工位终端"]);
   if (pageConfig.id === "routing") actions.push(["明细维护入口", "维护工序顺序、标准工时、SOP 引用和检验触发摘要，不编辑 PLM 工艺文件"]);
   if (pageConfig.id === "workshops") actions.push(["资源准入", "产线、班组、班次和产能日历发布后才允许 APS 排程与现场看板引用"]);
-  if (pageConfig.id === "partners") actions.push(["业务规则", "客户标签要求、供应商质量等级和追溯口径发布后进入订单、IQC 和包装校验"]);
   return actions;
+}
+
+function buildPartnerActions(active) {
+  const role = getPartnerType(active);
+  if (role === "供应商") {
+    return [
+      ["准入控制", isReleasedStatus(active.status) ? "允许 IQC、投料准入和追溯查询引用该供应商规则" : "供应商规则存在复核或冻结事项，需阻止或提示下游使用"],
+      ["供货范围", active.supplyScope || active.scope],
+      ["来料检验", active.iqcPolicy || "IQC 策略待维护"],
+      ["批次追溯", active.traceRule || active.ref],
+      ["异常闭环", /缺|冻结|待|风险|观察/.test(active.risk + active.status + active.version) ? "需生成缺料、MRB、库存冻结或供应商质量复核记录" : "当前无阻断项，持续沉淀供应商批次质量表现"],
+      ["下游联动", active.downstream],
+    ];
+  }
+  return [
+    ["准入控制", isReleasedStatus(active.status) ? "允许订单评审、标签打印和客户追溯报告引用该客户规则" : "客户资料存在复核事项，需阻止或提示下游使用"],
+    ["客户要求", active.ref],
+    ["报告口径", active.traceRule || "客户报告口径待维护"],
+    ["质量放行", active.iqcPolicy || "引用 FQC / OQC 策略"],
+    ["异常闭环", /缺|冻结|待|风险|压缩/.test(active.risk + active.status) ? "需生成计划调整、标签审批或客户资料复核记录" : "当前无阻断项，继续保留客户规则履历"],
+    ["下游联动", active.downstream],
+  ];
+}
+
+function buildMaterialActions(active) {
+  return [
+    ["投料准入", isReleasedStatus(active.status) ? "允许齐套检查、领料申请和投料防错引用该物料规则" : "物料处于待放行、替代评估或冻结状态，下游需阻止或提示"],
+    ["供应商关联", `${active.supplierName || "供应商待维护"}（${active.supplierId || "无编码"}）`],
+    ["供方资质", active.supplierQualification || "需在客户供应商中维护合格供方资质"],
+    ["来料检验", active.supplierIqcPolicy || active.ref],
+    ["批次追溯", active.supplierTraceRule || "供应商批次和来料批次规则待维护"],
+    ["边界说明", "物料资料只引用合格供应商和检验追溯规则，不处理库存、领料、配送或线边库执行"],
+    ["下游联动", active.downstream],
+  ];
+}
+
+function getPartnerType(item = {}) {
+  return item.partnerType || (item.id?.startsWith("SUP-") ? "供应商" : item.id?.startsWith("CUS-") ? "客户" : item.scope?.split("/")?.[0]?.trim() || "业务伙伴");
 }
 
 function renderLogs() {
@@ -827,8 +1055,192 @@ function renderAll() {
   renderBomLines();
   renderRoutingLayers();
   renderStationProfile();
+  renderWorkshopCalendar();
   renderCards();
   renderDetail();
+}
+
+function renderWorkshopCalendar() {
+  if (pageConfig.id !== "workshops") return;
+  ensureWorkshopCalendarPanel();
+  const active = getActive();
+  const calendarRows = getWorkshopCalendarRows();
+  const calendarDates = getWorkshopCalendarDates();
+  const checks = getWorkshopAccessChecks(active);
+  $("#workshopCalendarHint").textContent = "按资源和日期查看车间基准日历、产线继承/覆盖、加班、停线、保养和瓶颈资源占用；APS 按最终产线日历计算。";
+  $("#workshopCalendarSummary").innerHTML = [
+    ["车间日历", calendarRows.filter((item) => item.level === "车间").length],
+    ["产线日历", calendarRows.filter((item) => item.level === "产线").length],
+    ["覆盖 06-20 至 06-23", calendarRows.filter((item) => item.range.includes("2026-06-20") && item.range.includes("2026-06-23")).length],
+    ["存在例外窗口", calendarRows.filter((item) => item.exceptions && item.exceptions !== "无").length],
+  ].map(([label, value]) => `<span><em>${label}</em><strong>${value}</strong></span>`).join("");
+  $("#workshopCalendarGrid").style.setProperty("--calendar-days", calendarDates.length);
+  $("#workshopCalendarGrid").innerHTML = `
+    <div class="workshop-calendar-corner">
+      <strong>资源 / 日历</strong>
+      <span>点击资源查看详情</span>
+    </div>
+    ${calendarDates.map((date) => `<div class="workshop-calendar-day"><strong>${date.label}</strong><span>${date.week}</span></div>`).join("")}
+    ${calendarRows.map((item) => `
+      <button class="workshop-calendar-resource${item.id === active?.id ? " is-active" : ""}" type="button" data-id="${item.id}">
+        <span>${item.level}</span>
+        <strong>${item.name}</strong>
+        <em>${item.calendarId}</em>
+      </button>
+      ${calendarDates.map((date) => buildWorkshopCalendarCell(item, date)).join("")}
+    `).join("")}
+  `;
+  $("#workshopCalendarGrid").querySelectorAll("[data-id]").forEach((node) => {
+    node.addEventListener("click", () => {
+      state.activeId = node.dataset.id;
+      state.detailOpen = true;
+      saveState();
+      renderAll();
+    });
+  });
+  $("#workshopAccessList").innerHTML = checks.map((check) => `
+    <article class="workshop-access-item workshop-access-item--${check.status === "通过" ? "green" : "orange"}">
+      <div><span>${check.label}</span>${pill(check.status)}</div>
+      <strong>${check.desc}</strong>
+      <em>${check.trace}</em>
+    </article>
+  `).join("");
+}
+
+function ensureWorkshopCalendarPanel() {
+  if ($("#workshopCalendarPanel")) return;
+  const tablePanel = $(".basic-panel");
+  const panel = document.createElement("section");
+  panel.id = "workshopCalendarPanel";
+  panel.className = "basic-panel workshop-calendar-panel";
+  panel.innerHTML = `
+    <div class="basic-panel__head">
+      <div>
+        <h3>资源日历矩阵与排程准入</h3>
+        <p id="workshopCalendarHint"></p>
+      </div>
+      <a class="secondary-link" href="../orders/production-schedule.html">查看排程</a>
+    </div>
+    <div id="workshopCalendarSummary" class="workshop-calendar-summary"></div>
+    <div class="workshop-calendar-wrap">
+      <div id="workshopCalendarGrid" class="workshop-calendar-grid"></div>
+    </div>
+    <div class="workshop-calendar-legend">
+      <span><i class="is-base"></i>车间基准</span>
+      <span><i class="is-inherit"></i>继承车间</span>
+      <span><i class="is-override"></i>产线覆盖</span>
+      <span><i class="is-exception"></i>例外占用</span>
+      <span><i class="is-risk"></i>排程风险</span>
+    </div>
+    <div class="workshop-access">
+      <div class="station-section-title">
+        <h4>TCU-100 首批 800 台排程前检查</h4>
+        <span>基础资料 / 产线车间</span>
+      </div>
+      <div id="workshopAccessList" class="workshop-access-list"></div>
+    </div>
+  `;
+  tablePanel.insertAdjacentElement("afterend", panel);
+}
+
+function getWorkshopCalendarDates() {
+  return [
+    { key: "2026-06-20", label: "06-20", week: "周六" },
+    { key: "2026-06-21", label: "06-21", week: "周日" },
+    { key: "2026-06-22", label: "06-22", week: "周一" },
+    { key: "2026-06-23", label: "06-23", week: "周二" },
+  ];
+}
+
+function buildWorkshopCalendarCell(item, date) {
+  const cell = getWorkshopCalendarCell(item, date);
+  return `
+    <button class="workshop-calendar-cell workshop-calendar-cell--${cell.tone}${item.id === state.activeId ? " is-active-row" : ""}" type="button" data-id="${item.id}" aria-label="${item.name} ${date.label} ${cell.title}">
+      <span>${cell.source}</span>
+      <strong>${cell.title}</strong>
+      <em>${cell.event}</em>
+      <small>${cell.capacity}</small>
+    </button>
+  `;
+}
+
+function getWorkshopCalendarCell(item, date) {
+  if (item.id === "FAC-EAST-01") {
+    return {
+      tone: date.key === "2026-06-22" ? "exception" : "base",
+      source: "车间基准",
+      title: "白班 + 夜班",
+      event: date.key === "2026-06-22" ? "夜班 02:00-04:00 检修" : "基准生产窗口有效",
+      capacity: "36h / 车间",
+    };
+  }
+  if (item.id === "LINE-A") {
+    const isMaintenance = date.key === "2026-06-21";
+    return {
+      tone: isMaintenance ? "exception" : "override",
+      source: "继承白班",
+      title: "白班 08:00-20:00",
+      event: isMaintenance ? "18:00-20:00 老化房保养" : "TCU-100 首批可排程",
+      capacity: "800 台首批 / 老化瓶颈",
+    };
+  }
+  if (item.id === "LINE-B") {
+    const isFault = date.key === "2026-06-20";
+    return {
+      tone: isFault ? "risk" : "override",
+      source: "追加加班",
+      title: "白班 + 20:00-22:00",
+      event: isFault ? "Test-B2 15:00-17:00 复测" : "加班需车间主任确认",
+      capacity: "测试台 B2 瓶颈",
+    };
+  }
+  if (item.id === "LINE-C") {
+    const isAudit = date.key === "2026-06-23";
+    return {
+      tone: isAudit ? "exception" : "inherit",
+      source: "缩短班次",
+      title: "白班 08:00-18:00",
+      event: isAudit ? "16:00-18:00 客户稽核预留" : "包装节拍优先",
+      capacity: "包装 / 装配",
+    };
+  }
+  return {
+    tone: "inherit",
+    source: item.level || "资源",
+    title: item.shift || item.version,
+    event: item.exceptions || item.mode,
+    capacity: item.capacity,
+  };
+}
+
+function getWorkshopCalendarRows() {
+  return rows.map((item) => ({
+    id: item.id,
+    level: item.level || (item.id.startsWith("LINE-") ? "产线" : "车间"),
+    name: item.name,
+    calendarId: item.calendarId || item.id,
+    parentCalendar: item.parentCalendar || "工厂工作日历",
+    shift: item.version,
+    range: item.calendarRange || "覆盖日期待维护",
+    mode: item.calendarMode || "继承规则待维护",
+    capacity: item.capacityModel || item.ref,
+    exceptions: item.exceptions || "无",
+    status: item.status,
+  }));
+}
+
+function getWorkshopAccessChecks(active) {
+  const lineA = rows.find((item) => item.id === "LINE-A") || active;
+  const workshop = rows.find((item) => item.id === "FAC-EAST-01") || active;
+  const range = `${lineA?.calendarRange || ""} ${workshop?.calendarRange || ""}`;
+  return [
+    { label: "车间启用", status: /资源启用|可排程/.test(workshop?.status || "") ? "通过" : "待复核", desc: `${workshop?.name || "车间"} 状态为 ${workshop?.status || "待维护"}`, trace: "作为订单工厂、车间、权限范围合法来源" },
+    { label: "Line-A 启用", status: /可排程|资源启用/.test(lineA?.status || "") ? "通过" : "待复核", desc: `${lineA?.name || "Line-A"} 状态为 ${lineA?.status || "待维护"}`, trace: "作为 TCU-100 工单目标产线和派工资源" },
+    { label: "日期覆盖", status: /2026-06-20/.test(range) && /2026-06-23/.test(range) ? "通过" : "待复核", desc: lineA?.calendarRange || "产线日历覆盖范围待维护", trace: "APS 可计算计划开始、计划结束和设备占用" },
+    { label: "班次规则", status: /08:00-20:00/.test(lineA?.version || "") ? "通过" : "待复核", desc: lineA?.version || "班次未配置", trace: "白班窗口用于首批 800 台工序级排程" },
+    { label: "瓶颈资源", status: /老化|Aging/.test(`${lineA?.capacityModel || ""} ${lineA?.ref || ""}`) ? "通过" : "待复核", desc: lineA?.capacityModel || "瓶颈资源待维护", trace: "老化测试容量会限制首批完工时间" },
+    { label: "工位与线边库", status: /SMT-01/.test(lineA?.ref || "") && /Pack-A/.test(lineA?.ref || "") && /LS-A/.test(lineA?.capacityModel || "") ? "通过" : "待复核", desc: lineA?.ref || "绑定工位待维护", trace: "支撑领料、线边签收、开工检查和追溯" },
+  ];
 }
 
 function renderRoutingLayers() {

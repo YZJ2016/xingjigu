@@ -7,7 +7,7 @@
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="../styles.css" />
     <link rel="stylesheet" href="./production-orders.css" />
-    <link rel="stylesheet" href="./production-schedule.css" />
+    <link rel="stylesheet" href="./production-schedule.css?v=20260522-time-picker-polish" />
     <link rel="stylesheet" href="./order-maintenance.css" />
   </head>
   <body data-order-maintenance="schedule">
@@ -110,10 +110,24 @@
                   <h3>产线排程甘特图</h3>
                   <p>按资源、计划窗口和约束状态确认可下发批次</p>
                 </div>
-                <div class="timeline-legend">
-                  <span><i class="legend-plan"></i>建议</span>
-                  <span><i class="legend-risk"></i>待调整</span>
-                  <span><i class="legend-done"></i>已确认</span>
+                <div class="timeline-tools" aria-label="甘特图视图切换">
+                  <div class="segmented-control" role="group" aria-label="时间尺度">
+                    <button type="button" class="is-active" data-scale="week">周</button>
+                    <button type="button" data-scale="month">月</button>
+                    <button type="button" data-scale="quarter">季度</button>
+                    <button type="button" data-scale="half">半年</button>
+                    <button type="button" data-scale="year">年度</button>
+                  </div>
+                  <div class="segmented-control" role="group" aria-label="排程视角">
+                    <button type="button" class="is-active" data-view="product">产品</button>
+                    <button type="button" data-view="line">产线</button>
+                    <button type="button" data-view="operation">工序</button>
+                  </div>
+                  <div class="timeline-legend">
+                    <span><i class="legend-plan"></i>建议</span>
+                    <span><i class="legend-risk"></i>待调整</span>
+                    <span><i class="legend-done"></i>已确认</span>
+                  </div>
                 </div>
               </div>
               <div id="timelineGrid" class="timeline-grid"></div>
@@ -126,7 +140,10 @@
                     <h3>工序级计划</h3>
                     <p>当前工单从首工序到包装入库的资源占用</p>
                   </div>
-                  <button id="confirmPlanBtn" type="button">确认当前排程</button>
+                  <div class="section-actions">
+                    <button id="saveOperationTimesBtn" type="button">保存时间调整</button>
+                    <button id="confirmPlanBtn" type="button">确认当前排程</button>
+                  </div>
                 </div>
                 <div class="operation-table-wrap">
                   <table class="operation-table">
@@ -143,6 +160,27 @@
                     <tbody id="operationTableBody"></tbody>
                   </table>
                 </div>
+              </section>
+
+              <section class="schedule-version-panel">
+                <div class="section-title">
+                  <div>
+                    <h3>排程版本与发布</h3>
+                    <p>草案、锁定、发布、撤回和下游同步状态</p>
+                  </div>
+                </div>
+                <div id="versionList" class="version-list"></div>
+              </section>
+
+              <section class="schedule-risk-panel">
+                <div class="section-title">
+                  <div>
+                    <h3>资源冲突与齐套推导</h3>
+                    <p>按设备日历、BOM 缺口、在途到货和首批可排量判断</p>
+                  </div>
+                </div>
+                <div id="conflictList" class="conflict-list"></div>
+                <div id="kitList" class="kit-list"></div>
               </section>
 
               <section class="confirmed-panel">
@@ -217,6 +255,13 @@
                 <button id="releaseDispatchBtn" type="button">下发派工准备</button>
                 <button id="rollbackPlanBtn" class="danger-action" type="button">退回待调整</button>
               </div>
+            </section>
+
+            <section class="detail-section">
+              <div class="section-title">
+                <h3>发布后联动</h3>
+              </div>
+              <div id="linkageList" class="linkage-list"></div>
             </section>
 
             <section class="detail-section">

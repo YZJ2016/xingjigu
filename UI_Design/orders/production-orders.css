@@ -518,6 +518,18 @@ tbody tr.is-active {
   background: rgba(242, 242, 247, 0.86);
 }
 
+.field-hint {
+  display: block;
+  min-height: 15px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .confirm-modal {
   width: min(460px, calc(100vw - 40px));
 }

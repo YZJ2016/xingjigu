@@ -629,6 +629,266 @@
   white-space: normal;
 }
 
+.workshop-check-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workshop-card strong {
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.workshop-calendar-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.workshop-calendar-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.workshop-calendar-summary span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.workshop-calendar-summary em,
+.workshop-access-item span {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.workshop-calendar-summary strong {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.workshop-calendar-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.workshop-calendar-grid {
+  display: grid;
+  grid-template-columns: 210px repeat(var(--calendar-days, 4), minmax(190px, 1fr));
+  min-width: 980px;
+}
+
+.workshop-calendar-corner,
+.workshop-calendar-day,
+.workshop-calendar-resource,
+.workshop-calendar-cell {
+  min-width: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.58);
+  text-align: left;
+}
+
+.workshop-calendar-corner,
+.workshop-calendar-day {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.workshop-calendar-corner strong,
+.workshop-calendar-day strong,
+.workshop-calendar-resource strong,
+.workshop-calendar-cell strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.workshop-calendar-corner span,
+.workshop-calendar-day span,
+.workshop-calendar-resource span,
+.workshop-calendar-resource em,
+.workshop-calendar-cell span,
+.workshop-calendar-cell em,
+.workshop-calendar-cell small,
+.workshop-calendar-legend span {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.basic-panel .workshop-calendar-resource,
+.basic-panel .workshop-calendar-cell {
+  display: grid;
+  gap: 6px;
+  min-height: auto;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 11px;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+
+.workshop-calendar-resource {
+  background: rgba(248, 250, 252, 0.74);
+}
+
+.workshop-calendar-resource.is-active,
+.workshop-calendar-cell.is-active-row {
+  box-shadow: inset 3px 0 0 var(--blue);
+}
+
+.workshop-calendar-cell {
+  min-height: 118px;
+  border-top: 4px solid var(--blue);
+}
+
+.basic-panel .workshop-calendar-cell:hover,
+.basic-panel .workshop-calendar-resource:hover {
+  border-color: var(--line);
+  background: rgba(0, 122, 255, 0.06);
+}
+
+.workshop-calendar-cell--base {
+  border-top-color: var(--indigo);
+  background: rgba(88, 86, 214, 0.07);
+}
+
+.workshop-calendar-cell--inherit {
+  border-top-color: var(--green);
+  background: rgba(52, 199, 89, 0.07);
+}
+
+.workshop-calendar-cell--override {
+  border-top-color: var(--blue);
+  background: rgba(0, 122, 255, 0.07);
+}
+
+.workshop-calendar-cell--exception {
+  border-top-color: var(--orange);
+  background: rgba(255, 159, 10, 0.1);
+}
+
+.workshop-calendar-cell--risk {
+  border-top-color: var(--red);
+  background: rgba(255, 59, 48, 0.08);
+}
+
+.workshop-calendar-cell em,
+.workshop-calendar-cell small {
+  display: block;
+}
+
+.workshop-calendar-cell small {
+  color: var(--ink);
+}
+
+.workshop-calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.workshop-calendar-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.workshop-calendar-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--blue);
+}
+
+.workshop-calendar-legend .is-base {
+  background: var(--indigo);
+}
+
+.workshop-calendar-legend .is-inherit {
+  background: var(--green);
+}
+
+.workshop-calendar-legend .is-override {
+  background: var(--blue);
+}
+
+.workshop-calendar-legend .is-exception {
+  background: var(--orange);
+}
+
+.workshop-calendar-legend .is-risk {
+  background: var(--red);
+}
+
+.workshop-access {
+  display: grid;
+  gap: 10px;
+}
+
+.workshop-access-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workshop-access-item {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--orange);
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.workshop-access-item--green {
+  border-left-color: var(--green);
+}
+
+.workshop-access-item div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.workshop-access-item strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.42;
+}
+
+.workshop-access-item em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .bom-lines-summary {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1212,6 +1472,9 @@
 
   .basic-metrics,
   .basic-card-grid,
+  .workshop-check-grid,
+  .workshop-calendar-summary,
+  .workshop-access-list,
   .basic-impact-grid,
   .station-card-grid,
   .station-profile__grid,

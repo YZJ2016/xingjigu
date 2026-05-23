@@ -31,6 +31,7 @@ const initialOrders = [
   { id: "MO-202606-0010", product: "伺服驱动板 SRV-90", customer: "B 客户", qty: 420, done: 260, due: "2026-06-26", line: "Line-A", status: "生产中", priority: "紧急", risk: "交期", review: "已通过", schedule: "待调整", kit: "齐套", batchPlan: "420", planner: "王计划", materialGap: "齐套" },
   { id: "MO-202606-0011", product: "温湿度采集器 THS-10", customer: "I 客户", qty: 1800, done: 1480, due: "2026-07-08", line: "Line-C", status: "包装中", priority: "低", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "1800", planner: "周计划", materialGap: "齐套" },
   { id: "MO-202606-0012", product: "工业触控终端 HMI-100", customer: "J 客户", qty: 320, done: 80, due: "2026-06-30", line: "Line-B", status: "待首检", priority: "高", risk: "质量", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "320", planner: "李计划", materialGap: "首件尺寸项待确认" },
+  { id: "MO-202606-0014", product: "工业网关 GW-240", customer: "B 客户", qty: 480, done: 0, due: "2026-07-04", line: "Line-B", status: "已排程", priority: "中", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "480", planner: "李计划", materialGap: "齐套" },
 ];
 
 let orders = structuredClone(window.MES_BUSINESS_FLOW?.read().orders || window.MES_MASTER_DATA?.orders || initialOrders);
@@ -145,10 +146,14 @@ function createEmptyOrder() {
     const match = order.id.match(/MO-202606-(\d+)/);
     return match ? Math.max(max, Number(match[1])) : max;
   }, 0) + 1;
+  const defaultProduct = getProductOptions()[0];
+  const defaultCustomer = getCustomerOptions()[0];
   return {
     id: `MO-202606-${String(nextNumber).padStart(4, "0")}`,
-    product: "",
-    customer: "",
+    product: defaultProduct?.name || "",
+    productCode: defaultProduct?.code || "",
+    customer: defaultCustomer?.name || "",
+    customerId: defaultCustomer?.id || "",
     qty: 100,
     done: 0,
     due: "2026-07-10",
@@ -163,6 +168,76 @@ function createEmptyOrder() {
     planner: "待分配",
     materialGap: "待检查",
   };
+}
+
+function getProductOptions() {
+  return window.MES_MASTER_DATA?.products || [];
+}
+
+function getProductMaster(order) {
+  const products = getProductOptions();
+  return products.find((product) => product.code === order.productCode)
+    || products.find((product) => product.name === order.product)
+    || products.find((product) => order.product?.includes(product.code))
+    || null;
+}
+
+function getProductStatus(order) {
+  const product = getProductMaster(order);
+  if (!product) return { master: null, status: "未匹配", hint: "产品未匹配基础资料产品资料档案" };
+  if (/待|复核|冻结|停用|评估/.test(product.status)) return { master: product, status: "需复核", hint: `${product.id} / ${product.status}` };
+  return { master: product, status: "已引用", hint: `${product.id} / ${product.status}` };
+}
+
+function renderProductSelect(selectedOrder) {
+  const products = getProductOptions();
+  const selected = getProductMaster(selectedOrder) || products[0];
+  $("#formProduct").innerHTML = products.map((product) => `
+    <option value="${product.code}">${product.name} · ${product.id} · ${product.status}</option>
+  `).join("");
+  $("#formProduct").value = selected?.code || "";
+  renderProductHint(selected);
+}
+
+function renderProductHint(product) {
+  $("#formProductHint").textContent = product
+    ? `${product.source}；${product.bom} / ${product.routing}；${product.labelTemplate}`
+    : "基础资料产品资料中没有可选产品，请先维护产品档案";
+}
+
+function getCustomerOptions() {
+  return (window.MES_MASTER_DATA?.partners || []).filter((partner) => partner.type === "客户" || partner.partnerType === "客户");
+}
+
+function getCustomerMaster(order) {
+  const customers = getCustomerOptions();
+  return customers.find((customer) => customer.id === order.customerId)
+    || customers.find((customer) => customer.name === order.customer)
+    || customers.find((customer) => order.customer?.includes(customer.name))
+    || null;
+}
+
+function getCustomerStatus(order) {
+  const customer = getCustomerMaster(order);
+  if (!customer) return { master: null, status: "未匹配", hint: "客户未匹配基础资料客户供应商档案" };
+  if (/待|复核|冻结|停用/.test(customer.status)) return { master: customer, status: "需复核", hint: `${customer.id} / ${customer.status}` };
+  return { master: customer, status: "已引用", hint: `${customer.id} / ${customer.status}` };
+}
+
+function renderCustomerSelect(selectedOrder) {
+  const customers = getCustomerOptions();
+  const selected = getCustomerMaster(selectedOrder) || customers[0];
+  $("#formCustomer").innerHTML = customers.map((customer) => `
+    <option value="${customer.id}">${customer.name} · ${customer.id} · ${customer.status}</option>
+  `).join("");
+  $("#formCustomer").value = selected?.id || "";
+  renderCustomerHint(selected);
+}
+
+function renderCustomerHint(customer) {
+  $("#formCustomerHint").textContent = customer
+    ? `${customer.source}；${customer.rule}；${customer.traceRule}`
+    : "基础资料客户供应商中没有可选客户，请先维护客户档案";
 }
 
 function getFilteredOrders() {
@@ -289,8 +364,13 @@ function renderDetail() {
   $("#detailStatus").textContent = order.status;
   $("#detailOrderId").textContent = order.id;
   $("#detailProduct").textContent = order.product;
+  const productStatus = getProductStatus(order);
+  const product = productStatus.master;
+  const customerStatus = getCustomerStatus(order);
+  const customer = customerStatus.master;
   $("#detailGrid").innerHTML = [
-    ["客户", order.customer],
+    ["产品", `${order.product} / ${order.productCode || product?.code || "未关联"}`],
+    ["客户", `${order.customer} / ${order.customerId || customer?.id || "未关联"}`],
     ["计划数量", `${order.qty} 台`],
     ["完成数量", `${order.done} 台`],
     ["承诺交期", order.due],
@@ -301,7 +381,8 @@ function renderDetail() {
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
 
   $("#reviewChecklist").innerHTML = [
-    ["产品主数据", order.review === "已通过" ? "通过" : "待确认", order.product],
+    ["客户主数据", customerStatus.status, customerStatus.hint],
+    ["产品主数据", productStatus.status, productStatus.hint],
     ["BOM 与工艺", order.review === "已通过" ? "已发布" : "待工艺确认", "版本 V2026.06"],
     ["工位设备能力", order.review === "已通过" ? "通过" : "待检查", order.line],
     ["检验计划", order.risk === "资料" ? "待确认" : "已配置", "首件 / IPQC / FQC"],
@@ -318,10 +399,22 @@ function renderDetail() {
 }
 
 function getIntegrationItems(order) {
+  const product = getProductMaster(order);
+  const customer = getCustomerMaster(order);
   return [
     {
+      target: "基础资料 / 产品资料",
+      desc: product ? `${product.id}，${product.bom}，${product.routing}，${product.labelTemplate}` : "未匹配产品档案，订单评审需补齐产品主数据",
+      status: product ? product.status : "待维护",
+    },
+    {
+      target: "基础资料 / 客户供应商",
+      desc: customer ? `${customer.id}，${customer.rule}，${customer.traceRule}` : "未匹配客户档案，订单评审需补齐客户主数据",
+      status: customer ? customer.status : "待维护",
+    },
+    {
       target: "ERP",
-      desc: "同步工单主数据、客户交期、计划数量",
+      desc: `同步工单主数据、产品编码 ${order.productCode || product?.code || "待匹配"}、客户编码 ${order.customerId || "待匹配"}、交期和计划数量`,
       status: ["待评审", "待排程"].includes(order.status) ? "待同步" : "已同步",
     },
     {
@@ -388,6 +481,14 @@ function bindEvents() {
     if (event.target.id === "orderFormBackdrop") closeOrderForm();
   });
   $("#orderForm").addEventListener("submit", saveOrderForm);
+  $("#formProduct").addEventListener("change", (event) => {
+    const product = getProductOptions().find((item) => item.code === event.target.value);
+    renderProductHint(product);
+  });
+  $("#formCustomer").addEventListener("change", (event) => {
+    const customer = getCustomerOptions().find((item) => item.id === event.target.value);
+    renderCustomerHint(customer);
+  });
   bindConfirmDialog();
   $("#orderSearch").addEventListener("input", (event) => {
     state.search = event.target.value;
@@ -487,8 +588,8 @@ function openOrderForm(orderId) {
   $("#orderFormTitle").textContent = orderId ? "编辑订单" : "新增订单";
   $("#formOrderId").value = order.id;
   $("#formOrderId").disabled = Boolean(orderId);
-  $("#formProduct").value = order.product;
-  $("#formCustomer").value = order.customer;
+  renderProductSelect(order);
+  renderCustomerSelect(order);
   $("#formQty").value = order.qty;
   $("#formDone").value = order.done;
   $("#formDue").value = order.due;
@@ -514,10 +615,14 @@ function saveOrderForm(event) {
   const qty = Number($("#formQty").value);
   const done = Number($("#formDone").value);
   const status = $("#formStatus").value;
+  const product = getProductOptions().find((item) => item.code === $("#formProduct").value);
+  const customer = getCustomerOptions().find((item) => item.id === $("#formCustomer").value);
   const order = {
     id: $("#formOrderId").value.trim(),
-    product: $("#formProduct").value.trim(),
-    customer: $("#formCustomer").value.trim(),
+    product: product?.name || "",
+    productCode: product?.code || "",
+    customer: customer?.name || "",
+    customerId: customer?.id || "",
     qty,
     done: Math.min(done, qty),
     due: $("#formDue").value,

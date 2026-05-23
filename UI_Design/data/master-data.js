@@ -86,25 +86,28 @@ window.MES_MASTER_DATA = (() => {
   ];
 
   const workshops = [
-    { id: "FAC-EAST-01", name: "华东一厂 · 电子装配车间", shifts: "2026 白班日历", source: "MES 资源模型", status: "资源启用", capacity: "Line-A / Line-B / Line-C", owner: "车间主任 陈伟", time: "06-18 08:20", risk: "支持多产线并行和班次交接", downstream: "首页工作台、生产排程、电子看板" },
-    { id: "LINE-A", name: "Line-A 电子装配线", shifts: "白班 08:00-20:00", source: "APS 产能日历", status: "可排程", capacity: "SMT-01 / DIP-A1 / Pack-A", owner: "计划主管 李敏", time: "06-18 08:35", risk: "老化房为跨线瓶颈", downstream: "产能负荷、派工单、设备运行" },
-    { id: "LINE-B", name: "Line-B 模块装配线", shifts: "白班 + 加班窗口", source: "APS + 设备保养计划", status: "负荷预警", capacity: "Test-B / Assembly-B", owner: "计划主管 李敏", time: "06-18 10:16", risk: "功能测试与物料冻结双风险", downstream: "交期预警、缺料处理、设备效率" },
-    { id: "LINE-C", name: "Line-C 包装与装配线", shifts: "白班 08:00-20:00", source: "MES 资源模型", status: "可排程", capacity: "Assembly-C / Pack-C", owner: "包装主管 李娟", time: "06-18 13:26", risk: "HMI-70 工艺资料待签收", downstream: "包装作业、成品入库、交接班" },
+    { id: "FAC-EAST-01", level: "车间", name: "华东一厂 · 电子装配车间", calendarId: "CAL-WKS-EC-202606", parentCalendar: "工厂工作日历", shifts: "白班 08:00-20:00 / 夜班 20:00-08:00", calendarRange: "2026-06-20 至 2026-06-23", calendarMode: "车间基准日历", source: "MES 资源模型", status: "资源启用", capacity: "Line-A / Line-B / Line-C", capacityModel: "车间每日 36h 基准，产线可继承或覆盖", exceptions: "06-22 夜班检修窗口 02:00-04:00", owner: "车间主任 陈伟", time: "06-18 08:20", risk: "车间日历只定义车间可生产窗口，产线仍需独立确认班次、停线和瓶颈资源", downstream: "首页工作台、生产排程、电子看板" },
+    { id: "LINE-A", level: "产线", workshop: "电子装配车间", name: "Line-A 电子装配线", calendarId: "CAL-LINE-A-202606", parentCalendar: "CAL-WKS-EC-202606", shifts: "白班 08:00-20:00", calendarRange: "2026-06-20 至 2026-06-23", calendarMode: "继承车间白班，覆盖老化瓶颈窗口", source: "APS 产能日历", status: "可排程", capacity: "SMT-01 / DIP-Line-A / Burn-01 / Assembly-A / Test-A / Aging-Room-1 / QC-Final / Pack-A", capacityModel: "首批 800 台；老化房 1 为瓶颈资源；线边库 LS-A 已启用", exceptions: "06-21 18:00-20:00 Aging-Room-1 预留保养，不占用装配工位", owner: "计划主管 李敏", time: "06-18 08:35", risk: "TCU-100 首批可排程，但老化测试需锁定容量和时长", downstream: "产能负荷、派工单、设备运行" },
+    { id: "LINE-B", level: "产线", workshop: "电子装配车间", name: "Line-B 模块装配线", calendarId: "CAL-LINE-B-202606", parentCalendar: "CAL-WKS-EC-202606", shifts: "白班 08:00-20:00 / 加班 20:00-22:00", calendarRange: "2026-06-20 至 2026-06-23", calendarMode: "继承车间日历，追加加班窗口", source: "APS + 设备保养计划", status: "负荷预警", capacity: "SMT-B / Test-B / Assembly-B / Pack-B", capacityModel: "测试台 B2 为瓶颈；加班窗口需车间主任确认", exceptions: "06-20 15:00-17:00 Test-B2 故障复测，APS 暂不释放", owner: "计划主管 李敏", time: "06-18 10:16", risk: "功能测试与物料冻结双风险", downstream: "交期预警、缺料处理、设备效率" },
+    { id: "LINE-C", level: "产线", workshop: "电子装配车间", name: "Line-C 包装与装配线", calendarId: "CAL-LINE-C-202606", parentCalendar: "CAL-WKS-EC-202606", shifts: "白班 08:00-18:00", calendarRange: "2026-06-20 至 2026-06-23", calendarMode: "继承车间日历，缩短包装线班次", source: "MES 资源模型", status: "可排程", capacity: "Assembly-C / Aging-C / Pack-C", capacityModel: "包装节拍优先，HMI-70 资料未签收时不释放", exceptions: "06-23 16:00-18:00 包装线客户稽核预留", owner: "包装主管 李娟", time: "06-18 13:26", risk: "HMI-70 工艺资料待签收", downstream: "包装作业、成品入库、交接班" },
   ];
 
   const partners = [
-    { id: "CUS-A", name: "A 客户", type: "客户", level: "优先级高", source: "ERP 客户资料", status: "业务生效", rule: "客户标签模板 A-V1.4", owner: "业务资料管理员 沈清", time: "06-18 09:02", risk: "标签补打需审批", downstream: "订单评审、成品标签、客户追溯报告" },
-    { id: "CUS-B", name: "B 客户", type: "客户", level: "交期敏感", source: "ERP 客户资料", status: "业务生效", rule: "OTD 重点监控", owner: "计划主管 李敏", time: "06-18 10:08", risk: "交期压缩需计划调整", downstream: "交期预警、计划调整、交付达成" },
-    { id: "SUP-SEN-01", name: "传感器供应商 S-01", type: "供应商", level: "A级供应商", source: "QMS 供应商档案", status: "待到货复核", rule: "SEN-L20260605 / IQC 加严", owner: "采购跟单 袁青", time: "06-18 11:10", risk: "到货延迟影响第二批开工", downstream: "来料检验、缺料预警、批次追溯" },
-    { id: "SUP-PWR-02", name: "电源芯片供应商 P-02", type: "供应商", level: "质量观察", source: "QMS 冻结规则", status: "冻结待复核", rule: "PWRIC-L20260602", owner: "质量员 孟可", time: "06-18 11:42", risk: "需 MRB 或替代料审批", downstream: "来料检验、库存冻结、缺料处理" },
+    { id: "CUS-A", name: "A 客户", type: "客户", level: "优先级高", source: "ERP 客户资料", status: "业务生效", qualification: "年度框架订单有效", qualityLevel: "交付优先级 A", rule: "客户标签模板 A-V1.4", supplyScope: "TCU-100 / 客户 A 包装盒", traceRule: "按成品 SN、箱码、托盘码生成客户追溯报告", iqcPolicy: "不适用，客户侧引用 FQC / OQC 要求", owner: "业务资料管理员 沈清", time: "06-18 09:02", risk: "标签补打需审批", downstream: "订单评审、成品标签、客户追溯报告" },
+    { id: "CUS-B", name: "B 客户", type: "客户", level: "交期敏感", source: "ERP 客户资料", status: "业务生效", qualification: "重点客户有效", qualityLevel: "OTD 重点监控", rule: "OTD 重点监控 / 客户 B 标签模板", supplyScope: "GW-240 / SRV-90", traceRule: "按订单交付批次生成受控追溯资料", iqcPolicy: "不适用，客户侧引用 OQC 放行策略", owner: "计划主管 李敏", time: "06-18 10:08", risk: "交期压缩需计划调整", downstream: "交期预警、计划调整、交付达成" },
+    { id: "CUS-D", name: "D 客户", type: "客户", level: "指定批次", source: "ERP 客户资料 + QMS 客户要求", status: "业务生效", qualification: "专项订单有效", qualityLevel: "客户指定料重点管控", rule: "客户 D 指定批次 / 标签模板 D-V2", supplyScope: "PCM-60 / 客户指定电源芯片批次", traceRule: "客户指定批次、MRB 放行号、成品 SN 必须进入客户追溯报告", iqcPolicy: "引用 FQC / OQC 放行策略，关键料冻结需质量签核", owner: "业务资料管理员 沈清", time: "06-18 11:28", risk: "指定批次冻结会阻止备料和投料", downstream: "订单评审、齐套检查、客户追溯报告" },
+    { id: "CUS-E", name: "E 客户", type: "客户", level: "首版试产", source: "ERP 客户资料 + PLM 首版资料", status: "待质量复核", qualification: "试产订单有效", qualityLevel: "首版检验重点监控", rule: "客户 E 标签模板待确认", supplyScope: "HMI-70 / 客户 E 包装盒", traceRule: "首版试产需绑定 FAI、FQC、包装版本和客户签收记录", iqcPolicy: "引用 FAI / FQC 放行策略，检验规范未确认前不允许排程放行", owner: "质量工程师 孟可", time: "06-18 14:18", risk: "检验要求未确认，订单评审需拦截", downstream: "订单评审、生产排程、成品检验" },
+    { id: "SUP-SEN-01", name: "传感器供应商 S-01", type: "供应商", level: "A级供应商", source: "QMS 供应商档案", status: "待到货复核", qualification: "合格供方 / 资质有效至 2026-12-31", qualityLevel: "A级 / 近 3 批 IQC 合格率 98.8%", rule: "IQC-SEN-AQL-II / SEN-L20260605", supplyScope: "MAT-SEN-T100 温度传感器；可供 TCU-100、SEN-20", traceRule: "供应商批次 + 来料批次必填，投料后绑定工单、工序和成品 SN", iqcPolicy: "正常检验；逾期到货自动转加严复核", owner: "采购跟单 袁青", time: "06-18 11:10", risk: "到货延迟影响第二批开工", downstream: "来料检验、缺料预警、批次追溯" },
+    { id: "SUP-PWR-02", name: "电源芯片供应商 P-02", type: "供应商", level: "质量观察", source: "QMS 冻结规则", status: "冻结待复核", qualification: "临时放行需 MRB 审批", qualityLevel: "观察级 / 近期失效率超阈值", rule: "MRB-PWR-202606 / PWRIC-L20260602", supplyScope: "MAT-PWR-IC60 电源芯片；仅限 PCM-60 指定批次", traceRule: "客户指定批次 + MRB 放行号必填，冻结批次禁止进入投料准入", iqcPolicy: "加严检验；功能项全检后才允许库存解冻", owner: "质量员 孟可", time: "06-18 11:42", risk: "需 MRB 或替代料审批", downstream: "来料检验、库存冻结、缺料处理" },
   ];
 
   const orders = [
     { id: "MO-202606-0001", productCode: "TCU-100", product: "智能温控控制器 TCU-100", customer: "A 客户", customerId: "CUS-A", qty: 1000, done: 428, due: "2026-06-30", line: "Line-A", status: "已下达", priority: "高", risk: "缺料", quality: 98.7, oee: 86.4, review: "已通过", schedule: "已确认", kit: "缺 200 件", batchPlan: "800 + 200", planner: "周计划", materialGap: "温度传感器缺 200 件" },
-    { id: "MO-202606-0013", productCode: "TCU-100", product: "智能温控控制器 TCU-100", customer: "A 客户", customerId: "CUS-A", qty: 300, done: 0, due: "2026-07-05", line: "Line-A", status: "待排程", priority: "中", risk: "资料", quality: 0, oee: 0, review: "待评审", schedule: "未排程", kit: "待检查", batchPlan: "未拆批", planner: "待分配", materialGap: "等待资料复核" },
+    { id: "MO-202606-0013", productCode: "TCU-100", product: "智能温控控制器 TCU-100", customer: "A 客户", customerId: "CUS-A", qty: 300, done: 0, due: "2026-07-05", line: "Line-A", status: "待评审", priority: "中", risk: "资料", quality: 0, oee: 0, review: "待评审", schedule: "未排程", kit: "待检查", batchPlan: "未拆批", planner: "待分配", materialGap: "等待资料复核" },
     { id: "MO-202606-0002", productCode: "GW-240", product: "工业网关 GW-240", customer: "B 客户", customerId: "CUS-B", qty: 600, done: 315, due: "2026-06-28", line: "Line-B", status: "生产中", priority: "高", risk: "交期", quality: 97.9, oee: 83.8, review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "600", planner: "李计划", materialGap: "齐套" },
+    { id: "MO-202606-0014", productCode: "GW-240", product: "工业网关 GW-240", customer: "B 客户", customerId: "CUS-B", qty: 480, done: 0, due: "2026-07-04", line: "Line-B", status: "已排程", priority: "中", risk: "正常", quality: 0, oee: 0, review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "480", planner: "李计划", materialGap: "齐套" },
     { id: "MO-202606-0005", productCode: "PCM-60", product: "电源控制模块 PCM-60", customer: "D 客户", customerId: "CUS-D", qty: 900, done: 120, due: "2026-06-27", line: "Line-B", status: "待备料", priority: "紧急", risk: "缺料", quality: 96.8, oee: 81.6, review: "已通过", schedule: "待调整", kit: "缺 160 件", batchPlan: "500 + 400", planner: "李计划", materialGap: "电源芯片缺 160 件" },
-    { id: "MO-202606-0006", productCode: "HMI-70", product: "显示控制面板 HMI-70", customer: "E 客户", customerId: "CUS-E", qty: 500, done: 0, due: "2026-07-01", line: "Line-C", status: "待排程", priority: "中", risk: "资料", quality: 0, oee: 0, review: "待评审", schedule: "未排程", kit: "待检查", batchPlan: "未拆批", planner: "待分配", materialGap: "检验要求未确认" },
+    { id: "MO-202606-0006", productCode: "HMI-70", product: "显示控制面板 HMI-70", customer: "E 客户", customerId: "CUS-E", qty: 500, done: 0, due: "2026-07-01", line: "Line-C", status: "待评审", priority: "中", risk: "资料", quality: 0, oee: 0, review: "待评审", schedule: "未排程", kit: "待检查", batchPlan: "未拆批", planner: "待分配", materialGap: "检验要求未确认" },
     { id: "MO-202606-0010", productCode: "SRV-90", product: "伺服驱动板 SRV-90", customer: "B 客户", customerId: "CUS-B", qty: 420, done: 260, due: "2026-06-26", line: "Line-A", status: "生产中", priority: "紧急", risk: "交期", quality: 97.2, oee: 84.3, review: "已通过", schedule: "待调整", kit: "齐套", batchPlan: "420", planner: "王计划", materialGap: "齐套" },
   ];
 
@@ -138,14 +141,39 @@ window.MES_MASTER_DATA = (() => {
   }
 
   function toBasicRows() {
+    const partnerById = (id) => partners.find((partner) => partner.id === id);
     return {
       products: products.map((item) => ({ id: item.id, name: item.name, version: item.version, source: item.source, status: item.status, ref: `${item.bom} / ${item.routing} / ${item.labelTemplate}`, impact: `${orders.find((order) => order.productCode === item.code)?.id || "待关联工单"} ${item.status.includes("待") ? "阻止排程" : "可排程"}`, owner: item.owner, time: item.time, scope: `${item.customer} / ${item.line} / 电子装配`, risk: item.risk, downstream: item.downstream })),
-      materials: materials.map((item) => ({ id: item.id, name: item.name, version: item.batchRule, source: item.source, status: item.status, ref: `${item.iqc} / ${item.batch}`, impact: item.risk, owner: item.owner, time: item.time, scope: `${item.supplierName} / ${item.type}`, risk: item.risk, downstream: item.downstream })),
+      materials: materials.map((item) => {
+        const supplier = partnerById(item.supplier);
+        return {
+          id: item.id,
+          name: item.name,
+          materialType: item.type,
+          version: item.batchRule,
+          source: item.source,
+          status: item.status,
+          supplierId: item.supplier,
+          supplierName: item.supplierName,
+          supplierStatus: supplier?.status || "供应商档案待维护",
+          supplierQualification: supplier?.qualification || "合格供方关系待维护",
+          supplierQualityLevel: supplier?.qualityLevel || "质量等级待维护",
+          supplierTraceRule: supplier?.traceRule || "供应商批次规则待维护",
+          supplierIqcPolicy: supplier?.iqcPolicy || item.iqc,
+          ref: `${item.iqc} / ${item.batch}`,
+          impact: item.risk,
+          owner: item.owner,
+          time: item.time,
+          scope: `${item.supplierName} / ${item.type}`,
+          risk: item.risk,
+          downstream: item.downstream,
+        };
+      }),
       bom: bomHeaders.map((item) => ({ id: item.id, name: item.productName, version: item.version, source: item.source, status: item.status, ref: `${(bomLines[item.id] || []).length || 3} 个关键物料 / 损耗 ${item.lossRate}`, impact: `${orders.find((order) => order.productCode === item.productCode)?.id || "待关联工单"} ${item.risk}`, owner: item.owner, time: item.time, scope: `${item.productName} / ${item.version}`, risk: item.risk, downstream: item.downstream })),
       routing: routings.map((item) => ({ id: item.id, name: item.name, version: item.version, source: item.source, status: item.status, ref: `${item.steps} / ${item.sop}`, impact: `${orders.find((order) => order.productCode === item.productCode)?.id || "待关联工单"} 引用`, owner: item.owner, time: item.time, scope: `${item.productCode} / ${item.sop}`, risk: item.risk, downstream: item.downstream })),
       stations: stations.map((item) => ({ ...item, version: item.line, source: "MES 维护 + 设备/终端状态", ref: `${item.equipment} / ${item.terminal}`, impact: `${item.operation} 开工准入`, scope: `${item.operation} / ${item.line}` })),
-      workshops: workshops.map((item) => ({ id: item.id, name: item.name, version: item.shifts, source: item.source, status: item.status, ref: item.capacity, impact: item.risk, owner: item.owner, time: item.time, scope: item.name, risk: item.risk, downstream: item.downstream })),
-      partners: partners.map((item) => ({ id: item.id, name: item.name, version: item.level, source: item.source, status: item.status, ref: item.rule, impact: item.risk, owner: item.owner, time: item.time, scope: `${item.type} / ${item.name}`, risk: item.risk, downstream: item.downstream })),
+      workshops: workshops.map((item) => ({ ...item, version: item.shifts, ref: item.capacity, impact: item.risk, scope: `${item.level} / ${item.name}`, downstream: item.downstream })),
+      partners: partners.map((item) => ({ id: item.id, partnerType: item.type, name: item.name, version: item.level, source: item.source, status: item.status, qualification: item.qualification, qualityLevel: item.qualityLevel, ref: item.rule, supplyScope: item.supplyScope, traceRule: item.traceRule, iqcPolicy: item.iqcPolicy, impact: item.risk, owner: item.owner, time: item.time, scope: `${item.type} / ${item.name}`, risk: item.risk, downstream: item.downstream })),
     };
   }
 

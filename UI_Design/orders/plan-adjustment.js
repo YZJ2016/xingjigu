@@ -368,7 +368,7 @@ function approveAdjustment(orderId) {
   if (!order) return;
   const adjustment = getAdjustment(order);
   if (adjustment.countersign.some((item) => item.status !== "已确认")) {
-    showToast("请先完成会签再确认调整");
+    showToast("请先完成会签与影响校验");
     return;
   }
   schedulePlans[order.id] = {
@@ -378,7 +378,7 @@ function approveAdjustment(orderId) {
     window: formatWindow(adjustment.afterOffset, adjustment.afterDuration),
     batchPlan: getAfterBatch(order, adjustment),
   };
-  updateOrder(order.id, { schedule: "已确认", status: order.status === "待排程" ? "已排程" : order.status, batchPlan: getAfterBatch(order, adjustment), risk: order.risk === "交期" ? "正常" : order.risk }, "计划调整已确认并同步排程");
+  updateOrder(order.id, { schedule: "已确认", status: order.status === "待排程" ? "已排程" : order.status, batchPlan: getAfterBatch(order, adjustment), risk: order.risk === "交期" ? "正常" : order.risk }, "调整方案已同步排程准备，待派工重发校验");
 }
 
 function updateOrder(orderId, patch, message) {
@@ -442,11 +442,11 @@ function bindEvents() {
   $("#createAdjustmentBtn").addEventListener("click", () => {
     getAdjustmentOrders().forEach((order) => {
       adjustments[order.id] = buildAdjustment(order);
-      recordIntegration(order.id, "已生成计划调整建议");
+      recordIntegration(order.id, "模拟生成计划调整建议，等待会签与影响校验");
     });
     saveState();
     renderAll();
-    showToast("计划调整建议已生成");
+    showToast("模拟调整建议已生成");
   });
   $("#approveAdjustmentBtn").addEventListener("click", () => approveAdjustment(getActiveOrder().id));
   $("#confirmCountersignBtn").addEventListener("click", () => {
@@ -456,10 +456,10 @@ function bindEvents() {
       status: "可确认",
       countersign: getAdjustment(order).countersign.map((item) => ({ ...item, status: "已确认" })),
     };
-    recordIntegration(order.id, "计划调整会签已完成");
+    recordIntegration(order.id, "模拟计划调整会签已完成，影响校验通过");
     saveState();
     renderAll();
-    showToast("会签已完成");
+    showToast("模拟会签与影响校验已完成");
   });
   $("#moveEarlierBtn").addEventListener("click", () => shiftActiveAdjustment(-1));
   $("#moveLaterBtn").addEventListener("click", () => shiftActiveAdjustment(1));
@@ -467,12 +467,12 @@ function bindEvents() {
     const order = getActiveOrder();
     const adjustment = getAdjustment(order);
     adjustments[order.id] = { ...adjustment, reason: "缺料", afterDuration: Math.min(3, adjustment.afterDuration + 1), status: "待会签" };
-    recordIntegration(order.id, "已调整为拆批方案");
+    recordIntegration(order.id, "已维护为拆批调整方案");
     saveState();
     renderAll();
-    showToast("已调整为拆批方案");
+    showToast("已维护为拆批调整方案");
   });
-  $("#rollbackAdjustBtn").addEventListener("click", () => updateOrder(getActiveOrder().id, { schedule: "待调整" }, "计划已退回待调整"));
+  $("#rollbackAdjustBtn").addEventListener("click", () => updateOrder(getActiveOrder().id, { schedule: "待调整" }, "调整申请已回退并保留原计划"));
   $("#resetAdjustmentPageBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
     orders = structuredClone(initialOrders);
@@ -503,10 +503,10 @@ function shiftActiveAdjustment(days) {
   const adjustment = getAdjustment(order);
   const nextOffset = Math.max(0, Math.min(planDays.length - 1, adjustment.afterOffset + days));
   adjustments[order.id] = { ...adjustment, afterOffset: nextOffset, impact: getImpact(order, nextOffset, adjustment.afterDuration) };
-  recordIntegration(order.id, days < 0 ? "计划建议提前 1 天" : "计划建议后移 1 天");
+  recordIntegration(order.id, days < 0 ? "调整方案建议提前 1 天" : "调整方案建议后移 1 天");
   saveState();
   renderAll();
-  showToast(days < 0 ? "计划已提前 1 天" : "计划已后移 1 天");
+  showToast(days < 0 ? "方案已提前 1 天" : "方案已后移 1 天");
 }
 
 window.addEventListener("plan-maintenance:changed", () => {

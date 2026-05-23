@@ -31,19 +31,36 @@ const initialOrders = [
   { id: "MO-202606-0010", product: "伺服驱动板 SRV-90", customer: "B 客户", qty: 420, done: 260, due: "2026-06-26", line: "Line-A", status: "生产中", priority: "紧急", risk: "交期", review: "已通过", schedule: "待调整", kit: "齐套", batchPlan: "420", planner: "王计划", materialGap: "齐套" },
   { id: "MO-202606-0011", product: "温湿度采集器 THS-10", customer: "I 客户", qty: 1800, done: 1480, due: "2026-07-08", line: "Line-C", status: "包装中", priority: "低", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "1800", planner: "周计划", materialGap: "齐套" },
   { id: "MO-202606-0012", product: "工业触控终端 HMI-100", customer: "J 客户", qty: 320, done: 80, due: "2026-06-30", line: "Line-B", status: "待首检", priority: "高", risk: "质量", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "320", planner: "李计划", materialGap: "首件尺寸项待确认" },
+  { id: "MO-202606-0014", product: "工业网关 GW-240", customer: "B 客户", qty: 480, done: 0, due: "2026-07-04", line: "Line-B", status: "已排程", priority: "中", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "480", planner: "李计划", materialGap: "齐套" },
 ];
 
+const planStartDate = "2026-06-20";
+const planEndDate = "2026-07-31";
 const planDays = ["06-20", "06-21", "06-22", "06-23", "06-24", "06-25", "06-26"];
 const lines = ["Line-A", "Line-B", "Line-C"];
+const timeOptions = [
+  "06:00", "07:00", "08:00", "09:00", "10:00", "11:00",
+  "12:00", "13:00", "14:00", "15:00", "16:00", "17:00",
+  "18:00", "19:00", "20:00", "21:00", "22:00", "23:00",
+];
+const timeOptionGroups = [
+  { label: "白班", range: "06:00-17:00", values: timeOptions.slice(0, 12) },
+  { label: "晚班", range: "18:00-23:00", values: timeOptions.slice(12) },
+];
+const resourcePools = {
+  "Line-A": { SMT: "SMT-01", DIP: "DIP-Line-A", Assembly: "Assembly-A", Test: "Test-A", Aging: "Aging-Room-1", FQC: "QC-Final-A", Pack: "Pack-A" },
+  "Line-B": { SMT: "SMT-02", DIP: "DIP-Line-B", Assembly: "Assembly-B", Test: "Test-B2", Aging: "Aging-Room-2", FQC: "QC-Final-B", Pack: "Pack-B" },
+  "Line-C": { SMT: "SMT-03", DIP: "DIP-Line-C", Assembly: "Assembly-C", Test: "Test-C", Aging: "Aging-Room-1", FQC: "QC-Final-C", Pack: "Pack-C" },
+};
 const operationTemplates = [
-  ["SMT 贴片", "08:00", "12:00", "SMT-01"],
-  ["DIP 插件", "13:00", "18:00", "DIP-Line"],
-  ["程序烧录", "06-21 08:00", "06-21 12:00", "Burn-01"],
-  ["整机装配", "06-21 13:00", "06-21 18:00", "Assembly"],
-  ["功能测试", "06-22 08:00", "06-22 14:00", "Test"],
-  ["老化测试", "06-22 14:00", "06-23 06:00", "Aging-Room-1"],
-  ["FQC 成品检验", "06-23 08:00", "06-23 12:00", "QC-Final"],
-  ["包装入库", "06-23 13:00", "06-23 18:00", "Pack"],
+  { key: "SMT", name: "SMT 贴片", startHour: 8, hours: 4, qtyRate: 520 },
+  { key: "DIP", name: "DIP 插件", startHour: 13, hours: 5, qtyRate: 420 },
+  { key: "Burn", name: "程序烧录", startHour: 8, hours: 4, qtyRate: 360, offset: 1 },
+  { key: "Assembly", name: "整机装配", startHour: 13, hours: 5, qtyRate: 320, offset: 1 },
+  { key: "Test", name: "功能测试", startHour: 8, hours: 6, qtyRate: 260, offset: 2 },
+  { key: "Aging", name: "老化测试", startHour: 14, hours: 16, qtyRate: 120, offset: 2 },
+  { key: "FQC", name: "FQC 成品检验", startHour: 8, hours: 4, qtyRate: 500, offset: 3 },
+  { key: "Pack", name: "包装入库", startHour: 13, hours: 5, qtyRate: 600, offset: 3 },
 ];
 
 let orders = structuredClone(window.MES_MASTER_DATA?.orders || initialOrders);
@@ -54,6 +71,8 @@ let state = {
   search: "",
   schedule: "all",
   line: "all",
+  timelineScale: "week",
+  timelineView: "product",
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -129,6 +148,8 @@ function loadState() {
     schedulePlans = saved.schedulePlans || schedulePlans;
     state = { ...state, ...(saved.scheduleState || {}) };
     if (!["all", "未排程", "待调整"].includes(state.schedule)) state.schedule = "all";
+    if (!["week", "month", "quarter", "half", "year"].includes(state.timelineScale)) state.timelineScale = "week";
+    if (!["product", "line", "operation"].includes(state.timelineView)) state.timelineView = "product";
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -139,12 +160,239 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, orders, integrationLogs, schedulePlans, scheduleState: state }));
 }
 
+function getFlowScheduleStatus(order) {
+  if (order.schedule === "已确认") return "已发布";
+  if (order.schedule === "待调整") return "待约束确认";
+  if (order.schedule === "未排程") return order.review === "已通过" ? "待排程" : "等待评审";
+  return order.schedule || "待排程";
+}
+
+function syncScheduleFlow(orderIds, action) {
+  const flowState = window.MES_BUSINESS_FLOW?.read?.();
+  if (!flowState) return;
+  const ids = Array.isArray(orderIds) ? orderIds : [orderIds];
+  ids.forEach((orderId) => {
+    const order = orders.find((item) => item.id === orderId);
+    if (!order) return;
+    const plan = getPlan(order);
+    const existingIndex = flowState.orders.findIndex((item) => item.id === order.id);
+    if (existingIndex >= 0) flowState.orders[existingIndex] = { ...flowState.orders[existingIndex], ...order };
+    else flowState.orders.unshift({ ...order });
+    flowState.schedules[order.id] = {
+      ...(flowState.schedules[order.id] || {}),
+      orderId: order.id,
+      status: getFlowScheduleStatus(order),
+      batchPlan: plan.batchPlan,
+      route: flowState.schedules[order.id]?.route || "SMT>DIP>烧录>装配>测试>老化>FQC>包装",
+      line: order.line,
+      window: plan.window,
+      strategy: plan.strategy,
+      bottleneck: plan.bottleneck,
+      release: plan.release,
+      constraints: plan.constraints,
+      operations: plan.operations,
+      version: plan.version,
+      publishStatus: plan.publishStatus,
+      conflicts: plan.conflicts,
+      kitSummary: plan.kitSummary,
+      linkages: plan.linkages,
+    };
+    if (order.schedule === "已确认") {
+      flowState.dispatches[order.id] = {
+        ...(flowState.dispatches[order.id] || {}),
+        orderId: order.id,
+        status: order.status === "已下达" ? "已下达" : "派工准备",
+        route: flowState.schedules[order.id].route,
+      };
+      flowState.barcodeBatches[order.id] = {
+        ...(flowState.barcodeBatches[order.id] || {}),
+        orderId: order.id,
+        status: order.status === "已下达" ? "等待现场使用" : "等待派工下发",
+      };
+    }
+    flowState.logs = [{
+      id: `FLOW-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+      orderId: order.id,
+      stage: "生产排程",
+      action,
+      owner: order.planner || "计划员",
+      result: `${order.schedule}，${plan.window}，${plan.batchPlan}`,
+      refs: [order.line, plan.bottleneck].filter(Boolean),
+      time: new Date().toLocaleString("zh-CN", { hour12: false }),
+    }, ...(flowState.logs || [])].slice(0, 160);
+  });
+  window.MES_BUSINESS_FLOW.write(flowState);
+}
+
+function syncPageStore() {
+  const shape = window.MES_BUSINESS_FLOW?.getOrderStoreShape?.("scheduleState", state);
+  if (!shape) {
+    saveState();
+    return;
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...shape, schedulePlans: { ...shape.schedulePlans, ...schedulePlans }, scheduleState: state }));
+}
+
 function getActiveOrder() {
   return orders.find((order) => order.id === state.activeOrderId) || orders.find((order) => order.review === "已通过" && order.schedule !== "已确认") || orders[0];
 }
 
+function getProductCode(order) {
+  if (order.productCode) return order.productCode;
+  const product = window.MES_MASTER_DATA?.products?.find((item) => order.product?.includes(item.code));
+  return product?.code || String(order.product || "").split(" ").at(-1) || "";
+}
+
+function getRoutingSteps(order) {
+  const routing = window.MES_MASTER_DATA?.routingByProduct?.(getProductCode(order));
+  const rawSteps = String(routing?.steps || "SMT>DIP>烧录>装配>测试>老化>FQC>包装").split(">").filter(Boolean);
+  return rawSteps.map((step) => {
+    if (/SMT|贴片/.test(step)) return "SMT";
+    if (/DIP|插件/.test(step)) return "DIP";
+    if (/烧录|程序/.test(step)) return "Burn";
+    if (/装配/.test(step)) return "Assembly";
+    if (/测试/.test(step)) return "Test";
+    if (/老化/.test(step)) return "Aging";
+    if (/FQC|检验/.test(step)) return "FQC";
+    if (/包装|入库/.test(step)) return "Pack";
+    return "Assembly";
+  });
+}
+
+function getOrderMaterials(order) {
+  return window.MES_MASTER_DATA?.getBomMaterials?.(getProductCode(order), order.qty) || [];
+}
+
+function getKitSummary(order, firstBatchQty) {
+  const materials = getOrderMaterials(order);
+  const totalNeed = materials.reduce((sum, item) => sum + item.need, 0);
+  const totalAvailable = materials.reduce((sum, item) => sum + item.available + item.transit, 0);
+  const totalGap = materials.reduce((sum, item) => sum + item.gap, 0);
+  const gapItems = materials.filter((item) => item.gap > 0);
+  const firstBatchReady = !gapItems.length || firstBatchQty <= Math.max(0, order.qty - totalGap);
+  return {
+    totalNeed,
+    totalAvailable,
+    totalGap,
+    firstBatchReady,
+    status: totalGap > 0 ? "缺口待处理" : "齐套可排",
+    eta: gapItems[0]?.eta || "库存可用",
+    items: gapItems.length ? gapItems : materials.slice(0, 3),
+  };
+}
+
+function formatDayTime(dayIndex, hour) {
+  const day = planDays[Math.min(planDays.length - 1, Math.max(0, dayIndex))];
+  const normalizedHour = Math.max(0, Math.min(23, hour));
+  return `${day} ${String(normalizedHour).padStart(2, "0")}:00`;
+}
+
+function getOperationTemplate(key) {
+  return operationTemplates.find((item) => item.key === key) || operationTemplates[3];
+}
+
+function getOperationResource(order, key) {
+  const pool = resourcePools[order.line] || resourcePools["Line-A"];
+  if (key === "Burn") return `Burn-${order.line.slice(-1)}`;
+  return pool[key] || pool.Assembly;
+}
+
+function getOperationStatus(order, key, hasMaterialGap) {
+  if (order.schedule === "已确认") return "已确认";
+  if (hasMaterialGap && ["DIP", "Assembly", "Pack"].includes(key)) return "待物料";
+  if (order.risk === "设备" && ["Test", "Aging"].includes(key)) return "待设备";
+  if (order.risk === "质量" && ["FQC", "Test"].includes(key)) return "待质量";
+  return "建议";
+}
+
+function buildOperations(order, dayOffset, firstBatchQty, hasMaterialGap) {
+  const steps = getRoutingSteps(order);
+  return steps.map((key, index) => {
+    const template = getOperationTemplate(key);
+    const offset = typeof template.offset === "number" ? template.offset : index;
+    const dayIndex = Math.min(planDays.length - 1, dayOffset + offset);
+    const adjustedHours = Math.max(template.hours, Math.ceil(firstBatchQty / template.qtyRate) * 2);
+    return {
+      name: template.name,
+      start: formatDayTime(dayIndex, template.startHour),
+      end: formatDayTime(dayIndex, template.startHour + Math.min(10, adjustedHours)),
+      resource: getOperationResource(order, key),
+      qty: key === "Pack" && hasMaterialGap ? firstBatchQty : Math.min(order.qty, firstBatchQty),
+      status: getOperationStatus(order, key, hasMaterialGap),
+      routeStep: key,
+      standard: `${template.qtyRate} 台/班参考节拍`,
+      owner: key === "FQC" ? "质量员" : key === "Aging" || key === "Test" ? "设备员" : "车间计划员",
+    };
+  });
+}
+
+function getPlanVersion(order) {
+  const suffix = order.schedule === "已确认" ? "V1" : order.schedule === "待调整" ? "D2" : "D1";
+  return `SCH-${order.id}-${suffix}`;
+}
+
+function getPlanPublishStatus(order) {
+  if (order.status === "已下达") return "已同步派工";
+  if (order.schedule === "已确认") return "已发布";
+  if (order.schedule === "待调整") return "草案待会签";
+  return "草案";
+}
+
+function getConfirmedLinkageStatus(order) {
+  if (order.status === "已下达") return { label: "已下发", style: "green" };
+  if (["生产中", "待首检", "待检", "包装中"].includes(order.status)) return { label: "现场已接收", style: "green" };
+  if (order.schedule === "已确认") return { label: "派工准备", style: "blue" };
+  return { label: "待发布", style: "orange" };
+}
+
+function getPlanConflicts(order, dayOffset, duration, operations, kitSummary) {
+  const conflicts = [];
+  const related = orders.filter((item) => item.id !== order.id && item.review === "已通过" && item.schedule !== "未排程");
+  operations.forEach((operation) => {
+    const conflictOrders = related.filter((item) => {
+      const targetOffset = getOrderDayOffset(item);
+      const targetDuration = getOrderDuration(item);
+      const targetResources = getRoutingSteps(item).map((key) => getOperationResource(item, key));
+      return targetOffset <= dayOffset + duration - 1
+        && targetOffset + targetDuration - 1 >= dayOffset
+        && targetResources.includes(operation.resource);
+    });
+    if (conflictOrders.length) {
+      conflicts.push({
+        label: operation.resource,
+        desc: `${operation.name} 与 ${conflictOrders.map((item) => item.id).slice(0, 2).join(" / ")} 占用重叠`,
+        status: "需调整",
+      });
+    }
+  });
+  if (kitSummary.totalGap > 0) {
+    conflicts.push({ label: "物料齐套", desc: `缺口 ${kitSummary.totalGap} 件，首批 ${kitSummary.firstBatchReady ? "可排" : "不可排"}`, status: "需物料会签" });
+  }
+  if (order.risk === "设备") conflicts.push({ label: "设备日历", desc: `${order.line} 关键设备保养或故障窗口待确认`, status: "需设备会签" });
+  if (order.risk === "交期" || order.priority === "紧急") conflicts.push({ label: "交期承诺", desc: `${order.due} 前完成包装入库，需确认插单影响`, status: "需计划确认" });
+  return conflicts.length ? conflicts.slice(0, 5) : [{ label: "资源占用", desc: "未发现同资源同窗口硬冲突", status: "可排" }];
+}
+
+function getPlanLinkages(order) {
+  return [
+    { label: "派工", desc: order.schedule === "已确认" ? "可生成工序任务和班组任务" : "等待排程发布", status: order.status === "已下达" ? "已下发" : order.schedule === "已确认" ? "待下发" : "未触发" },
+    { label: "备料", desc: `${order.kit} / ${order.materialGap}`, status: order.kit === "齐套" ? "可锁库" : "待齐套" },
+    { label: "检验", desc: "首件、过程检验、FQC 计划随工序窗口生成", status: order.risk === "质量" ? "需质量确认" : "已准备" },
+    { label: "条码", desc: `生产批次 LOT-${getProductCode(order)}-${order.id.slice(-4)}`, status: order.schedule === "已确认" ? "待派工下发" : "等待计划" },
+  ];
+}
+
 function getPlan(order) {
-  if (!schedulePlans[order.id] || typeof schedulePlans[order.id].dayOffset !== "number" || !schedulePlans[order.id].window) {
+  const plan = schedulePlans[order.id];
+  if (!plan
+    || typeof plan.dayOffset !== "number"
+    || !plan.window
+    || !plan.version
+    || !plan.publishStatus
+    || !Array.isArray(plan.operations)
+    || !Array.isArray(plan.conflicts)
+    || !plan.kitSummary
+    || !Array.isArray(plan.linkages)) {
     schedulePlans[order.id] = buildPlan(order);
   }
   return schedulePlans[order.id];
@@ -157,41 +405,31 @@ function buildPlan(order) {
   const duration = getOrderDuration(order);
   const firstBatch = hasGap ? Math.max(order.qty - 200, Math.ceil(order.qty * 0.72)) : order.qty;
   const secondBatch = Math.max(order.qty - firstBatch, 0);
-  const resources = {
-    "Line-A": ["SMT-01", "DIP-Line-A", "Assembly-A", "Test-A", "Pack-A"],
-    "Line-B": ["SMT-02", "DIP-Line-B", "Assembly-B", "Test-B", "Pack-B"],
-    "Line-C": ["SMT-03", "DIP-Line-C", "Assembly-C", "Test-C", "Pack-C"],
-  }[order.line] || ["SMT-01", "DIP-Line-A", "Assembly-A", "Test-A", "Pack-A"];
+  const kitSummary = getKitSummary(order, firstBatch);
+  const operations = buildOperations(order, dayOffset, firstBatch, hasGap);
+  const conflicts = getPlanConflicts(order, dayOffset, duration, operations, kitSummary);
+  const window = formatPlanWindowFromOperations(operations);
 
   return {
+    version: getPlanVersion(order),
+    publishStatus: getPlanPublishStatus(order),
     strategy: hasGap ? "拆批生产" : "整批排程",
     batchPlan: secondBatch ? `${firstBatch} + ${secondBatch}` : `${order.qty}`,
     bottleneck: order.qty >= 1000 ? "老化测试" : "功能测试",
     release: order.schedule === "已确认" ? "可下发" : "待确认",
     dayOffset,
     duration,
-    window: `${planDays[dayOffset]}-${planDays[Math.min(planDays.length - 1, dayOffset + duration - 1)]}`,
+    window,
+    kitSummary,
+    conflicts,
+    linkages: getPlanLinkages(order),
     constraints: [
-      { label: "物料", desc: order.materialGap, status: hasGap ? "需确认" : "齐套" },
+      { label: "物料", desc: `${kitSummary.status}，${order.materialGap}`, status: hasGap ? "需确认" : "齐套" },
       { label: "设备", desc: hasEquipmentRisk ? `${order.line} 设备日历需确认` : `${order.line} 资源可用`, status: hasEquipmentRisk ? "需确认" : "可用" },
       { label: "交期", desc: `${order.due} 前完成包装入库`, status: order.risk === "交期" ? "需调整" : "可承诺" },
       { label: "质量", desc: "首件、功能测试、FQC 检验计划", status: order.risk === "质量" ? "需确认" : "已配置" },
     ],
-    operations: operationTemplates.map(([name, start, end, resource], index) => ({
-      name,
-      start: start.includes("06-") ? shiftOperationDate(start, dayOffset) : `${planDays[dayOffset]} ${start}`,
-      end: end.includes("06-") ? shiftOperationDate(end, dayOffset) : `${planDays[dayOffset]} ${end}`,
-      resource: resource.includes("-") ? resource : `${resource}-${order.line.slice(-1)}`,
-      qty: index < 2 && secondBatch ? firstBatch : order.qty,
-      status: order.schedule === "已确认" ? "已确认" : (hasGap && index > 5 ? "待物料" : "建议"),
-    })).map((item, index) => {
-      if (index === 0) return { ...item, resource: resources[0] };
-      if (index === 1) return { ...item, resource: resources[1] };
-      if (index === 3) return { ...item, resource: resources[2] };
-      if (index === 4) return { ...item, resource: resources[3] };
-      if (index === 7) return { ...item, resource: resources[4] };
-      return item;
-    }),
+    operations,
   };
 }
 
@@ -215,6 +453,284 @@ function shiftOperationDate(value, offset) {
   return `${planDays[Math.min(planDays.length - 1, index)]} ${match[2]}`;
 }
 
+function getTimelineScale() {
+  return {
+    week: { label: "周", unit: "日", columns: 7, columnMin: 112, headers: ["06-20", "06-21", "06-22", "06-23", "06-24", "06-25", "06-26"] },
+    month: { label: "月", unit: "周", columns: 4, columnMin: 180, headers: ["第 1 周", "第 2 周", "第 3 周", "第 4 周"] },
+    quarter: { label: "季度", unit: "月", columns: 3, columnMin: 220, headers: ["6 月", "7 月", "8 月"] },
+    half: { label: "半年", unit: "月", columns: 6, columnMin: 150, headers: ["6 月", "7 月", "8 月", "9 月", "10 月", "11 月"] },
+    year: { label: "年度", unit: "季度", columns: 4, columnMin: 180, headers: ["Q2", "Q3", "Q4", "Q1"] },
+  }[state.timelineScale] || {
+    label: "周",
+    unit: "日",
+    columns: 7,
+    columnMin: 112,
+    headers: planDays,
+  };
+}
+
+function parsePlanDayIndex(value) {
+  const minutes = parsePlanTimeToMinutes(value);
+  return Number.isFinite(minutes) ? Math.max(0, Math.floor(minutes / 1440)) : 0;
+}
+
+function toTimelineColumn(dayIndex) {
+  if (state.timelineScale === "week") return Math.min(6, Math.max(0, dayIndex));
+  if (state.timelineScale === "month") return Math.min(3, Math.floor(Math.max(0, dayIndex) / 7));
+  if (state.timelineScale === "quarter") return Math.min(2, Math.floor(Math.max(0, dayIndex) / 30));
+  if (state.timelineScale === "half") return Math.min(5, Math.floor(Math.max(0, dayIndex) / 30));
+  if (state.timelineScale === "year") return Math.min(3, Math.floor(Math.max(0, dayIndex) / 90));
+  return Math.min(6, Math.max(0, dayIndex));
+}
+
+function getOperationRange(operations) {
+  const starts = operations.map((item) => parsePlanDayIndex(item.start));
+  const ends = operations.map((item) => parsePlanDayIndex(item.end));
+  return {
+    startDay: Math.min(...starts),
+    endDay: Math.max(...ends),
+  };
+}
+
+function formatPlanWindowFromOperations(operations) {
+  const range = getOperationRange(operations);
+  return `${formatPlanDayLabel(range.startDay)}-${formatPlanDayLabel(range.endDay)}`;
+}
+
+function isValidPlanTime(value) {
+  const minutes = parsePlanTimeToMinutes(value);
+  return Number.isFinite(minutes)
+    && minutes >= 0
+    && minutes <= parseDateInputToDayIndex(planEndDate) * 1440 + 23 * 60 + 59;
+}
+
+function parseDateInputToDayIndex(value) {
+  const match = String(value || "").match(/^2026-(\d{2})-(\d{2})$/);
+  if (!match) return Number.NaN;
+  const base = new Date(`${planStartDate}T00:00:00`);
+  const target = new Date(`2026-${match[1]}-${match[2]}T00:00:00`);
+  return Math.round((target - base) / 86400000);
+}
+
+function formatPlanDayLabel(dayIndex) {
+  const date = new Date(`${planStartDate}T00:00:00`);
+  date.setDate(date.getDate() + Math.max(0, dayIndex));
+  return `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function parsePlanTimeToMinutes(value) {
+  const match = String(value || "").match(/(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+  if (!match) return Number.NaN;
+  const dayIndex = parseDateInputToDayIndex(`2026-${match[1]}-${match[2]}`);
+  if (!Number.isFinite(dayIndex)) return Number.NaN;
+  return dayIndex * 1440 + Number(match[3]) * 60 + Number(match[4]);
+}
+
+function formatPlanTimeFromMinutes(minutes) {
+  const maxMinutes = parseDateInputToDayIndex(planEndDate) * 1440 + 23 * 60;
+  const safeMinutes = Math.min(maxMinutes, Math.max(0, minutes));
+  const dayIndex = Math.floor(safeMinutes / 1440);
+  const minuteOfDay = safeMinutes % 1440;
+  return `${formatPlanDayLabel(dayIndex)} ${String(Math.floor(minuteOfDay / 60)).padStart(2, "0")}:${String(minuteOfDay % 60).padStart(2, "0")}`;
+}
+
+function toPlanDateInputValue(value) {
+  const match = String(value || "").match(/(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+  if (!match) return planStartDate;
+  return `2026-${match[1]}-${match[2]}`;
+}
+
+function toPlanTimeInputValue(value) {
+  const match = String(value || "").match(/(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+  if (!match) return "08:00";
+  return `${match[3]}:${match[4]}`;
+}
+
+function fromDateAndTimeInputValues(dateValue, timeValue) {
+  const dateMatch = String(dateValue || "").match(/^2026-(\d{2})-(\d{2})$/);
+  const timeMatch = String(timeValue || "").match(/^(\d{2}):(\d{2})$/);
+  if (!dateMatch || !timeMatch) return "";
+  return `${dateMatch[1]}-${dateMatch[2]} ${timeMatch[1]}:${timeMatch[2]}`;
+}
+
+function comparePlanTime(start, end) {
+  return parsePlanTimeToMinutes(end) - parsePlanTimeToMinutes(start);
+}
+
+function getPlanTimeInput(index, field, part) {
+  return document.querySelector(`[data-operation-index="${index}"][data-time-field="${field}"][data-part="${part}"]`);
+}
+
+function setPlanTimeInputs(index, field, value) {
+  const dateInput = getPlanTimeInput(index, field, "date");
+  const timeInput = getPlanTimeInput(index, field, "time");
+  if (dateInput) dateInput.value = toPlanDateInputValue(value);
+  if (timeInput) timeInput.value = toPlanTimeInputValue(value);
+}
+
+function readOperationInputs(operations) {
+  return operations.map((operation, index) => {
+    const next = { ...operation };
+    ["start", "end"].forEach((field) => {
+      const dateInput = getPlanTimeInput(index, field, "date");
+      const timeInput = getPlanTimeInput(index, field, "time");
+      next[field] = fromDateAndTimeInputValues(dateInput?.value, timeInput?.value);
+    });
+    return next;
+  });
+}
+
+function previewOperationTimes(nextOperations) {
+  const order = getActiveOrder();
+  if (!order) return;
+  const plan = getPlan(order);
+  const range = getOperationRange(nextOperations);
+  schedulePlans[order.id] = {
+    ...plan,
+    operations: nextOperations,
+    dayOffset: range.startDay,
+    duration: Math.max(1, range.endDay - range.startDay + 1),
+    window: formatPlanWindowFromOperations(nextOperations),
+    publishStatus: order.schedule === "已确认" ? "草案已调整待再发布" : "草案待会签",
+    release: "待确认",
+  };
+  renderTimeline();
+  renderConfirmedPlans();
+  renderVersionAndRisks();
+  renderDetail();
+}
+
+function shiftFollowingOperationTimes(changedInput) {
+  const order = getActiveOrder();
+  if (!order) return;
+  const plan = getPlan(order);
+  const index = Number(changedInput.dataset.operationIndex);
+  const field = changedInput.dataset.timeField;
+  const nextOperations = readOperationInputs(plan.operations);
+  const baseOperation = plan.operations[index];
+  const nextOperation = nextOperations[index];
+  const originalMinutes = parsePlanTimeToMinutes(baseOperation?.[field]);
+  const changedMinutes = parsePlanTimeToMinutes(nextOperation?.[field]);
+  if (!Number.isFinite(originalMinutes) || !Number.isFinite(changedMinutes) || !isValidPlanTime(nextOperation?.[field])) return;
+  if (field === "end" && comparePlanTime(nextOperation.start, nextOperation.end) <= 0) {
+    showToast(`${nextOperation.name} 的结束时间必须晚于开始时间`);
+    setPlanTimeInputs(index, "end", baseOperation.end);
+    return;
+  }
+
+  const delta = changedMinutes - originalMinutes;
+  if (!delta) return;
+
+  if (field === "start") {
+    const originalEndMinutes = parsePlanTimeToMinutes(baseOperation.end);
+    nextOperation.end = formatPlanTimeFromMinutes(originalEndMinutes + delta);
+    setPlanTimeInputs(index, "end", nextOperation.end);
+  }
+
+  for (let nextIndex = index + 1; nextIndex < nextOperations.length; nextIndex += 1) {
+    nextOperations[nextIndex].start = formatPlanTimeFromMinutes(parsePlanTimeToMinutes(plan.operations[nextIndex].start) + delta);
+    nextOperations[nextIndex].end = formatPlanTimeFromMinutes(parsePlanTimeToMinutes(plan.operations[nextIndex].end) + delta);
+    setPlanTimeInputs(nextIndex, "start", nextOperations[nextIndex].start);
+    setPlanTimeInputs(nextIndex, "end", nextOperations[nextIndex].end);
+  }
+
+  previewOperationTimes(nextOperations);
+}
+
+function getOperationRowLabel(operation) {
+  return `${operation.name} / ${operation.resource}`;
+}
+
+function getTimelineRows(visibleOrders) {
+  if (state.timelineView === "operation") {
+    const labels = [];
+    visibleOrders.forEach((order) => {
+      getPlan(order).operations.forEach((operation) => {
+        const label = getOperationRowLabel(operation);
+        if (!labels.includes(label)) labels.push(label);
+      });
+    });
+    return labels;
+  }
+  if (state.timelineView === "line") return lines;
+  return visibleOrders.map((order) => `${order.product.split(" ")[0]} / ${order.id}`);
+}
+
+function getProductRowOrder(rowLabel, visibleOrders) {
+  return visibleOrders.find((order) => rowLabel.endsWith(order.id));
+}
+
+function buildProductTimelineItem(order) {
+  const plan = getPlan(order);
+  const range = getOperationRange(plan.operations);
+  return {
+    order,
+    start: range.startDay,
+    end: range.endDay,
+    title: order.id,
+    desc: `${order.line} · ${plan.batchPlan}`,
+    status: order.schedule,
+  };
+}
+
+function buildLineTimelineItem(order) {
+  const plan = getPlan(order);
+  const range = getOperationRange(plan.operations);
+  return {
+    order,
+    start: range.startDay,
+    end: range.endDay,
+    title: order.id,
+    desc: `${order.product.split(" ")[0]} · ${plan.batchPlan}`,
+    status: order.schedule,
+  };
+}
+
+function getTimelineRowHeader() {
+  if (state.timelineView === "operation") return "工序 / 资源";
+  if (state.timelineView === "line") return "产线";
+  return "产品 / 工单";
+}
+
+function getTimelineViewLabel() {
+  if (state.timelineView === "operation") return "工序资源占用";
+  if (state.timelineView === "line") return "产线负荷跨度";
+  return "产品订单跨度";
+}
+
+function getTimelineItemsForRow(rowLabel, visibleOrders) {
+  if (state.timelineView === "operation") {
+    return visibleOrders.flatMap((order) => {
+      const plan = getPlan(order);
+      return plan.operations
+        .filter((operation) => getOperationRowLabel(operation) === rowLabel)
+        .map((operation) => {
+          const start = parsePlanDayIndex(operation.start);
+          const end = parsePlanDayIndex(operation.end);
+          return {
+            order,
+            start,
+            end,
+            title: `${order.id} · ${operation.name}`,
+            desc: `${operation.resource} · ${operation.qty} 台`,
+            status: operation.status,
+          };
+        });
+    });
+  }
+  if (state.timelineView === "line") {
+    return visibleOrders.filter((order) => order.line === rowLabel).map(buildLineTimelineItem);
+  }
+  const order = getProductRowOrder(rowLabel, visibleOrders);
+  return order ? [buildProductTimelineItem(order)] : [];
+}
+
+function getTimelineItemClass(item) {
+  if (item.order.schedule === "已确认" && !String(item.status).includes("待")) return " is-confirmed";
+  if (item.order.schedule === "待调整" || String(item.status).includes("待")) return " is-risk";
+  return "";
+}
+
 function getFilteredOrders() {
   const keyword = state.search.trim().toLowerCase();
   return orders.filter((order) => {
@@ -233,6 +749,8 @@ function renderAll() {
   renderConfirmedPlans();
   renderDetail();
   renderOperations();
+  renderVersionAndRisks();
+  renderLinkages();
   renderLogs();
 }
 
@@ -242,6 +760,15 @@ function renderMetrics() {
   $("#metricConfirmed").textContent = orders.filter((order) => order.review === "已通过" && order.schedule === "已确认").length;
   const load = Math.min(96, Math.round(orders.filter((order) => order.review === "已通过").reduce((sum, order) => sum + order.qty, 0) / 118));
   $("#metricBottleneck").textContent = `${load}%`;
+}
+
+function renderTimelineControls() {
+  document.querySelectorAll("[data-scale]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.scale === state.timelineScale);
+  });
+  document.querySelectorAll("[data-view]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.view === state.timelineView);
+  });
 }
 
 function renderCandidateList() {
@@ -268,26 +795,33 @@ function renderCandidateList() {
 
 function renderTimeline() {
   const visible = orders.filter((order) => order.review === "已通过" && order.schedule !== "未排程");
-  const rows = lines.map((line) => {
-    const lineOrders = visible.filter((order) => order.line === line).sort((a, b) => getPlan(a).dayOffset - getPlan(b).dayOffset);
-    const items = lineOrders.map((order, index) => {
-      const plan = getPlan(order);
-      const statusClass = order.schedule === "已确认" ? " is-confirmed" : order.schedule === "待调整" ? " is-risk" : "";
+  const scale = getTimelineScale();
+  const rowLabels = getTimelineRows(visible);
+  const rows = rowLabels.map((rowLabel) => {
+    const rowItems = getTimelineItemsForRow(rowLabel, visible).sort((a, b) => a.start - b.start);
+    const items = rowItems.map((item, index) => {
+      const startColumn = toTimelineColumn(item.start);
+      const endColumn = toTimelineColumn(item.end);
+      const span = Math.max(1, endColumn - startColumn + 1);
+      const statusClass = getTimelineItemClass(item);
       return `
-        <button class="gantt-item${statusClass}${order.id === state.activeOrderId ? " is-active" : ""}" type="button" data-order-id="${order.id}" style="--start:${plan.dayOffset + 1}; --span:${plan.duration}; --lane:${index % 3}">
-          <strong>${order.id}</strong>
-          <span>${order.product.split(" ")[0]} · ${plan.batchPlan}</span>
+        <button class="gantt-item${statusClass}${item.order.id === state.activeOrderId ? " is-active" : ""}" type="button" data-order-id="${item.order.id}" style="--start:${startColumn + 1}; --span:${span}; --lane:${index % 4}">
+          <strong>${item.title}</strong>
+          <span>${item.desc}</span>
         </button>
       `;
     }).join("");
-    return `<div class="timeline-row"><div class="timeline-line">${line}</div><div class="gantt-lane">${items}</div></div>`;
+    return `<div class="timeline-row"><div class="timeline-line">${rowLabel}</div><div class="gantt-lane">${items}</div></div>`;
   }).join("");
   $("#timelineGrid").innerHTML = `
-    <div class="timeline-head">
-      <div>产线</div>
-      ${planDays.map((day) => `<div>${day}</div>`).join("")}
+    <div class="timeline-head" style="--columns:${scale.columns}; --column-min:${scale.columnMin}px">
+      <div>${getTimelineRowHeader()}</div>
+      ${scale.headers.map((day) => `<div>${day}</div>`).join("")}
     </div>
-    ${rows}
+    <div class="timeline-scale-note">当前视图：${scale.label} / ${getTimelineViewLabel()}，甘特条由工序级计划开始和结束时间汇总</div>
+    <div class="timeline-body" style="--columns:${scale.columns}; --column-min:${scale.columnMin}px">
+      ${rows}
+    </div>
   `;
 
   $("#timelineGrid").querySelectorAll("[data-order-id]").forEach((item) => {
@@ -309,14 +843,15 @@ function renderConfirmedPlans() {
   });
   $("#confirmedTableBody").innerHTML = confirmed.length ? confirmed.map((order) => {
     const plan = getPlan(order);
+    const linkage = getConfirmedLinkageStatus(order);
     return `
       <tr class="${order.id === state.activeOrderId ? "is-active" : ""}" data-order-id="${order.id}">
         <td class="order-no">${order.id}</td>
         <td class="product-cell"><strong>${order.product}</strong><span>${order.customer} · ${order.qty} 台</span></td>
         <td>${order.line}</td>
         <td>${plan.batchPlan}</td>
-        <td>${plan.window}</td>
-        <td><span class="pill pill--green">${order.status === "已下达" ? "已下发" : "待下发"}</span></td>
+        <td>${plan.window} · ${plan.version}</td>
+        <td class="confirmed-linkage-cell"><span class="schedule-status-badge schedule-status-badge--${linkage.style}">${linkage.label}</span></td>
       </tr>
     `;
   }).join("") : `<tr><td colspan="6">当前筛选条件下没有已确认计划</td></tr>`;
@@ -349,6 +884,7 @@ function renderDetail() {
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
 
   $("#strategyList").innerHTML = [
+    ["版本", plan.version, plan.publishStatus],
     ["策略", plan.strategy, order.schedule === "已确认" ? "已锁定" : "建议"],
     ["批次", plan.batchPlan, plan.release],
     ["瓶颈", plan.bottleneck, "重点看护"],
@@ -366,15 +902,188 @@ function renderDetail() {
 function renderOperations() {
   const order = getActiveOrder();
   const plan = getPlan(order);
-  $("#operationTableBody").innerHTML = plan.operations.map((item) => `
+  $("#operationTableBody").innerHTML = plan.operations.map((item, index) => `
     <tr>
       <td>${item.name}</td>
-      <td>${item.start}</td>
-      <td>${item.end}</td>
-      <td>${item.resource}</td>
+      <td>
+        <div class="operation-time-group">
+          <input class="operation-time-input operation-date-input" type="date" min="${planStartDate}" max="${planEndDate}" data-operation-index="${index}" data-time-field="start" data-part="date" value="${toPlanDateInputValue(item.start)}" aria-label="${item.name} 计划开始日期" />
+          <input class="operation-time-input operation-clock-input" type="text" inputmode="none" readonly data-operation-index="${index}" data-time-field="start" data-part="time" value="${toPlanTimeInputValue(item.start)}" aria-label="${item.name} 计划开始时间" />
+        </div>
+      </td>
+      <td>
+        <div class="operation-time-group">
+          <input class="operation-time-input operation-date-input" type="date" min="${planStartDate}" max="${planEndDate}" data-operation-index="${index}" data-time-field="end" data-part="date" value="${toPlanDateInputValue(item.end)}" aria-label="${item.name} 计划结束日期" />
+          <input class="operation-time-input operation-clock-input" type="text" inputmode="none" readonly data-operation-index="${index}" data-time-field="end" data-part="time" value="${toPlanTimeInputValue(item.end)}" aria-label="${item.name} 计划结束时间" />
+        </div>
+      </td>
+      <td>${item.resource}<br><span class="muted-cell">${item.standard}</span></td>
       <td>${item.qty} 台</td>
-      <td><span class="pill pill--${item.status === "已确认" ? "green" : item.status === "待物料" ? "orange" : "blue"}">${item.status}</span></td>
+      <td><span class="pill pill--${item.status === "已确认" ? "green" : item.status.includes("待") ? "orange" : "blue"}">${item.status}</span></td>
     </tr>
+  `).join("");
+  bindTimePickers();
+}
+
+function closeTimePicker() {
+  document.querySelector(".time-picker-popover")?.remove();
+  document.querySelectorAll(".operation-clock-input.is-picker-open").forEach((input) => input.classList.remove("is-picker-open"));
+}
+
+function openTimePicker(input) {
+  closeTimePicker();
+  const rect = input.getBoundingClientRect();
+  const popover = document.createElement("div");
+  popover.className = "time-picker-popover";
+  input.classList.add("is-picker-open");
+  popover.innerHTML = `
+    <div class="time-picker-popover__head">
+      <div>
+        <strong>选择计划时间</strong>
+        <span>${input.dataset.timeField === "start" ? "计划开始" : "计划结束"} · ${input.value || "未选择"}</span>
+      </div>
+      <button type="button" data-time-picker-close aria-label="关闭时间选择器">×</button>
+    </div>
+    <div class="time-picker-shifts">
+      ${timeOptionGroups.map((group) => `
+        <section class="time-picker-shift">
+          <div class="time-picker-shift__title">
+            <span>${group.label}</span>
+            <em>${group.range}</em>
+          </div>
+          <div class="time-picker-grid">
+            ${group.values.map((time) => `<button type="button" class="${time === input.value ? "is-active" : ""}" data-time-value="${time}">${time}</button>`).join("")}
+          </div>
+        </section>
+      `).join("")}
+    </div>
+  `;
+  document.body.appendChild(popover);
+  const pickerRect = popover.getBoundingClientRect();
+  const left = Math.min(window.innerWidth - pickerRect.width - 12, Math.max(12, rect.left + rect.width - pickerRect.width));
+  const belowTop = rect.bottom + 10;
+  const aboveTop = rect.top - pickerRect.height - 10;
+  const top = belowTop + pickerRect.height > window.innerHeight - 12 && aboveTop > 12 ? aboveTop : Math.min(window.innerHeight - pickerRect.height - 12, belowTop);
+  popover.style.left = `${left}px`;
+  popover.style.top = `${Math.max(12, top)}px`;
+  popover.style.setProperty("--anchor-left", `${Math.min(pickerRect.width - 24, Math.max(24, rect.left + rect.width / 2 - left))}px`);
+  popover.querySelectorAll("[data-time-value]").forEach((button) => {
+    button.addEventListener("click", () => {
+      input.value = button.dataset.timeValue;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      closeTimePicker();
+    });
+  });
+  popover.querySelector("[data-time-picker-close]").addEventListener("click", closeTimePicker);
+}
+
+function bindTimePickers() {
+  document.querySelectorAll(".operation-time-input").forEach((input) => {
+    input.addEventListener("change", () => shiftFollowingOperationTimes(input));
+  });
+  document.querySelectorAll(".operation-clock-input").forEach((input) => {
+    input.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openTimePicker(input);
+    });
+  });
+}
+
+function saveOperationTimes() {
+  const order = getActiveOrder();
+  if (!order) return;
+  const plan = getPlan(order);
+  const nextOperations = plan.operations.map((operation) => ({ ...operation }));
+  for (const operation of nextOperations) {
+    const index = nextOperations.indexOf(operation);
+    for (const field of ["start", "end"]) {
+      const dateInput = document.querySelector(`[data-operation-index="${index}"][data-time-field="${field}"][data-part="date"]`);
+      const timeInput = document.querySelector(`[data-operation-index="${index}"][data-time-field="${field}"][data-part="time"]`);
+      const value = fromDateAndTimeInputValues(dateInput?.value, timeInput?.value);
+      if (!isValidPlanTime(value)) {
+        showToast(`请选择 ${planStartDate} 至 ${planEndDate} 范围内的工序时间`);
+        (dateInput || timeInput)?.focus();
+        return;
+      }
+      operation[field] = value;
+    }
+  }
+  const invalid = nextOperations.find((operation) => comparePlanTime(operation.start, operation.end) <= 0);
+  if (invalid) {
+    showToast(`${invalid.name} 的结束时间必须晚于开始时间`);
+    return;
+  }
+  const range = getOperationRange(nextOperations);
+  schedulePlans[order.id] = {
+    ...plan,
+    operations: nextOperations,
+    dayOffset: range.startDay,
+    duration: Math.max(1, range.endDay - range.startDay + 1),
+    window: formatPlanWindowFromOperations(nextOperations),
+    publishStatus: order.schedule === "已确认" ? "草案已调整待再发布" : "草案待会签",
+    release: "待确认",
+  };
+  state.activeOrderId = order.id;
+  recordIntegration(order.id, "工序计划时间已调整，已重算订单窗口和甘特图跨度");
+  syncScheduleFlow(order.id, "编辑工序时间");
+  syncPageStore();
+  renderAll();
+  showToast("工序时间已保存，排程窗口和甘特图已重算");
+}
+
+function renderVersionAndRisks() {
+  const order = getActiveOrder();
+  if (!order) return;
+  const plan = getPlan(order);
+  $("#versionList").innerHTML = [
+    ["排程版本", plan.version, plan.publishStatus],
+    ["计划窗口", plan.window, `${plan.duration} 天跨度`],
+    ["责任人", order.planner, new Date().toLocaleString("zh-CN", { hour12: false })],
+    ["来源", `ERP 工单 ${order.id} + MES APS 规则排程`, "内部排程"],
+    ["发布边界", "确认排程后才允许派工、备料、检验和条码下发", plan.release],
+  ].map(([label, value, status]) => `
+    <div>
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <em>${status}</em>
+    </div>
+  `).join("");
+
+  $("#conflictList").innerHTML = plan.conflicts.map((item) => `
+    <div>
+      <span>${item.label}</span>
+      <strong>${item.desc}</strong>
+      <em>${item.status}</em>
+    </div>
+  `).join("");
+
+  const kit = plan.kitSummary;
+  $("#kitList").innerHTML = `
+    <div class="kit-summary">
+      <span>${kit.status}</span>
+      <strong>需求 ${kit.totalNeed} / 可用含在途 ${kit.totalAvailable} / 缺口 ${kit.totalGap}</strong>
+      <em>${kit.eta}</em>
+    </div>
+    ${kit.items.map((item) => `
+      <div>
+        <span>${item.materialNo || "物料"}</span>
+        <strong>${item.name} · 需 ${item.need} / 可用 ${item.available} / 缺 ${item.gap}</strong>
+        <em>${item.gap > 0 ? item.eta : "可锁库"}</em>
+      </div>
+    `).join("")}
+  `;
+}
+
+function renderLinkages() {
+  const order = getActiveOrder();
+  if (!order) return;
+  const plan = getPlan(order);
+  $("#linkageList").innerHTML = plan.linkages.map((item) => `
+    <div>
+      <span>${item.label}</span>
+      <strong>${item.desc}</strong>
+      <em>${item.status}</em>
+    </div>
   `).join("");
 }
 
@@ -399,7 +1108,9 @@ function updateOrder(orderId, patch, message) {
   schedulePlans[orderId] = buildPlan(orders[index]);
   state.activeOrderId = orderId;
   recordIntegration(orderId, message);
-  saveState();
+  syncScheduleFlow(orderId, message);
+  loadState();
+  syncPageStore();
   renderAll();
   showToast(message);
 }
@@ -438,6 +1149,10 @@ window.addEventListener("plan-maintenance:changed", () => {
 });
 
 function bindEvents() {
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".time-picker-popover") && !event.target.classList.contains("operation-clock-input")) closeTimePicker();
+  });
+  window.addEventListener("scroll", closeTimePicker, true);
   $("#scheduleSearch").addEventListener("input", (event) => {
     state.search = event.target.value;
     saveState();
@@ -453,6 +1168,22 @@ function bindEvents() {
     saveState();
     renderAll();
   });
+  document.querySelectorAll("[data-scale]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.timelineScale = button.dataset.scale;
+      saveState();
+      renderTimeline();
+      renderTimelineControls();
+    });
+  });
+  document.querySelectorAll("[data-view]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.timelineView = button.dataset.view;
+      saveState();
+      renderTimeline();
+      renderTimelineControls();
+    });
+  });
   $("#autoPlanBtn").addEventListener("click", () => {
     const targets = orders.filter((order) => order.review === "已通过" && order.schedule === "未排程");
     if (!targets.length) {
@@ -466,11 +1197,14 @@ function bindEvents() {
       recordIntegration(order.id, order.schedule === "已确认" ? "自动排程已确认" : "已生成排程建议，等待约束确认");
     });
     state.activeOrderId = targets[0].id;
-    saveState();
+    syncScheduleFlow(targets.map((order) => order.id), "生成排程建议");
+    loadState();
+    syncPageStore();
     renderAll();
     showToast(`已生成 ${targets.length} 个排程建议`);
   });
   $("#confirmPlanBtn").addEventListener("click", () => confirmPlan(getActiveOrder()));
+  $("#saveOperationTimesBtn").addEventListener("click", saveOperationTimes);
   $("#splitBatchBtn").addEventListener("click", () => {
     const order = getActiveOrder();
     updateOrder(order.id, { schedule: "待调整", batchPlan: getPlan(order).batchPlan }, "订单已按物料和瓶颈资源拆分批次");
@@ -492,13 +1226,16 @@ function bindEvents() {
   $("#rollbackPlanBtn").addEventListener("click", () => updateOrder(getActiveOrder().id, { schedule: "待调整", status: "待排程" }, "排程已退回待调整"));
   $("#resetSchedulePageBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
-    orders = structuredClone(initialOrders);
+    const flowState = window.MES_BUSINESS_FLOW?.reset?.();
+    orders = structuredClone(flowState?.orders || window.MES_MASTER_DATA?.orders || initialOrders);
     integrationLogs = [];
     schedulePlans = {};
-    state = { activeOrderId: "MO-202606-0005", search: "", schedule: "all", line: "all" };
+    state = { activeOrderId: "MO-202606-0005", search: "", schedule: "all", line: "all", timelineScale: "week", timelineView: "product" };
     $("#scheduleSearch").value = "";
     $("#scheduleFilter").value = "all";
     $("#lineFilter").value = "all";
+    syncPageStore();
+    renderTimelineControls();
     renderAll();
     showToast("排程演示已重置");
   });
@@ -510,4 +1247,5 @@ $("#scheduleSearch").value = state.search;
 $("#scheduleFilter").value = state.schedule;
 $("#lineFilter").value = state.line;
 bindEvents();
+renderTimelineControls();
 renderAll();

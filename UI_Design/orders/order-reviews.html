@@ -106,37 +106,49 @@
               </label>
             </div>
 
+            <section class="review-decision-panel" aria-label="当前订单评审决策">
+              <div class="review-decision-copy">
+                <span id="decisionBadge" class="decision-badge">待评审</span>
+                <h2 id="decisionOrderTitle">MO-202606-0006 · 显示控制面板 HMI-70</h2>
+                <p id="decisionSummary">资料未闭环，暂不可转入排程</p>
+                <div id="decisionMeta" class="decision-meta"></div>
+              </div>
+              <div class="review-decision-actions">
+                <button id="passActiveBtn" class="primary-action" type="button">评审通过</button>
+                <button id="returnActiveBtn" class="secondary-action" type="button">退回补资料</button>
+                <button id="moveScheduleBtn" class="secondary-action" type="button">转入待排程</button>
+              </div>
+            </section>
+
+            <section class="review-gate-panel review-gate-focus">
+              <div class="section-title">
+                <div>
+                  <h3>准入关卡</h3>
+                  <p>ERP 工单、PLM 工艺、BOM、质量规则、物料和设备能力全部通过后才能排程</p>
+                </div>
+              </div>
+              <div id="gateChecklist" class="gate-card-list"></div>
+            </section>
+
             <section class="review-gate-panel">
               <div class="section-title">
                 <div>
-                  <h3>评审资料</h3>
-                  <p>核对 ERP 工单、PLM 工艺、检验要求和客户标签是否可转生产执行</p>
+                  <h3>待闭环阻断事项</h3>
+                  <p>按责任部门收敛资料、会签和准入问题，处理完成后更新评审结论</p>
                 </div>
                 <button id="confirmMaterialsBtn" type="button">确认全部资料</button>
               </div>
+              <div id="reviewBlockerList" class="review-blocker-list"></div>
+            </section>
+
+            <section class="review-gate-panel">
+              <div class="section-title">
+                <div>
+                  <h3>评审资料来源</h3>
+                  <p>核对 ERP、PLM、QMS、WMS 和设备日历的版本、状态和责任人</p>
+                </div>
+              </div>
               <div id="reviewMaterialList" class="review-material-list"></div>
-            </section>
-
-            <section class="review-gate-panel">
-              <div class="section-title">
-                <div>
-                  <h3>准入校验</h3>
-                  <p>主数据、BOM、工艺路线、质量规则和资源能力全部通过后才能排程</p>
-                </div>
-                <button id="passActiveBtn" type="button">评审通过</button>
-              </div>
-              <div id="gateChecklist" class="gate-list"></div>
-            </section>
-
-            <section class="review-gate-panel">
-              <div class="section-title">
-                <div>
-                  <h3>会签意见</h3>
-                  <p>物料、质量、设备和计划风险需要责任人确认闭环</p>
-                </div>
-                <button id="returnActiveBtn" type="button">退回补资料</button>
-              </div>
-              <div id="countersignList" class="countersign-list"></div>
             </section>
           </div>
 
@@ -144,37 +156,11 @@
             <section class="order-list-panel review-order-panel">
               <div class="section-title">
                 <div>
-                  <h3>评审订单池</h3>
-                  <p>选择订单后在左侧完成资料、准入和会签判断</p>
+                  <h3>待处理队列</h3>
+                  <p>按交期、阻断和会签风险排序，选择订单后在左侧处理</p>
                 </div>
               </div>
-              <div class="table-wrap">
-                <table class="order-table review-table">
-                  <colgroup>
-                    <col class="col-order" />
-                    <col class="col-product" />
-                    <col class="col-customer" />
-                    <col class="col-status" />
-                    <col class="col-risk" />
-                    <col class="col-review-owner" />
-                    <col class="col-review-gate" />
-                    <col class="col-actions" />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th>工单号</th>
-                      <th>产品</th>
-                      <th>客户</th>
-                      <th>评审</th>
-                      <th>风险</th>
-                      <th>责任人</th>
-                      <th>准入结论</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody id="reviewTableBody"></tbody>
-                </table>
-              </div>
+              <div id="reviewTableBody" class="review-queue"></div>
             </section>
 
             <section class="order-detail-panel review-detail-panel">
