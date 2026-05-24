@@ -1,20 +1,4 @@
-const modules = window.MES_NAV_MODULES || [
-  { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
-  { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
-  { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场终端", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
-  { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
-  { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
-  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "质量放行", "出货检验", "不良记录", "返工评审"] },
-  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "工装夹具", "量检具校准", "点检计划", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
-  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机归因", "过程趋势", "电子看板"] },
-  { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
-  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工复核", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
-  { id: "trace", title: "追溯查询", layer: "质量追溯", color: "#8e8e93", mark: "追", items: ["产品追溯", "批次追溯", "物料去向", "生产履历", "检验履历", "设备履历", "客户追溯报告"] },
-  { id: "reports", title: "报表与看板", layer: "经营分析", color: "#8e8e93", mark: "表", items: ["生产日报", "良率分析", "交付达成", "设备效率", "停机损失", "物料损耗", "管理驾驶舱"] },
-  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "规则与代码", "班次日历", "客户供应商"] },
-  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "人员资质", "角色权限", "审批设置", "接口补偿配置", "消息提醒", "操作记录", "数据备份"] },
-];
+const modules = window.MES_NAV_MODULES || [];
 
 const STORAGE_KEY = "xingjigu_mes_workbench_v2";
 
@@ -82,7 +66,7 @@ const reportPages = {
   设备效率: "equipment-efficiency.html",
   停机损失: "downtime-loss.html",
   物料损耗: "material-loss.html",
-  管理驾驶舱: "management-cockpit.html",
+  "MES 生产指标驾驶舱": "management-cockpit.html",
 };
 
 const basicPages = {
@@ -105,7 +89,7 @@ const systemPages = {
   单据同步: "document-sync.html",
   消息提醒: "message-alerts.html",
   操作记录: "operation-logs.html",
-  数据备份: "data-backup.html",
+  数据归档与恢复演练: "data-backup.html",
 };
 
 const homePreviewModuleIds = ["basic", "orders", "dispatch", "station", "materials", "quality", "equipment", "process", "exceptions", "warehouse", "reports"];
@@ -133,14 +117,14 @@ masterOrders.forEach((masterOrder) => {
 });
 
 const flowSteps = [
-  { name: "ERP 工单", meta: "MO-202606-0001 接收成功", status: "done", owner: "计划员", action: "查看订单" },
+  { name: "工单来源", meta: "MO-202606-0001 外部同步 / MES 手工均需评审", status: "done", owner: "计划员", action: "查看订单" },
   { name: "生产资料检查", meta: "BOM / 工艺 / 作业指导 / 检验要求通过", status: "done", owner: "工艺工程师", action: "查看资料" },
   { name: "生产排程", meta: "第一批 800 台，老化测试为瓶颈", status: "done", owner: "计划主管", action: "调整排程" },
   { name: "任务下达", meta: "SMT 至包装任务已生成", status: "current", owner: "车间主任", action: "查看任务" },
   { name: "物料齐套", meta: "温度传感器第二批待到货", status: "todo", owner: "物料员", action: "催料" },
   { name: "现场生产", meta: "SMT / DIP / 烧录 / 装配", status: "todo", owner: "班组长", action: "进入看板" },
   { name: "质量放行", meta: "FAI / IPQC / FQC", status: "todo", owner: "质量工程师", action: "查看检验" },
-  { name: "入库回传", meta: "WMS 入库，ERP 完工回传", status: "todo", owner: "仓库主管", action: "查看单据" },
+  { name: "入库回执", meta: "有 WMS 接收入库回执；无 WMS 登记 MES 库存记录", status: "todo", owner: "仓库主管", action: "查看单据" },
 ];
 
 const initialOperations = [
@@ -302,6 +286,13 @@ function renderMenu() {
 
 function applyMenuEntry(moduleId, entry) {
   const order = getActiveOrder();
+  if (moduleId !== "workbench") {
+    const route = window.resolveMesRoute?.(moduleId, entry);
+    if (route) {
+      window.location.href = route;
+      return;
+    }
+  }
   if (moduleId === "orders" && entry === "生产订单") {
     window.location.href = "./orders/production-orders.html";
     return;
@@ -350,7 +341,7 @@ function applyMenuEntry(moduleId, entry) {
     window.location.href = "./dispatch/task-change.html";
     return;
   }
-  if (moduleId === "dispatch" && entry === "SOP 查看") {
+  if (moduleId === "dispatch" && entry === "工艺文件与作业指导") {
     window.location.href = "./dispatch/sop-view.html";
     return;
   }
@@ -358,7 +349,7 @@ function applyMenuEntry(moduleId, entry) {
     window.location.href = "./dispatch/start-check.html";
     return;
   }
-  if (moduleId === "station" && entry === "员工登录") {
+  if (moduleId === "station" && entry === "工位身份回执") {
     window.location.href = "./station/employee-login.html";
     return;
   }
@@ -977,7 +968,7 @@ function bindTopbar() {
         if (first) state.activeOrderId = first.id;
         saveDemoState();
         renderAllProduction();
-        setContext("繁忙产线", "已切换到当前压力较高的 Line-B。");
+        setContext("按产线筛选", "已按当前压力较高的 Line-B 过滤订单、现场任务和风险项。");
       }
     });
   });
@@ -1057,7 +1048,7 @@ function bindModal() {
     event.preventDefault();
     const type = $("#exceptionType").value;
     const step = $("#exceptionStep").value;
-    const desc = $("#exceptionDesc").value.trim() || "现场新建异常，待补充详细说明";
+    const desc = $("#exceptionDesc").value.trim() || "后台补录异常，待补充现场回执和影响说明";
     const style = type === "质量" || type === "缺料" ? "red" : type === "设备" ? "orange" : "blue";
     risks.unshift({
       id: `risk-${Date.now()}`,
@@ -1079,7 +1070,7 @@ function bindModal() {
       station: step,
       order: activeOrder.id,
       dispatch: "首页草稿",
-      source: "首页工作台新建异常草稿",
+      source: "首页工作台后台异常补录草稿",
       status: "草稿",
       owner: "待分配",
       action: desc,
@@ -1089,13 +1080,13 @@ function bindModal() {
       owner: "生产经理",
       result: `首页已串联异常上报入口：${type} / ${step}`,
     });
-    appendWorkbenchLog("新建异常草稿", `${type} / ${step} / ${activeOrder.id}`);
+    appendWorkbenchLog("后台异常补录草稿", `${type} / ${step} / ${activeOrder.id}`);
     $("#exceptionDesc").value = "";
     closeModal();
     saveDemoState();
     renderAllProduction();
-    setContext("新建异常", `已提交 ${type} 异常，影响工序：${step}。`);
-    showToast("异常草稿已创建，可进入异常上报继续维护");
+    setContext("后台异常补录", `已登记 ${type} 异常补录草稿，影响工序：${step}。`);
+    showToast("异常补录草稿已创建，可进入异常上报继续维护");
   });
 }
 
@@ -1204,8 +1195,8 @@ function refreshData() {
   });
   saveDemoState();
   renderAllProduction();
-  setContext("数据刷新", `${state.line} ${state.shift} 数据已刷新。`);
-  showToast("数据已刷新");
+  setContext("模拟接口刷新回执", `${state.line} ${state.shift} 已接收模拟接口刷新回执，并刷新当前工作台视图。`);
+  showToast("已接收模拟接口刷新回执");
 }
 
 function setActiveLink(activeLink) {

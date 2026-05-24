@@ -1,40 +1,7 @@
 const pageConfig = window.SETTINGS_PAGE || { id: "accounts", title: "人员账号", eyebrow: "系统设置 / 人员账号" };
 const STORAGE_KEY = `xingjigu_mes_settings_${pageConfig.id}_v1`;
 
-const modules = window.MES_NAV_MODULES || [
-  { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
-  { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
-  { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场终端", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
-  { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
-  { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
-  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "质量放行", "出货检验", "不良记录", "返工评审"] },
-  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "工装夹具", "量检具校准", "点检计划", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
-  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机归因", "过程趋势", "电子看板"] },
-  { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
-  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工复核", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
-  { id: "trace", title: "追溯查询", layer: "质量追溯", color: "#8e8e93", mark: "追", items: ["产品追溯", "批次追溯", "物料去向", "生产履历", "检验履历", "设备履历", "客户追溯报告"] },
-  { id: "reports", title: "报表与看板", layer: "经营分析", color: "#8e8e93", mark: "表", items: ["生产日报", "良率分析", "交付达成", "设备效率", "停机损失", "物料损耗", "管理驾驶舱"] },
-  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "规则与代码", "班次日历", "客户供应商"] },
-  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "人员资质", "角色权限", "审批设置", "接口补偿配置", "消息提醒", "操作记录", "数据备份"] },
-];
-
-const pageMaps = {
-  orders: { 生产订单: "../orders/production-orders.html", 订单评审: "../orders/order-reviews.html", 生产排程: "../orders/production-schedule.html", 产能负荷: "../orders/capacity-load.html", 交期预警: "../orders/delivery-warning.html", 计划调整: "../orders/plan-adjustment.html", 齐套检查: "../orders/kit-check.html" },
-  dispatch: { 派工单: "../dispatch/dispatch-orders.html", 工序任务: "../dispatch/operation-tasks.html", 班组任务: "../dispatch/team-tasks.html", 任务下达: "../dispatch/task-release.html", 任务变更: "../dispatch/task-change.html", "SOP 查看": "../dispatch/sop-view.html", 开工检查: "../dispatch/start-check.html" },
-  station: { 员工登录: "../station/employee-login.html", 扫码开工: "../station/scan-start.html", 工艺指导: "../station/work-instruction.html", 投料确认: "../station/feeding-confirmation.html", 过程记录: "../station/process-record.html", 工序报工: "../station/operation-report.html", 交接班: "../station/shift-handover.html" },
-  materials: { 用料需求: "../materials/material-requirements.html", 领料申请: "../materials/picking-requests.html", 配送进度: "../materials/delivery-progress.html", 线边库存: "../materials/line-side-inventory.html", 投料记录: "../materials/feeding-records.html", 余料退回: "../materials/return-materials.html", 缺料预警: "../materials/shortage-alerts.html" },
-  barcode: { 生产批次: "../barcode/production-batches.html", 产品序列号: "../barcode/product-serials.html", 物料标签: "../barcode/material-labels.html", 成品标签: "../barcode/finished-labels.html", 箱码托盘码: "../barcode/box-pallet-codes.html", 标签打印: "../barcode/label-printing.html", 补打申请: "../barcode/reprint-requests.html" },
-  quality: { 来料检验: "../quality/incoming-inspection.html", 首件检验: "../quality/first-article.html", 巡检任务: "../quality/patrol-tasks.html", 过程检验: "../quality/process-inspection.html", 成品检验: "../quality/final-inspection.html", 质量放行: "../quality/release.html", 出货检验: "../quality/outgoing-inspection.html", 不良记录: "../quality/defect-records.html", 返工评审: "../quality/rework-review.html" },
-  equipment: { 设备状态: "../equipment/equipment-status.html", 工装夹具: "../equipment/tooling-fixtures.html", 量检具校准: "../equipment/calibration.html", 点检计划: "../equipment/inspection-plan.html", 保养计划: "../equipment/maintenance-plan.html", 维修工单: "../equipment/repair-orders.html", 停机记录: "../equipment/downtime-records.html", 备件领用: "../equipment/spare-parts.html", 设备效率: "../equipment/equipment-efficiency.html" },
-  process: { 实时产量: "../monitoring/realtime-output.html", 设备运行: "../monitoring/device-runtime.html", 工艺参数: "../monitoring/process-parameters.html", 报警记录: "../monitoring/alarm-records.html", 停机归因: "../monitoring/downtime-reasons.html", 停机原因: "../monitoring/downtime-reasons.html", 过程趋势: "../monitoring/process-trends.html", 电子看板: "../monitoring/electronic-board.html" },
-  exceptions: { 异常上报: "../exceptions/exception-report.html", 待处理异常: "../exceptions/pending-exceptions.html", 停线申请: "../exceptions/line-stop.html", 缺料处理: "../exceptions/material-shortage.html", 质量问题: "../exceptions/quality-issues.html", 设备故障: "../exceptions/equipment-faults.html", 处理复盘: "../exceptions/review.html" },
-  warehouse: { 工序完工复核: "../warehouse/operation-completion.html", 工序完工: "../warehouse/operation-completion.html", 完工确认: "../warehouse/completion-confirmation.html", 包装作业: "../warehouse/packaging.html", 成品入库: "../warehouse/finished-goods-receipt.html", 库存冻结: "../warehouse/inventory-freeze.html", 退料入库: "../warehouse/return-receipt.html", 单据同步: "../warehouse/document-sync.html" },
-  trace: { 产品追溯: "../traceability/product-trace.html", 批次追溯: "../traceability/batch-trace.html", 物料去向: "../traceability/material-flow.html", 生产履历: "../traceability/production-history.html", 检验履历: "../traceability/inspection-history.html", 设备履历: "../traceability/equipment-history.html", 客户追溯报告: "../traceability/customer-report.html" },
-  reports: { 生产日报: "../reports/production-daily.html", 良率分析: "../reports/yield-analysis.html", 交付达成: "../reports/delivery-attainment.html", 设备效率: "../reports/equipment-efficiency.html", 停机损失: "../reports/downtime-loss.html", 物料损耗: "../reports/material-loss.html", 管理驾驶舱: "../reports/management-cockpit.html" },
-  basic: { 产品资料: "../basic/product-master.html", 物料资料: "../basic/material-master.html", "BOM 清单": "../basic/bom-list.html", 工艺路线: "../basic/routing.html", 工序工位: "../basic/operation-stations.html", 产线车间: "../basic/workshops.html", 规则与代码: "../basic/rules-codes.html", 班次日历: "../basic/shift-calendar.html", 客户供应商: "../basic/partners.html" },
-  system: { 人员账号: "personnel-accounts.html", 人员资质: "personnel-qualification.html", 角色权限: "role-permissions.html", 审批设置: "approval-settings.html", 接口补偿配置: "document-sync.html", 单据同步: "document-sync.html", 消息提醒: "message-alerts.html", 操作记录: "operation-logs.html", 数据备份: "data-backup.html" },
-};
+const modules = window.MES_NAV_MODULES || [];
 
 const pageDefinitions = {
   accounts: {
@@ -104,12 +71,12 @@ const pageDefinitions = {
     simulationHint: "模拟审计查询或归档任务，不表示后台删除或改写原始操作记录",
   },
   backup: {
-    subtitle: "运维管理员配置在线库、历史库、时序数据、接口消息和审计日志的备份、归档、恢复演练与告警阈值",
+    subtitle: "运维管理员登记在线库、历史库、时序数据、接口消息和审计日志的数据归档策略、恢复演练、抽样校验与告警责任闭环",
     user: "运维管理员",
     metricLabels: ["备份策略", "最近成功", "待演练", "告警项"],
-    columns: ["备份对象", "数据来源", "策略 / RPO", "保留与归档", "状态", "最近结果", "责任人", "时间戳"],
-    tableTitle: "数据备份、归档与恢复演练",
-    tableHint: "备份设置保障 MES 多年运行后的数据可用性，恢复演练需形成记录和责任闭环",
+    columns: ["归档对象", "数据来源", "策略 / RPO", "保留与归档", "状态", "最近结果", "责任人", "时间戳"],
+    tableTitle: "数据归档与恢复演练",
+    tableHint: "该页面只展示策略、演练、告警和责任闭环，不直接访问或操作生产数据库",
     cardTitle: "数据治理闭环",
     simulationTitle: "模拟备份调度回执",
     simulationHint: "模拟备份作业、归档任务或恢复演练回执，不表示后台直接访问生产数据库",
@@ -149,7 +116,7 @@ const initialRows = {
   ],
   logs: [
     { id: "AUD-240620-001", name: "质量放行电子签名", area: "成品检验 FQC-0620-18", source: "后台工作台 / 质量工程师", scope: "结论：待放行 -> 已放行", status: "成功", statusStyle: "green", check: "签名设备与账号匹配", owner: "质量工程师 孟可", time: "2026-06-20 09:24", trace: "electronic_signature SIG-8891", next: "归入检验履历", risk: "客户稽核可追溯签名记录" },
-    { id: "AUD-240620-077", name: "PDA 登录失败锁定", area: "仓储员账号 USR-MAT-027", source: "PDA / 成品库 Wi-Fi", scope: "失败次数 4 -> 5", status: "失败拦截", statusStyle: "red", check: "账号已锁定并通知主管", owner: "仓储员 田悦", time: "2026-06-20 10:06", trace: "client_ip PDA-FG-03", next: "主管确认后解锁", risk: "锁定期间不可确认入库回执" },
+    { id: "AUD-240620-077", name: "PDA 登录失败锁定", area: "仓储员账号 USR-MAT-027", source: "PDA / 成品库 Wi-Fi", scope: "失败次数 4 -> 5", status: "失败拦截", statusStyle: "red", check: "账号已锁定并通知主管", owner: "仓储员 田悦", time: "2026-06-20 10:06", trace: "client_ip PDA-FG-03", next: "主管确认后解锁", risk: "锁定期间不可登记入库回执" },
     { id: "AUD-240620-088", name: "接口死信补偿申请", area: "ERP 完工回传 DLM-893", source: "接口管理员后台", scope: "补偿状态：待处理 -> 审批中", status: "成功", statusStyle: "green", check: "已触发 FLOW-IF-COMP 审批", owner: "接口管理员 陶然", time: "2026-06-20 10:50", trace: "approval_task COMP-893", next: "审批通过后重新投递", risk: "补偿全程留痕，不直接改 ERP" },
     { id: "AUD-240620-096", name: "权限越权访问拦截", area: "库存冻结解冻按钮", source: "后台工作台 / 计划员", scope: "按钮权限 denied", status: "已拦截", statusStyle: "orange", check: "角色无质量/仓储解冻权限", owner: "计划员 程诺", time: "2026-06-20 11:02", trace: "permission_check RBAC-096", next: "如需操作提交授权申请", risk: "防止跨职责解除质量冻结" },
   ],
@@ -240,21 +207,21 @@ const maintenanceDefinitions = {
     disable: { offLabel: "停用接口", onLabel: "启用接口", offStatus: "停用", onStatus: "重试中", offCheck: "接口已停用，未完成消息保留在补偿池并进入对账", onCheck: "接口已重新启用申请，需模拟对账通过后恢复投递" },
   },
   backup: {
-    createLabel: "新增备份策略",
-    noun: "备份策略",
+    createLabel: "新增归档策略",
+    noun: "归档策略",
     idPrefix: "BK-NEW",
     statusOptions: ["最近成功", "归档中", "已生效", "待演练", "停用"],
-    sourceOptions: ["在线库 + 日志备份", "时序库 + 对象存储", "audit_log + field_change_log", "integration_message + dead_letter", "后台备份策略"],
+    sourceOptions: ["在线库 + 日志备份", "时序库 + 对象存储", "audit_log + field_change_log", "integration_message + dead_letter", "后台归档策略"],
     defaults: {
       status: "待演练",
-      source: "后台备份策略",
+      source: "后台归档策略",
       owner: "运维管理员 何澈",
       trace: "backup_policy / draft",
-      check: "新增备份策略待 RPO/RTO、保留周期、恢复演练和告警阈值复核",
+      check: "新增归档策略待 RPO/RTO、保留周期、恢复演练和告警阈值复核",
       risk: "演示页面只记录策略与演练结论，不直接访问生产数据库",
       next: "完成恢复演练计划审批后发布策略",
     },
-    fields: ["策略编码", "备份对象", "数据来源", "策略来源", "策略 / RPO", "状态", "最近结果", "责任人", "作业引用", "恢复风险", "下一步闭环"],
+    fields: ["策略编码", "归档对象", "数据来源", "策略来源", "策略 / RPO", "状态", "最近结果", "责任人", "作业引用", "恢复风险", "下一步闭环"],
     primary: { label: "发起演练", status: "待演练", check: "恢复演练申请已生成，需运维窗口和业务责任人共同确认", next: "演练完成后记录 RTO、抽样校验和回退结论" },
     disable: { offLabel: "停用策略", onLabel: "启用策略", offStatus: "停用", onStatus: "待演练", offCheck: "备份策略已停用，历史备份和归档任务保留", onCheck: "备份策略已重新启用申请，需恢复演练后生效" },
   },
@@ -288,7 +255,7 @@ const governanceDefinitions = {
     matrix: [
       { id: "GOV-APR-MDM", control: "主数据发布审批模板", module: "基础资料 / 开工检查", rule: "工艺、质量、计划依次签核，发布执行快照", approver: "流程管理员 许航", status: "运行中", evidence: "approval_template MDM-PUBLISH", next: "版本影响评估" },
       { id: "GOV-APR-STOCK", control: "冻结/解冻审批模板", module: "库存冻结 / 追溯查询", rule: "仓储提交，质量复判，计划确认排程影响", approver: "仓储主管 王宁", status: "待发布", evidence: "approval_template STOCK-FREEZE-V2", next: "试运行发布" },
-      { id: "GOV-APR-RESTORE", control: "恢复演练审批模板", module: "数据备份 / 单据同步", rule: "运维窗口 + 业务抽样 + 回退结论", approver: "IT 运维 何澈", status: "待复核", evidence: "approval_template RESTORE-DRILL", next: "签名校验" },
+      { id: "GOV-APR-RESTORE", control: "恢复演练审批模板", module: "数据归档与恢复演练 / 单据同步", rule: "运维窗口 + 业务抽样 + 回退结论", approver: "IT 运维 何澈", status: "待复核", evidence: "approval_template RESTORE-DRILL", next: "签名校验" },
     ],
   },
   sync: {
@@ -298,7 +265,7 @@ const governanceDefinitions = {
     matrix: [
       { id: "GOV-IF-WMS", control: "WMS 入库回执对账", module: "成品入库 / 单据同步", rule: "箱托层级一致后才允许 ERP 入库回传", approver: "仓储主管 王宁", status: "有差异", evidence: "interface_reconcile REC-0620-03", next: "关闭对账差异" },
       { id: "GOV-IF-ERP", control: "ERP 完工回传补偿", module: "工序完工 / ERP 工单关闭", rule: "死信补偿需审批，重推消息不改 ERP 账务", approver: "接口管理员 陶然", status: "死信待补偿", evidence: "dead_letter DLM-893", next: "申请补偿" },
-      { id: "GOV-IF-PLM", control: "PLM 工艺附件同步", module: "基础资料 / SOP 查看", rule: "附件哈希校验通过后下发工位终端", approver: "工艺工程师 林澈", status: "重试中", evidence: "retry_count 2 / next 10:25", next: "模拟重推" },
+      { id: "GOV-IF-PLM", control: "PLM 工艺附件同步", module: "基础资料 / 工艺文件与作业指导", rule: "附件哈希校验通过后下发工位终端", approver: "工艺工程师 林澈", status: "重试中", evidence: "retry_count 2 / next 10:25", next: "模拟重推" },
     ],
   },
   messages: {
@@ -318,12 +285,12 @@ const governanceDefinitions = {
     matrix: [
       { id: "GOV-AUD-SIGN", control: "电子签名审计样本", module: "质量放行 / 返工评审", rule: "签名前后值、签名设备、账号和时间戳不可篡改", approver: "审计员 赵岚", status: "已生效", evidence: "audit_sample SIG-8891", next: "标记稽核样本" },
       { id: "GOV-AUD-EXPORT", control: "客户稽核导出申请", module: "追溯报告 / 操作记录", rule: "导出需审批，包含查询条件和报告版本快照", approver: "质量负责人 周雅", status: "待审批", evidence: "export_request AUD-EXPORT", next: "申请导出" },
-      { id: "GOV-AUD-ARCHIVE", control: "审计日志合规归档", module: "操作记录 / 数据备份", rule: "保留 10 年，不允许页面编辑或删除原始记录", approver: "IT 运维 何澈", status: "归档中", evidence: "archive_policy AUDIT-10Y", next: "归档任务" },
+      { id: "GOV-AUD-ARCHIVE", control: "审计日志合规归档", module: "操作记录 / 数据归档与恢复演练", rule: "保留 10 年，不允许页面编辑或删除原始记录", approver: "IT 运维 何澈", status: "归档中", evidence: "archive_policy AUDIT-10Y", next: "归档任务" },
     ],
   },
   backup: {
-    title: "备份恢复治理",
-    guard: "备份策略和恢复演练只登记 RPO/RTO、抽样校验和责任闭环，不在演示页直接访问生产数据库",
+    title: "数据归档与恢复演练治理",
+    guard: "归档策略和恢复演练只登记 RPO/RTO、抽样校验和责任闭环，不在演示页直接访问生产数据库",
     actions: ["发起演练", "确认恢复结果", "告警配置"],
     matrix: [
       { id: "GOV-BK-ONLINE", control: "在线业务库备份策略", module: "订单 / 派工 / 质量 / 入库", rule: "全量每日 02:00，日志 15 分钟，RPO 15 分钟", approver: "运维管理员 何澈", status: "最近成功", evidence: "backup_job BK-ONLINE-0620", next: "周日恢复演练" },
@@ -464,8 +431,9 @@ function renderFrameMenu() {
 }
 
 function goMenu(moduleId, entry) {
-  if (moduleId === "workbench") window.location.href = "../index.html";
-  else if (pageMaps[moduleId]?.[entry]) window.location.href = pageMaps[moduleId][entry];
+  const route = window.resolveMesRoute?.(moduleId, entry);
+  if (route) window.location.href = route;
+  else if (moduleId === "workbench") window.location.href = "../index.html";
   else showToast(`${entry} 页面待建设`);
 }
 

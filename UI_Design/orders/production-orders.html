@@ -42,9 +42,9 @@
             <h1>生产订单管理</h1>
           </div>
           <div class="topbar-actions">
-            <button id="createOrderBtn" class="primary-action" type="button">新增订单</button>
-            <button id="syncErpBtn" class="primary-action" type="button">同步 ERP 工单</button>
-            <button id="resetOrderPageBtn" class="secondary-action" type="button">重置订单演示</button>
+            <button id="createOrderBtn" class="primary-action" type="button">新建 MES 手工工单</button>
+            <button id="syncErpBtn" class="primary-action" type="button">导入/同步工单</button>
+            <button id="resetOrderPageBtn" class="secondary-action" type="button">重置订单原型数据</button>
             <a class="secondary-link" href="../index.html">返回首页</a>
             <div class="user-chip">
               <span class="avatar">陈</span>
@@ -191,7 +191,7 @@
             <section class="detail-section">
               <div class="section-title">
                 <h3>排程与齐套</h3>
-                <button id="scheduleConfirmBtn" type="button">确认排程</button>
+                <button id="scheduleConfirmBtn" type="button">生成排程版本</button>
               </div>
               <div id="schedulePlan" class="schedule-list"></div>
             </section>
@@ -210,9 +210,9 @@
               <div class="action-grid">
                 <button id="editActiveOrderBtn" type="button">编辑订单</button>
                 <button id="kitReadyBtn" type="button">标记齐套</button>
-                <button id="priorityBtn" type="button">设为加急</button>
+                <button id="priorityBtn" type="button">提交加急会签</button>
                 <button id="createRiskBtn" type="button">登记计划风险</button>
-                <button id="deleteActiveOrderBtn" class="danger-action" type="button">删除/作废订单</button>
+                <button id="deleteActiveOrderBtn" class="danger-action" type="button">删除草稿/作废申请</button>
               </div>
             </section>
           </aside>
@@ -225,7 +225,7 @@
         <div class="modal__header">
           <div>
             <div class="drawer__label">生产订单</div>
-            <h3 id="orderFormTitle">新增订单</h3>
+            <h3 id="orderFormTitle">新建 MES 手工工单</h3>
           </div>
           <button id="orderFormClose" class="icon-button" type="button" aria-label="关闭订单表单">×</button>
         </div>
@@ -236,14 +236,22 @@
             <input id="formOrderId" name="id" type="text" required />
           </label>
           <label>
+            来源类型
+            <select id="formSourceType" name="sourceType" required>
+              <option value="MES 手工工单">MES 手工工单</option>
+              <option value="外部系统同步">外部系统同步</option>
+              <option value="Excel 导入">Excel 导入</option>
+            </select>
+          </label>
+          <label>
             产品
             <select id="formProduct" name="product" required></select>
-            <small id="formProductHint" class="field-hint">产品来源于基础资料 / 产品资料</small>
+            <small id="formProductHint" class="field-hint">产品来源于基础资料 / 产品资料，支持外部同步或 MES 手工维护</small>
           </label>
           <label>
             客户
             <select id="formCustomer" name="customer" required></select>
-            <small id="formCustomerHint" class="field-hint">客户来源于基础资料 / 客户供应商</small>
+            <small id="formCustomerHint" class="field-hint">客户来源于基础资料 / 客户供应商，支持外部同步或 MES 手工维护</small>
           </label>
           <label>
             计划数量

@@ -1,22 +1,6 @@
 const STORAGE_KEY = "xingjigu_mes_production_orders_v2";
 
-const modules = window.MES_NAV_MODULES || [
-  { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
-  { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
-  { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
-  { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
-  { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
-  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
-  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "点检任务", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
-  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机原因", "过程趋势", "电子看板"] },
-  { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
-  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
-  { id: "trace", title: "追溯查询", layer: "质量追溯", color: "#8e8e93", mark: "追", items: ["产品追溯", "批次追溯", "物料去向", "生产履历", "检验履历", "设备履历", "客户追溯报告"] },
-  { id: "reports", title: "报表与看板", layer: "经营分析", color: "#8e8e93", mark: "表", items: ["生产日报", "良率分析", "交付达成", "设备效率", "停机损失", "物料损耗", "管理驾驶舱"] },
-  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "客户供应商"] },
-  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "角色权限", "审批设置", "单据同步", "消息提醒", "操作记录", "数据备份"] },
-];
+const modules = window.MES_NAV_MODULES || [];
 
 const initialOrders = [
   { id: "MO-202606-0001", product: "智能温控控制器 TCU-100", customer: "A 客户", qty: 1000, done: 428, due: "2026-06-30", line: "Line-A", status: "已下达", priority: "高", risk: "缺料", review: "已通过", schedule: "已确认", kit: "缺 200 件", batchPlan: "800 + 200", planner: "周计划", materialGap: "温度传感器缺 200 件" },
@@ -34,7 +18,7 @@ const initialOrders = [
   { id: "MO-202606-0014", product: "工业网关 GW-240", customer: "B 客户", qty: 480, done: 0, due: "2026-07-04", line: "Line-B", status: "已排程", priority: "中", risk: "正常", review: "已通过", schedule: "已确认", kit: "齐套", batchPlan: "480", planner: "李计划", materialGap: "齐套" },
 ];
 
-let orders = structuredClone(window.MES_BUSINESS_FLOW?.read().orders || window.MES_MASTER_DATA?.orders || initialOrders);
+let orders = normalizeOrders(structuredClone(window.MES_BUSINESS_FLOW?.read().orders || window.MES_MASTER_DATA?.orders || initialOrders));
 let integrationLogs = [];
 let state = {
   activeOrderId: "MO-202606-0001",
@@ -95,9 +79,9 @@ function renderFrameMenu() {
       else if (moduleId === "dispatch" && entry === "班组任务") window.location.href = "../dispatch/team-tasks.html";
       else if (moduleId === "dispatch" && entry === "任务下达") window.location.href = "../dispatch/task-release.html";
       else if (moduleId === "dispatch" && entry === "任务变更") window.location.href = "../dispatch/task-change.html";
-      else if (moduleId === "dispatch" && entry === "SOP 查看") window.location.href = "../dispatch/sop-view.html";
+      else if (moduleId === "dispatch" && entry === "工艺文件与作业指导") window.location.href = "../dispatch/sop-view.html";
       else if (moduleId === "dispatch" && entry === "开工检查") window.location.href = "../dispatch/start-check.html";
-      else if (moduleId === "station" && entry === "员工登录") window.location.href = "../station/employee-login.html";
+      else if (moduleId === "station" && entry === "工位身份回执") window.location.href = "../station/employee-login.html";
       else if (moduleId === "station" && entry === "扫码开工") window.location.href = "../station/scan-start.html";
       else if (moduleId === "station" && entry === "工艺指导") window.location.href = "../station/work-instruction.html";
       else if (moduleId === "station" && entry === "投料确认") window.location.href = "../station/feeding-confirmation.html";
@@ -113,17 +97,36 @@ function loadState() {
   try {
     const flowState = window.MES_BUSINESS_FLOW?.read();
     if (flowState?.orders) {
-      orders = flowState.orders;
+      orders = normalizeOrders(flowState.orders);
       integrationLogs = flowState.logs.map((item) => ({ orderId: item.orderId, action: `${item.stage}：${item.action} - ${item.result}`, time: item.time }));
     }
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (!saved) return;
-    orders = flowState?.orders || saved.orders || orders;
+    orders = normalizeOrders(flowState?.orders || saved.orders || orders);
     integrationLogs = flowState?.logs?.map((item) => ({ orderId: item.orderId, action: `${item.stage}：${item.action} - ${item.result}`, time: item.time })) || saved.integrationLogs || integrationLogs;
     state = { ...state, ...(saved.state || {}) };
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+}
+
+function normalizeOrders(list) {
+  return (list || []).map((order) => ({
+    sourceType: "外部系统同步",
+    sourceRef: "外部同步回执",
+    ...deriveSourceMetadata(order.sourceType),
+    approvalStatus: order.review === "已通过" ? "已评审" : "待评审",
+    impactAssessment: "需评估产品、客户、BOM、工艺、齐套、质量和排程影响",
+    auditTrail: [],
+    ...order,
+    ...deriveSourceMetadata(order.sourceType),
+  }));
+}
+
+function deriveSourceMetadata(sourceType = "外部系统同步") {
+  if (sourceType === "MES 手工工单") return { sourceMode: "mesManual", sourceSystem: "MES" };
+  if (sourceType === "Excel 导入") return { sourceMode: "excelImport", sourceSystem: "none" };
+  return { sourceMode: "externalSync", sourceSystem: "ERP" };
 }
 
 function saveState() {
@@ -154,6 +157,11 @@ function createEmptyOrder() {
     productCode: defaultProduct?.code || "",
     customer: defaultCustomer?.name || "",
     customerId: defaultCustomer?.id || "",
+    sourceType: "MES 手工工单",
+    sourceRef: "计划员手工录入",
+    ...deriveSourceMetadata("MES 手工工单"),
+    approvalStatus: "待评审",
+    auditTrail: [],
     qty: 100,
     done: 0,
     due: "2026-07-10",
@@ -292,7 +300,7 @@ function renderTable() {
       return `
         <tr class="${order.id === state.activeOrderId ? "is-active" : ""}" data-order-id="${order.id}">
           <td class="order-no">${order.id}</td>
-          <td class="product-cell"><strong>${order.product}</strong><span>${order.planner} · ${order.review} · ${order.schedule}</span></td>
+          <td class="product-cell"><strong>${order.product}</strong><span>${getOrderSourceLabel(order)} · ${order.planner} · ${order.review} · ${order.schedule}</span></td>
           <td>${order.customer}</td>
           <td>${order.done} / ${order.qty}</td>
           <td><span class="pill pill--blue">${order.status}</span></td>
@@ -303,7 +311,7 @@ function renderTable() {
           <td>
             <div class="table-actions">
               <button type="button" data-action="edit" data-order-id="${order.id}">编辑</button>
-              <button class="danger-action" type="button" data-action="delete" data-order-id="${order.id}">${canPhysicallyDelete(order) ? "删除" : "作废"}</button>
+              <button class="danger-action" type="button" data-action="delete" data-order-id="${order.id}">${canPhysicallyDelete(order) ? "删除草稿" : "作废申请"}</button>
             </div>
           </td>
         </tr>
@@ -354,7 +362,7 @@ function renderDetail() {
   if (!order) {
     $("#detailStatus").textContent = "无订单";
     $("#detailOrderId").textContent = "暂无生产订单";
-    $("#detailProduct").textContent = "请新增订单或重置演示数据";
+    $("#detailProduct").textContent = "请新建 MES 手工工单或重置原型数据";
     $("#detailGrid").innerHTML = "";
     $("#reviewChecklist").innerHTML = "";
     $("#schedulePlan").innerHTML = "";
@@ -369,6 +377,7 @@ function renderDetail() {
   const customerStatus = getCustomerStatus(order);
   const customer = customerStatus.master;
   $("#detailGrid").innerHTML = [
+    ["来源类型", getOrderSourceLabel(order)],
     ["产品", `${order.product} / ${order.productCode || product?.code || "未关联"}`],
     ["客户", `${order.customer} / ${order.customerId || customer?.id || "未关联"}`],
     ["计划数量", `${order.qty} 台`],
@@ -378,24 +387,34 @@ function renderDetail() {
     ["优先级", order.priority],
     ["计划员", order.planner],
     ["风险", order.risk],
+    ["来源模式", `${order.sourceMode || deriveSourceMetadata(order.sourceType).sourceMode} / ${order.sourceSystem || deriveSourceMetadata(order.sourceType).sourceSystem}`],
+    ["审批/评审", `${order.approvalStatus || order.review || "待评审"} / ${order.auditOwner || order.planner || "待分配"}`],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
 
   $("#reviewChecklist").innerHTML = [
+    ["工单来源", order.sourceType || "外部系统同步", order.sourceRef || "来源凭证待补齐"],
     ["客户主数据", customerStatus.status, customerStatus.hint],
     ["产品主数据", productStatus.status, productStatus.hint],
     ["BOM 与工艺", order.review === "已通过" ? "已发布" : "待工艺确认", "版本 V2026.06"],
     ["工位设备能力", order.review === "已通过" ? "通过" : "待检查", order.line],
     ["检验计划", order.risk === "资料" ? "待确认" : "已配置", "首件 / IPQC / FQC"],
+    ["检验规则", order.risk === "资料" ? "待确认" : "已配置", "首件 / IPQC / FQC / OQC"],
     ["编码与标签", order.review === "已通过" ? "已启用" : "待检查", "工单、批次、SN"],
+    ["审批与影响", order.review === "已通过" ? "已留痕" : "待评审", order.impactAssessment || "需评估排程、齐套、工艺、质量和客户要求"],
   ].map(([label, status, desc]) => `<div><span>${label}</span><strong>${desc}</strong><em>${status}</em></div>`).join("");
 
   $("#schedulePlan").innerHTML = [
     ["订单批次", `${order.batchPlan} 台`, order.kit],
+    ["排程版本", order.scheduleVersion || "待生成", order.schedule === "已确认" ? "已发布" : "草案"],
     ["SMT 贴片", "06-20 08:00-12:00", `${order.line} / SMT`],
     ["DIP 插件", "06-20 13:00-18:00", `${order.line} / DIP`],
     ["测试老化", order.risk === "设备" ? "需避开设备高峰" : "06-22 08:00-06-23 06:00", "Test / Aging"],
-    ["包装入库", "06-23 13:00-18:00", "Pack / WMS"],
+    ["包装入库", "06-23 13:00-18:00", "Pack / MES 库存或 WMS 回执"],
   ].map(([step, time, resource]) => `<div><span>${step}</span><strong>${time}</strong><em>${resource}</em></div>`).join("");
+}
+
+function getOrderSourceLabel(order) {
+  return `${order.sourceType || "外部系统同步"}${order.sourceRef ? ` / ${order.sourceRef}` : ""}`;
 }
 
 function getIntegrationItems(order) {
@@ -413,13 +432,13 @@ function getIntegrationItems(order) {
       status: customer ? customer.status : "待维护",
     },
     {
-      target: "ERP",
-      desc: `同步工单主数据、产品编码 ${order.productCode || product?.code || "待匹配"}、客户编码 ${order.customerId || "待匹配"}、交期和计划数量`,
-      status: ["待评审", "待排程"].includes(order.status) ? "待同步" : "已同步",
+      target: "工单来源",
+      desc: `${getOrderSourceLabel(order)}；产品编码 ${order.productCode || product?.code || "待匹配"}、客户编码 ${order.customerId || "待匹配"}、交期和计划数量均需进入评审`,
+      status: ["待评审", "待排程"].includes(order.status) ? "待复核" : "已受控",
     },
     {
-      target: "APS 排程",
-      desc: `${order.line} 产能负荷、批次计划、交期优先级`,
+      target: "排程版本",
+      desc: `${order.line} 产能负荷、批次计划、交期优先级；已下达/生产中只允许走计划调整或任务变更`,
       status: order.schedule === "已确认" ? "已更新" : "待排程",
     },
     {
@@ -438,8 +457,8 @@ function getIntegrationItems(order) {
       status: ["质量", "资料"].includes(order.risk) ? "需确认" : "已准备",
     },
     {
-      target: "WMS / 成品入库",
-      desc: "完工数量、包装批次、入库预约",
+      target: "MES 库存 / WMS 回执",
+      desc: "完工数量、包装批次、入库预约；无 WMS 时登记 MES 库存记录",
       status: ["包装中", "待检"].includes(order.status) ? "待入库" : "未触发",
     },
   ];
@@ -533,7 +552,7 @@ function bindEvents() {
   $("#resetOrderPageBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
     const flowState = window.MES_BUSINESS_FLOW?.reset?.();
-    orders = structuredClone(flowState?.orders || initialOrders);
+    orders = normalizeOrders(structuredClone(flowState?.orders || initialOrders));
     integrationLogs = [];
     state = { activeOrderId: "MO-202606-0001", search: "", status: "all", line: "all", risk: "all", page: 1, pageSize: 5, editingOrderId: null };
     $("#orderSearch").value = "";
@@ -545,12 +564,12 @@ function bindEvents() {
     showToast("订单演示已重置");
   });
   $("#syncErpBtn").addEventListener("click", () => {
-    showToast("已模拟同步 ERP 工单，未发现重复幂等键");
+    showToast("已生成导入/同步工单模拟回执，支持外部同步、Excel 导入和 MES 手工来源");
   });
-  $("#reviewPassBtn").addEventListener("click", () => updateActiveOrder({ review: "已通过", status: "待排程", risk: getActiveOrder().risk === "资料" ? "正常" : getActiveOrder().risk }, "订单评审已通过"));
-  $("#scheduleConfirmBtn").addEventListener("click", () => updateActiveOrder({ review: "已通过", schedule: "已确认", status: getActiveOrder().status === "待排程" ? "已排程" : getActiveOrder().status }, "排程已确认"));
+  $("#reviewPassBtn").addEventListener("click", () => updateActiveOrder({ review: "已通过", approvalStatus: "评审通过", status: "待排程", risk: getActiveOrder().risk === "资料" ? "正常" : getActiveOrder().risk }, "订单评审已通过并写入审批履历"));
+  $("#scheduleConfirmBtn").addEventListener("click", () => updateActiveOrder({ review: "已通过", schedule: "已确认", scheduleVersion: `SCH-${new Date().toISOString().slice(0, 10)}`, status: getActiveOrder().status === "待排程" ? "已排程" : getActiveOrder().status }, "已生成受控排程版本"));
   $("#kitReadyBtn").addEventListener("click", () => updateActiveOrder({ kit: "齐套", materialGap: "齐套", risk: getActiveOrder().risk === "缺料" ? "正常" : getActiveOrder().risk }, "齐套状态已更新"));
-  $("#priorityBtn").addEventListener("click", () => updateActiveOrder({ priority: "紧急", schedule: "待调整" }, "已设为加急并进入计划调整"));
+  $("#priorityBtn").addEventListener("click", () => updateActiveOrder({ priority: "紧急", schedule: "待调整", approvalStatus: "加急会签中" }, "已提交加急会签并进入计划调整候选"));
   $("#createRiskBtn").addEventListener("click", () => updateActiveOrder({ risk: "交期", schedule: "待调整" }, "计划风险已登记"));
 }
 
@@ -565,7 +584,13 @@ function bindConfirmDialog() {
 function updateActiveOrder(patch, message) {
   const index = orders.findIndex((order) => order.id === state.activeOrderId);
   if (index < 0) return;
-  orders[index] = { ...orders[index], ...patch };
+  const trail = {
+    action: message,
+    owner: orders[index].planner || "计划员",
+    time: new Date().toLocaleString("zh-CN", { hour12: false }),
+    source: "订单与计划页面",
+  };
+  orders[index] = { ...orders[index], ...patch, auditTrail: [trail, ...(orders[index].auditTrail || [])], auditOwner: trail.owner };
   if (message.includes("评审")) window.MES_BUSINESS_FLOW?.applyAction(orders[index].id, "approveReview", { owner: orders[index].planner });
   else if (message.includes("排程")) window.MES_BUSINESS_FLOW?.applyAction(orders[index].id, "publishPlan", { owner: orders[index].planner });
   else if (message.includes("齐套")) window.MES_BUSINESS_FLOW?.applyAction(orders[index].id, "confirmKit", { owner: orders[index].planner });
@@ -585,9 +610,10 @@ function openOrderForm(orderId) {
     return;
   }
   state.editingOrderId = orderId || null;
-  $("#orderFormTitle").textContent = orderId ? "编辑订单" : "新增订单";
+  $("#orderFormTitle").textContent = orderId ? "编辑订单受控变更" : "新建 MES 手工工单";
   $("#formOrderId").value = order.id;
   $("#formOrderId").disabled = Boolean(orderId);
+  $("#formSourceType").value = order.sourceType || "MES 手工工单";
   renderProductSelect(order);
   renderCustomerSelect(order);
   $("#formQty").value = order.qty;
@@ -623,6 +649,11 @@ function saveOrderForm(event) {
     productCode: product?.code || "",
     customer: customer?.name || "",
     customerId: customer?.id || "",
+    sourceType: $("#formSourceType").value,
+    sourceRef: $("#formSourceType").value === "MES 手工工单" ? "计划员手工录入" : $("#formSourceType").value === "Excel 导入" ? "Excel 导入待复核" : "外部系统同步回执",
+    ...deriveSourceMetadata($("#formSourceType").value),
+    approvalStatus: ["待评审", "待排程"].includes(status) ? "待评审" : "已评审",
+    impactAssessment: "保存后需联动产品、客户、BOM、工艺、齐套、质量和排程影响检查",
     qty,
     done: Math.min(done, qty),
     due: $("#formDue").value,
@@ -654,20 +685,26 @@ function saveOrderForm(event) {
   if (isEdit) {
     const index = orders.findIndex((item) => item.id === state.editingOrderId);
     if (index < 0) return;
-    orders[index] = order;
-    window.MES_BUSINESS_FLOW?.upsertOrder(order, { action: "订单变更" });
+    orders[index] = {
+      ...order,
+      auditTrail: [{ action: "订单受控变更", owner: order.planner, time: new Date().toLocaleString("zh-CN", { hour12: false }), source: "订单表单" }, ...(orders[index].auditTrail || [])],
+    };
+    window.MES_BUSINESS_FLOW?.upsertOrder(orders[index], { action: "订单受控变更" });
   } else {
-    orders.unshift(order);
+    orders.unshift({
+      ...order,
+      auditTrail: [{ action: "MES 手工工单创建", owner: order.planner, time: new Date().toLocaleString("zh-CN", { hour12: false }), source: order.sourceType }],
+    });
     state.page = 1;
-    window.MES_BUSINESS_FLOW?.upsertOrder(order, { action: "MES 新增订单" });
+    window.MES_BUSINESS_FLOW?.upsertOrder(orders[0], { action: "MES 手工工单创建" });
   }
   state.activeOrderId = order.id;
-  recordIntegration(order.id, isEdit ? "订单变更已推送联动" : "新增订单已推送联动");
+  recordIntegration(order.id, isEdit ? "订单受控变更已推送联动" : "MES 手工工单已创建，等待评审");
   closeOrderForm();
   saveState();
   syncFlowStore();
   renderAll();
-  showToast(isEdit ? "生产订单已更新" : "生产订单已新增");
+  showToast(isEdit ? "生产订单受控变更已保存" : "MES 手工工单已创建，需完成订单评审");
 }
 
 function deleteOrder(orderId) {
@@ -678,15 +715,15 @@ function deleteOrder(orderId) {
   }
   const canDelete = canPhysicallyDelete(order);
   openConfirmDialog({
-    title: `${canDelete ? "删除" : "作废"} ${order.id}`,
+    title: `${canDelete ? "删除草稿" : "作废申请"} ${order.id}`,
     message: canDelete
-      ? "该订单尚未被评审、排程或现场执行引用，可从当前 MES 演示订单池删除。真实系统仍会保留导入和操作审计。"
-      : "该订单已被评审、排程、派工或现场执行引用，不能物理删除。系统将改为作废并保留订单、责任人、时间戳和下游影响履历。",
+      ? "该工单仍处于草稿或待评审且未被排程、派工、报工、库存或追溯引用，可删除草稿；系统仍保留创建和删除审计。"
+      : "该订单已被评审、排程、派工或现场执行引用，不能物理删除。系统将提交作废申请并保留订单、责任人、时间戳和下游影响履历。",
     meta: [`产品：${order.product}`, `客户：${order.customer}`, `状态：${order.status} / 风险：${order.risk}`],
-    okText: canDelete ? "确认删除" : "确认作废",
+    okText: canDelete ? "确认删除草稿" : "确认提交作废申请",
     onConfirm: () => {
       if (canDelete) {
-        recordIntegration(order.id, "未引用订单已删除并保留导入审计");
+        recordIntegration(order.id, "未引用草稿订单已删除并保留创建/删除审计");
         orders = orders.filter((item) => item.id !== orderId);
         const flowState = window.MES_BUSINESS_FLOW?.read?.();
         if (flowState) {
@@ -694,13 +731,14 @@ function deleteOrder(orderId) {
           window.MES_BUSINESS_FLOW.write(flowState);
         }
         if (state.activeOrderId === orderId) state.activeOrderId = orders[0]?.id || "";
-        showToast("生产订单已删除");
+        showToast("生产订单草稿已删除");
       } else {
         const index = orders.findIndex((item) => item.id === orderId);
-        orders[index] = { ...orders[index], status: "已作废", risk: "资料", materialGap: "订单作废，停止后续计划动作" };
-        window.MES_BUSINESS_FLOW?.upsertOrder(orders[index], { action: "订单作废" });
-        recordIntegration(order.id, "订单已作废，已通知评审、排程、齐套与派工准备");
-        showToast("生产订单已作废");
+        const trail = { action: "提交作废申请", owner: orders[index].planner || "计划员", time: new Date().toLocaleString("zh-CN", { hour12: false }), source: "订单与计划页面" };
+        orders[index] = { ...orders[index], status: "已作废", risk: "资料", approvalStatus: "作废申请已提交", materialGap: "订单作废申请已提交，停止后续计划动作", auditTrail: [trail, ...(orders[index].auditTrail || [])] };
+        window.MES_BUSINESS_FLOW?.upsertOrder(orders[index], { action: "订单作废申请" });
+        recordIntegration(order.id, "订单作废申请已提交，已通知评审、排程、齐套与派工准备");
+        showToast("生产订单作废申请已提交");
       }
       state.page = Math.min(state.page, getPagination().totalPages);
       saveState();

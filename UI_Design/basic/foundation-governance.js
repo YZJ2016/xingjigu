@@ -14,7 +14,7 @@ const seedData = {
     { id: "CAL-QC-FINAL", type: "检验资源", name: "FQC 终检资源日历", version: "2026-06", scope: "QC-Final / FQC 检验台", source: "质量检验资源", status: "已发布", owner: "质量主管 周雅", updated: "2026-06-19 09:40", impact: "成品检验、质量放行、完工确认、成品入库", check: "FQC 每班 2 人，抽样加严时折减 1 小时能力", next: "供完工确认排队和交期预警引用", risk: "资源不足会导致入库前积压" },
   ],
   qualification: [
-    { id: "QUAL-SMT-OP-018", type: "岗位技能", name: "SMT 操作员资质", version: "V2.0", scope: "员工 EMP-018 / SMT-WS-01", source: "HR 在职 + 班组排班 + 培训记录", status: "已发布", owner: "班组长 郑峰", updated: "2026-06-20 07:55", impact: "员工登录、扫码开工、开工检查", check: "SMT 上料、换线、首件配合资质有效至 2026-12-31", next: "允许模拟工牌登录并接收 SMT 任务", risk: "资质过期将拦截开工" },
+    { id: "QUAL-SMT-OP-018", type: "岗位技能", name: "SMT 操作员资质", version: "V2.0", scope: "员工 EMP-018 / SMT-WS-01", source: "HR 在职 + 班组排班 + 培训记录", status: "已发布", owner: "班组长 郑峰", updated: "2026-06-20 07:55", impact: "工位身份回执、扫码开工、开工检查", check: "SMT 上料、换线、首件配合资质有效至 2026-12-31", next: "允许模拟工牌登录并接收 SMT 任务", risk: "资质过期将拦截开工" },
     { id: "QUAL-QA-FQC-031", type: "质量签核", name: "FQC 放行签核资质", version: "V1.8", scope: "质量员 QC-031 / FQC / 质量放行", source: "QMS 资质 + 电子签名", status: "需复核", owner: "质量负责人 周雅", updated: "2026-06-20 09:12", impact: "成品检验、质量放行、库存冻结、客户追溯报告", check: "FQC 放行资质 06-25 到期，需复核延期", next: "复核后继续允许质量放行签核", risk: "到期后必须拦截质量放行按钮" },
     { id: "QUAL-TPM-IP-022", type: "设备点检", name: "SMT 点检与复位资质", version: "V2.4", scope: "设备员 EQ-022 / SMT-01", source: "设备 TPM 资质", status: "已发布", owner: "设备主管 梁溪", updated: "2026-06-18 14:25", impact: "点检计划、开工检查、设备状态、维修工单", check: "允许班前点检、故障后复位和保养验收", next: "设备状态和开工准入可引用", risk: "无资质复位会影响设备履历可信度" },
   ],

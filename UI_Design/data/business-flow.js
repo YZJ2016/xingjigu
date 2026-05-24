@@ -963,7 +963,7 @@ window.MES_BUSINESS_FLOW = (() => {
         owner: event.owner,
         updated: event.time,
         trace: event.batch || event.businessId || event.id,
-        next: risky ? "责任人复核后重算报表" : "同步 BI / 管理驾驶舱",
+        next: risky ? "责任人复核后重算报表" : "同步 BI / MES 生产指标驾驶舱",
       };
     });
   }

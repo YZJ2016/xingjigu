@@ -1,29 +1,13 @@
 const pageConfig = window.QUALITY_PAGE || { id: "incoming", title: "来料检验", eyebrow: "质量检验 / 来料检验" };
 const STORAGE_KEY = `xingjigu_mes_quality_upstream_${pageConfig.id}_v2`;
 
-const modules = window.MES_NAV_MODULES || [
-  { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
-  { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
-  { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
-  { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
-  { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
-  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
-  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "点检任务", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
-  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机原因", "过程趋势", "电子看板"] },
-  { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
-  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
-  { id: "trace", title: "追溯查询", layer: "质量追溯", color: "#8e8e93", mark: "追", items: ["产品追溯", "批次追溯", "物料去向", "生产履历", "检验履历", "设备履历", "客户追溯报告"] },
-  { id: "reports", title: "报表与看板", layer: "经营分析", color: "#8e8e93", mark: "表", items: ["生产日报", "良率分析", "交付达成", "设备效率", "停机损失", "物料损耗", "管理驾驶舱"] },
-  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "客户供应商"] },
-  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "角色权限", "审批设置", "单据同步", "消息提醒", "操作记录", "数据备份"] },
-];
+const modules = window.MES_NAV_MODULES || [];
 
 const knownRoutes = {
   workbench: { 生产总览: "../index.html" },
   orders: { 生产订单: "../orders/production-orders.html", 订单评审: "../orders/order-reviews.html", 生产排程: "../orders/production-schedule.html", 产能负荷: "../orders/capacity-load.html", 交期预警: "../orders/delivery-warning.html", 计划调整: "../orders/plan-adjustment.html", 齐套检查: "../orders/kit-check.html" },
-  dispatch: { 派工单: "../dispatch/dispatch-orders.html", 工序任务: "../dispatch/operation-tasks.html", 班组任务: "../dispatch/team-tasks.html", 任务下达: "../dispatch/task-release.html", 任务变更: "../dispatch/task-change.html", "SOP 查看": "../dispatch/sop-view.html", 开工检查: "../dispatch/start-check.html" },
-  station: { 员工登录: "../station/employee-login.html", 扫码开工: "../station/scan-start.html", 工艺指导: "../station/work-instruction.html", 投料确认: "../station/feeding-confirmation.html", 过程记录: "../station/process-record.html", 工序报工: "../station/operation-report.html", 交接班: "../station/shift-handover.html" },
+  dispatch: { 派工单: "../dispatch/dispatch-orders.html", 工序任务: "../dispatch/operation-tasks.html", 班组任务: "../dispatch/team-tasks.html", 任务下达: "../dispatch/task-release.html", 任务变更: "../dispatch/task-change.html", "工艺文件与作业指导": "../dispatch/sop-view.html", 开工检查: "../dispatch/start-check.html" },
+  station: { 工位身份回执: "../station/employee-login.html", 扫码开工: "../station/scan-start.html", 工艺指导: "../station/work-instruction.html", 投料确认: "../station/feeding-confirmation.html", 过程记录: "../station/process-record.html", 工序报工: "../station/operation-report.html", 交接班: "../station/shift-handover.html" },
   materials: { 用料需求: "../materials/material-requirements.html", 领料申请: "../materials/picking-requests.html", 配送进度: "../materials/delivery-progress.html", 线边库存: "../materials/line-side-inventory.html", 投料记录: "../materials/feeding-records.html", 余料退回: "../materials/return-materials.html", 缺料预警: "../materials/shortage-alerts.html" },
   barcode: { 生产批次: "../barcode/production-batches.html", 产品序列号: "../barcode/product-serials.html", 物料标签: "../barcode/material-labels.html", 成品标签: "../barcode/finished-labels.html", 箱码托盘码: "../barcode/box-pallet-codes.html", 标签打印: "../barcode/label-printing.html", 补打申请: "../barcode/reprint-requests.html" },
   quality: { 来料检验: "./incoming-inspection.html", 首件检验: "./first-article.html", 巡检任务: "./patrol-tasks.html", 过程检验: "./process-inspection.html", 成品检验: "./final-inspection.html", 不良记录: "./defect-records.html", 返工评审: "./rework-review.html" },
@@ -31,15 +15,15 @@ const knownRoutes = {
 
 const pageDefinitions = {
   incoming: {
-    subtitle: "接收 WMS、采购到货和供应商批次，完成抽样、判定、冻结或放行，并回写物料标签、线边库存和缺料预警",
+    subtitle: "接收 WMS、采购到货和供应商批次；无外部系统时由 MES 登记 IQC 判定、冻结/放行和批次准入，并回写物料标签、线边库存和缺料预警",
     user: "IQC 检验员",
     metrics: ["到货批次", "待判定", "已放行", "冻结 / 缺料"],
     columns: ["检验单", "到货 / 供应商", "物料 / 批次", "抽样方案", "判定结果", "库存动作", "追溯衔接", "责任人"],
     tableTitle: "IQC 来料准入批次",
-    tableHint: "后台记录 WMS/采购/供应商批次回执，检验结论驱动物料标签、库存冻结和线边准入",
+    tableHint: "后台记录 WMS/采购/供应商批次回执或 MES IQC 手工判定，检验结论驱动物料标签、库存冻结和线边准入",
     cardTitle: "IQC 放行、冻结与物料联动",
     simulationTitle: "模拟 WMS / 供应商批次到货回执",
-    simulationHint: "模拟外部 WMS、采购到货或供应商批次回传，页面只做质量准入记录和状态联动",
+    simulationHint: "模拟外部 WMS、采购到货、供应商批次回传或无外部系统的 MES IQC 判定登记，页面只做质量准入记录和状态联动",
     primaryStatus: "已放行",
     secondaryStatus: "冻结待 MRB",
     primaryMessage: "模拟 IQC 判定合格，已回写物料标签和 WMS 放行状态",
@@ -47,7 +31,7 @@ const pageDefinitions = {
     links: [["线边库存", "../materials/line-side-inventory.html"], ["缺料预警", "../materials/shortage-alerts.html"], ["投料确认", "../station/feeding-confirmation.html"]],
   },
   firstArticle: {
-    subtitle: "换线、换型、换料或开工后触发 FAI 首件，检验员确认尺寸、外观、功能，合格后放行批量生产，不合格锁定派工并生成质量异常",
+    subtitle: "换线、换型、换料或开工后触发 FAI 首件，检验员按检验项和电子签名确认尺寸、外观、功能，合格后放行批量生产，不合格锁定派工并生成质量异常",
     user: "首件检验员",
     metrics: ["首件任务", "等待签核", "已放行", "锁定派工"],
     columns: ["首件单", "派工 / 工序", "产品 / 批次", "触发原因", "检验项目", "准入状态", "异常处置", "责任人"],

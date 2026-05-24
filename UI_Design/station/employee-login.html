@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>星技谷 MES | 工位身份确认</title>
+    <title>星技谷 MES | 工位身份回执</title>
     <link rel="stylesheet" href="../styles.css" />
     <link rel="stylesheet" href="../orders/production-orders.css" />
     <link rel="stylesheet" href="../dispatch/dispatch-orders.css" />
@@ -38,8 +38,8 @@
       <main class="main station-main">
         <header class="topbar">
           <div>
-            <div class="eyebrow">工位作业 / 员工登录</div>
-            <h1>人员到岗与工位绑定监控</h1>
+            <div class="eyebrow">工位作业 / 工位身份回执</div>
+            <h1>人员到岗与工位身份回执监控</h1>
           </div>
           <div class="topbar-actions">
             <button id="batchLoginBtn" class="primary-action" type="button">批量同步模拟绑定回执</button>
@@ -87,7 +87,7 @@
                 状态
                 <select id="loginStatusFilter">
                   <option value="all">全部状态</option>
-                  <option value="已登录">已绑定</option>
+                  <option value="已登录">已接收绑定回执</option>
                   <option value="待登录">待确认</option>
                   <option value="资质异常">资质异常</option>
                   <option value="离线">离线</option>
@@ -292,8 +292,8 @@
                   <button id="loginBtn" type="button">同步模拟绑定回执</button>
                   <button id="logoutBtn" type="button">登记模拟退出回执</button>
                   <button id="qualifyBtn" type="button">发起资质复核通过</button>
-                  <button id="replaceBtn" type="button">登记换人到岗</button>
-                  <button id="handoverBtn" type="button">记录交接</button>
+                  <button id="replaceBtn" type="button">登记模拟换人到岗回执</button>
+                  <button id="handoverBtn" type="button">记录模拟交接回执</button>
                   <button id="lockBtn" class="danger-action" type="button">锁定开工准入</button>
                 </div>
               </section>

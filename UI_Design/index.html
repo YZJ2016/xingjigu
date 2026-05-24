@@ -42,8 +42,8 @@
           <div class="topbar-actions">
             <button id="searchToggle" class="icon-button" aria-label="搜索">⌕</button>
             <button id="messageToggle" class="icon-button" aria-label="消息">◌</button>
-            <button id="newExceptionBtn" class="primary-action">新建异常</button>
-            <button id="resetDemoBtn" class="secondary-action">重置演示</button>
+            <button id="newExceptionBtn" class="primary-action">登记后台异常补录</button>
+            <button id="resetDemoBtn" class="secondary-action">重置原型数据</button>
             <div class="user-chip">
               <span class="avatar">陈</span>
               <span>生产经理</span>
@@ -68,7 +68,7 @@
             <div class="hero-quick-actions">
               <button type="button" data-hero-action="urgent">查看紧急订单</button>
               <button type="button" data-hero-action="risk">处理未关闭风险</button>
-              <button type="button" data-hero-action="line">切换繁忙产线</button>
+              <button type="button" data-hero-action="line">按产线筛选</button>
             </div>
             <div class="hero-global-controls">
               <select id="lineSelect" aria-label="选择产线">
@@ -81,7 +81,7 @@
                 <option>白班</option>
                 <option>夜班</option>
               </select>
-              <button id="refreshDataBtn" class="secondary-action">刷新数据</button>
+              <button id="refreshDataBtn" class="secondary-action">接收模拟接口刷新回执</button>
             </div>
           </div>
           <div class="hero-order">
@@ -243,7 +243,7 @@
     <div id="modalBackdrop" class="modal-backdrop" hidden>
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal__header">
-          <h3 id="modalTitle">新建异常</h3>
+          <h3 id="modalTitle">登记后台异常补录</h3>
           <button id="modalClose" class="icon-button" aria-label="关闭">×</button>
         </div>
         <form id="exceptionForm" class="form-grid">

@@ -1,22 +1,6 @@
 const STORAGE_KEY = "xingjigu_mes_production_orders_v2";
 
-const modules = window.MES_NAV_MODULES || [
-  { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
-  { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
-  { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
-  { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
-  { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
-  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
-  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "点检任务", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
-  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机原因", "过程趋势", "电子看板"] },
-  { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
-  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
-  { id: "trace", title: "追溯查询", layer: "质量追溯", color: "#8e8e93", mark: "追", items: ["产品追溯", "批次追溯", "物料去向", "生产履历", "检验履历", "设备履历", "客户追溯报告"] },
-  { id: "reports", title: "报表与看板", layer: "经营分析", color: "#8e8e93", mark: "表", items: ["生产日报", "良率分析", "交付达成", "设备效率", "停机损失", "物料损耗", "管理驾驶舱"] },
-  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "客户供应商"] },
-  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "角色权限", "审批设置", "单据同步", "消息提醒", "操作记录", "数据备份"] },
-];
+const modules = window.MES_NAV_MODULES || [];
 
 const initialOrders = [
   { id: "MO-202606-0001", product: "智能温控控制器 TCU-100", customer: "A 客户", qty: 1000, done: 428, due: "2026-06-30", line: "Line-A", status: "已下达", priority: "高", risk: "缺料", review: "已通过", schedule: "已确认", kit: "缺 200 件", batchPlan: "800 + 200", planner: "周计划", materialGap: "温度传感器缺 200 件" },
@@ -87,9 +71,9 @@ function renderFrameMenu() {
       else if (moduleId === "dispatch" && entry === "班组任务") window.location.href = "../dispatch/team-tasks.html";
       else if (moduleId === "dispatch" && entry === "任务下达") window.location.href = "../dispatch/task-release.html";
       else if (moduleId === "dispatch" && entry === "任务变更") window.location.href = "../dispatch/task-change.html";
-      else if (moduleId === "dispatch" && entry === "SOP 查看") window.location.href = "../dispatch/sop-view.html";
+      else if (moduleId === "dispatch" && entry === "工艺文件与作业指导") window.location.href = "../dispatch/sop-view.html";
       else if (moduleId === "dispatch" && entry === "开工检查") window.location.href = "../dispatch/start-check.html";
-      else if (moduleId === "station" && entry === "员工登录") window.location.href = "../station/employee-login.html";
+      else if (moduleId === "station" && entry === "工位身份回执") window.location.href = "../station/employee-login.html";
       else if (moduleId === "station" && entry === "扫码开工") window.location.href = "../station/scan-start.html";
       else if (moduleId === "station" && entry === "工艺指导") window.location.href = "../station/work-instruction.html";
       else if (moduleId === "station" && entry === "投料确认") window.location.href = "../station/feeding-confirmation.html";
@@ -553,7 +537,7 @@ function bindEvents() {
     const order = getActiveOrder();
     window.MES_BACKEND?.escalateShortage?.(order.id, "物料异常协调员 何敏");
     loadState();
-    updateOrder(order.id, { risk: "缺料", kit: "缺料待补", materialGap: "采购到货承诺需升级确认" }, "缺料已升级给采购", { skipFlow: true });
+    updateOrder(order.id, { risk: "缺料", kit: "缺料待补", materialGap: "采购到货承诺需升级确认" }, "已登记采购协同请求", { skipFlow: true });
   });
   $("#lockMaterialBtn").addEventListener("click", () => {
     const order = getActiveOrder();
@@ -561,7 +545,7 @@ function bindEvents() {
     loadState();
     saveState();
     renderAll();
-    showToast("库存已锁定");
+    showToast("已生成锁库请求，等待 WMS 回执或 MES 库存保留复核");
   });
   $("#releaseScheduleBtn").addEventListener("click", () => {
     const order = getActiveOrder();

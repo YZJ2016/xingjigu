@@ -27,7 +27,7 @@
       "feeding-confirmation.html": [{ key: "reviewFeed", label: "复核投料异常" }, { key: "releaseMat", label: "解除物料拦截", danger: true }, { key: "weight", label: "登记称重差异" }],
       "process-record.html": [{ key: "makeupReason", label: "补录原因" }, { key: "rejudge", label: "复判参数" }, { key: "closeWarn", label: "关闭预警", danger: true }],
       "operation-report.html": [{ key: "reviewReport", label: "复核报工" }, { key: "makeupNote", label: "补录说明" }, { key: "reject", label: "驳回异常报工", danger: true }],
-      "shift-handover.html": [{ key: "newItem", label: "新增交接事项" }, { key: "transfer", label: "确认移交" }, { key: "close", label: "关闭交接问题", danger: true }],
+      "shift-handover.html": [{ key: "newItem", label: "新增交接事项" }, { key: "transfer", label: "登记模拟移交回执" }, { key: "close", label: "关闭交接问题", danger: true }],
     };
     return [...(map[file] || []), ...common];
   }

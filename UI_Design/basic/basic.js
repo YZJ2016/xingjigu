@@ -2,55 +2,19 @@ const pageConfig = window.BASIC_PAGE || { id: "products", title: "产品资料",
 const STORAGE_VERSION = pageConfig.id === "partners" ? "v4" : pageConfig.id === "workshops" ? "v4" : "v3";
 const STORAGE_KEY = `xingjigu_mes_basic_${pageConfig.id}_${STORAGE_VERSION}`;
 
-const modules = window.MES_NAV_MODULES || [
-  { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
-  { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
-  { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场回执", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
-  { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
-  { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
-  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "质量放行", "出货检验", "不良记录", "返工评审"] },
-  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "工装夹具", "量检具校准", "点检计划", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
-  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机归因", "过程趋势", "电子看板"] },
-  { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
-  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工复核", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
-  { id: "trace", title: "追溯查询", layer: "质量追溯", color: "#8e8e93", mark: "追", items: ["产品追溯", "批次追溯", "物料去向", "生产履历", "检验履历", "设备履历", "客户追溯报告"] },
-  { id: "reports", title: "报表与看板", layer: "经营分析", color: "#8e8e93", mark: "表", items: ["生产日报", "良率分析", "交付达成", "设备效率", "停机损失", "物料损耗", "管理驾驶舱"] },
-  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "规则与代码", "班次日历", "客户供应商"] },
-  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "人员资质", "角色权限", "审批设置", "接口补偿配置", "消息提醒", "操作记录", "数据备份"] },
-];
-
-const pageMaps = {
-  basic: {
-    产品资料: "product-master.html",
-    物料资料: "material-master.html",
-    "BOM 清单": "bom-list.html",
-    工艺路线: "routing.html",
-    工序工位: "operation-stations.html",
-    产线车间: "workshops.html",
-    规则与代码: "rules-codes.html",
-    班次日历: "shift-calendar.html",
-    客户供应商: "partners.html",
-  },
-  orders: { 生产订单: "../orders/production-orders.html", 订单评审: "../orders/order-reviews.html", 生产排程: "../orders/production-schedule.html", 产能负荷: "../orders/capacity-load.html", 交期预警: "../orders/delivery-warning.html", 计划调整: "../orders/plan-adjustment.html", 齐套检查: "../orders/kit-check.html" },
-  dispatch: { 派工单: "../dispatch/dispatch-orders.html", 工序任务: "../dispatch/operation-tasks.html", 班组任务: "../dispatch/team-tasks.html", 任务下达: "../dispatch/task-release.html", 任务变更: "../dispatch/task-change.html", "SOP 查看": "../dispatch/sop-view.html", 开工检查: "../dispatch/start-check.html" },
-  station: { 员工登录: "../station/employee-login.html", 扫码开工: "../station/scan-start.html", 工艺指导: "../station/work-instruction.html", 投料确认: "../station/feeding-confirmation.html", 过程记录: "../station/process-record.html", 工序报工: "../station/operation-report.html", 交接班: "../station/shift-handover.html" },
-  materials: { 用料需求: "../materials/material-requirements.html", 领料申请: "../materials/picking-requests.html", 配送进度: "../materials/delivery-progress.html", 线边库存: "../materials/line-side-inventory.html", 投料记录: "../materials/feeding-records.html", 余料退回: "../materials/return-materials.html", 缺料预警: "../materials/shortage-alerts.html" },
-  quality: { 来料检验: "../quality/incoming-inspection.html", 首件检验: "../quality/first-article.html", 巡检任务: "../quality/patrol-tasks.html", 过程检验: "../quality/process-inspection.html", 成品检验: "../quality/final-inspection.html", 质量放行: "../quality/release.html", 出货检验: "../quality/outgoing-inspection.html", 不良记录: "../quality/defect-records.html", 返工评审: "../quality/rework-review.html" },
-  equipment: { 设备状态: "../equipment/equipment-status.html", 工装夹具: "../equipment/tooling-fixtures.html", 量检具校准: "../equipment/calibration.html", 点检计划: "../equipment/inspection-plan.html", 保养计划: "../equipment/maintenance-plan.html", 维修工单: "../equipment/repair-orders.html", 停机记录: "../equipment/downtime-records.html", 备件领用: "../equipment/spare-parts.html", 设备效率: "../equipment/equipment-efficiency.html" },
-};
+const modules = window.MES_NAV_MODULES || [];
 
 const pageDefinitions = {
   products: {
-    subtitle: "维护产品编码、版本、客户要求、标签策略和检验引用，是 ERP 工单进入 MES 校验的第一道门",
+    subtitle: "维护产品编码、版本、客户要求、标签策略和检验引用，支持外部同步和 MES 手工维护两种受控来源",
     user: "主数据工程师",
     metrics: ["产品档案", "已发布", "待审批", "影响订单"],
     columns: ["产品编码", "产品 / 客户", "版本 / 来源", "关键引用", "产品版本状态", "下游校验", "责任人", "时间戳"],
     tableTitle: "产品主数据与执行版本",
-    tableHint: "来自 ERP/PLM 的产品资料经 MES 审批后，供订单评审、BOM、工艺、标签和追溯引用",
+    tableHint: "产品资料可来自 ERP/PLM 同步，也可由 MES 手工维护；必须经审批、生效范围和下游引用检查后，才供订单评审、BOM、工艺、标签和追溯引用",
     cardTitle: "影响关系 / 下游引用检查",
-    simulationTitle: "模拟 ERP / PLM 产品同步",
-    simulationHint: "模拟外部主数据同步，不代表后台直接修改 ERP 或 PLM 原始资料",
+    simulationTitle: "模拟外部同步 / MES 手工产品维护",
+    simulationHint: "有外部系统时模拟主数据同步；无外部系统时走 MES 手工维护、审批、版本和审计，不代表无约束改主数据",
   },
   materials: {
     subtitle: "维护料号、批次规则、IQC 策略、替代关系和合格供应商引用，支撑 BOM、齐套、投料和追溯",
@@ -58,10 +22,10 @@ const pageDefinitions = {
     metrics: ["物料档案", "可投料", "待补规则", "影响投料"],
     columns: ["物料编码", "物料 / 类型", "批次与检验", "合格供应商", "投料准入状态", "下游校验", "责任人", "时间戳"],
     tableTitle: "物料主数据、批次规则与供应商引用",
-    tableHint: "物料资料维护料号、批次和检验口径，并引用客户供应商中的合格供方档案；库存、领料和线边执行仍进入物料与线边库",
+    tableHint: "物料资料可来自 ERP 同步或 MES 手工维护，需维护料号、批次规则、IQC、替代料、供应商范围和投料防错；库存、领料和线边执行仍进入物料与线边库",
     cardTitle: "物料资料驱动关系",
-    simulationTitle: "模拟 ERP / WMS 物料同步",
-    simulationHint: "模拟外部物料、库存或供应商规则回传，后台只做校验和审批记录",
+    simulationTitle: "模拟外部同步 / MES 手工物料维护",
+    simulationHint: "有外部系统时模拟物料、库存或供应商规则回传；无外部系统时由 MES 手工维护并保留审批和版本审计",
   },
   bom: {
     subtitle: "按产品版本维护制造 BOM、用量、损耗率、替代料和生效范围，是物料需求与投料防错的共同依据",
@@ -69,21 +33,21 @@ const pageDefinitions = {
     metrics: ["BOM 版本", "已发布", "待评估", "缺口风险"],
     columns: ["BOM 编号", "产品 / 版本", "关键物料", "用量 / 损耗", "BOM版本状态", "影响范围", "责任人", "时间戳"],
     tableTitle: "制造 BOM 与用料口径",
-    tableHint: "PLM 发布后由 MES 评估生效，向齐套检查、领料申请、投料确认和损耗分析传递同一口径",
+    tableHint: "BOM 可来自 PLM 发布，也可由 MES 手工维护；必须具备版本、用量、损耗、替代料、审批和生效范围，向齐套、领料、投料防错和损耗分析传递同一口径",
     cardTitle: "BOM 驱动关系",
-    simulationTitle: "模拟 PLM BOM 变更同步",
-    simulationHint: "模拟 PLM 工程变更或 BOM 发布消息，页面只登记校验、审批和影响评估",
+    simulationTitle: "模拟 PLM 同步 / MES 手工 BOM 维护",
+    simulationHint: "模拟工程变更或 MES 手工 BOM 维护，页面只登记校验、审批、版本和影响评估",
   },
   routing: {
-    subtitle: "维护产品工艺路线、工序顺序、标准工时、SOP、参数规格和质量触发规则",
+    subtitle: "维护产品工艺路线、工序顺序、标准工时、SOP、参数规格和质量触发规则，兼容 PLM 同步与 MES 手工工艺",
     user: "工艺工程师",
     metrics: ["路线版本", "已发布", "待签收", "开工拦截"],
     columns: ["路线编号", "产品 / 版本", "工序链", "SOP / 检验", "工艺版本状态", "现场约束", "责任人", "时间戳"],
     tableTitle: "工艺路线与执行标准",
-    tableHint: "工艺路线决定 APS 资源计算、派工单工序、工位终端指导、过程采集和质量触发",
+    tableHint: "工艺路线可来自 PLM 同步或 MES 手工维护，必须具备工序、工位、设备、SOP、检验点、首件触发和现场签收，决定排程、派工、终端指导、过程采集和质量触发",
     cardTitle: "工艺路线驱动关系",
-    simulationTitle: "模拟 PLM 工艺路线发布",
-    simulationHint: "模拟外部工艺版本发布，不代表后台直接编辑 PLM 工艺文件",
+    simulationTitle: "模拟 PLM 发布 / MES 手工工艺维护",
+    simulationHint: "模拟外部工艺版本发布或 MES 手工工艺维护，发布前必须完成审批、生效范围和现场签收",
   },
   stations: {
     subtitle: "维护工位档案、设备终端、人员资质、开工准入、数据采集和现场显示内容，连接后台派工和现场执行",
@@ -108,15 +72,15 @@ const pageDefinitions = {
     simulationHint: "模拟排程或设备停机日历同步，后台不直接控制现场产线",
   },
   partners: {
-    subtitle: "仅维护客户与供应商在 MES 执行中的引用边界：客户标签/追溯报告要求、供应商资质状态、来料检验策略和批次追溯规则",
+    subtitle: "维护客户与供应商在 MES 执行中的受控资料：客户标签、包装、OQC、追溯报告、供应商可供物料、IQC 策略和批次追溯规则",
     user: "业务资料管理员",
     metrics: ["伙伴档案", "业务生效", "待复核", "供应风险"],
     columns: ["伙伴编码", "角色 / 名称", "MES引用状态 / 资质", "标签 / 检验 / 追溯范围", "执行准入状态", "执行影响", "责任人", "时间戳"],
     tableTitle: "客户供应商 MES 执行引用规则",
-    tableHint: "客户侧只传递标签模板、追溯报告和交付优先级引用；供应商侧只传递合格供方状态、可供物料、IQC 策略和批次追溯约束，不维护 CRM/SRM、合同、价格、采购或库存业务",
+    tableHint: "客户供应商可来自外部同步或 MES 手工维护；客户侧维护标签、包装、OQC、追溯报告和交付要求，供应商侧维护可供物料、质量等级、IQC 和批次规则，不维护价格、合同、账期、财务",
     cardTitle: "客户供应商 MES 引用关系",
-    simulationTitle: "模拟 ERP / QMS 伙伴同步",
-    simulationHint: "模拟客户优先级或供应商质量等级同步，页面只记录 MES 生效与影响范围",
+    simulationTitle: "模拟外部同步 / MES 手工客户供应商维护",
+    simulationHint: "无外部系统时可在 MES 手工维护客户供应商执行资料，但必须保留责任人、时间戳、审批和下游引用影响",
   },
 };
 
@@ -142,7 +106,7 @@ const initialRows = {
   routing: [
     { id: "RT-TCU-100-V2.6", name: "TCU-100 标准路线", version: "V2.6", source: "PLM 工艺发布", status: "已发布", ref: "SMT>DIP>烧录>装配>测试>老化>FQC>包装", impact: "D-001 至 D-008 派工生成", owner: "工艺工程师 林澈", time: "06-18 09:58", scope: "Line-A / TCU-100 / SOP-TCU-2.6", risk: "老化测试为瓶颈资源", downstream: "生产排程、工序任务、工艺指导、检验履历" },
     { id: "RT-GW-240-V1.8", name: "GW-240 标准路线", version: "V1.8", source: "PLM 工艺发布", status: "已发布", ref: "SMT>烧录>功能测试>FQC>包装", impact: "MO-202606-0002 生产中", owner: "工艺工程师 林澈", time: "06-18 10:44", scope: "Line-B / GW-240", risk: "功能测试工位排队", downstream: "产能负荷、过程检验、报工" },
-    { id: "RT-HMI-70-V1.0", name: "HMI-70 首版路线", version: "V1.0", source: "PLM 首版", status: "待现场签收", ref: "装配参数和 FQC 规范待确认", impact: "MO-202606-0006 待排程", owner: "车间工艺员 许诺", time: "06-18 14:22", scope: "Line-C / 显示控制面板", risk: "终端 SOP 未签收，开工检查拦截", downstream: "SOP 查看、开工检查、成品检验" },
+    { id: "RT-HMI-70-V1.0", name: "HMI-70 首版路线", version: "V1.0", source: "PLM 首版", status: "待现场签收", ref: "装配参数和 FQC 规范待确认", impact: "MO-202606-0006 待排程", owner: "车间工艺员 许诺", time: "06-18 14:22", scope: "Line-C / 显示控制面板", risk: "终端 SOP 未签收，开工检查拦截", downstream: "工艺文件与作业指导、开工检查、成品检验" },
     { id: "RT-SRV-90-V1.4", name: "SRV-90 加急路线", version: "V1.4", source: "PLM ECN-2406", status: "影响评估中", ref: "老化测试缩短需质量签核", impact: "MO-202606-0010 交期压缩", owner: "质量工程师 孟可", time: "06-18 15:42", scope: "Line-A / B 客户", risk: "检验放行条件未完成", downstream: "首件检验、计划调整、质量放行" },
   ],
   stations: [
@@ -204,8 +168,9 @@ function renderFrameMenu() {
 }
 
 function goMenu(moduleId, entry) {
-  if (moduleId === "workbench") window.location.href = "../index.html";
-  else if (pageMaps[moduleId]?.[entry]) window.location.href = pageMaps[moduleId][entry];
+  const route = window.resolveMesRoute?.(moduleId, entry);
+  if (route) window.location.href = route;
+  else if (moduleId === "workbench") window.location.href = "../index.html";
   else showToast(`${entry} 页面待建设`);
 }
 
@@ -1549,7 +1514,7 @@ function mountMaintenanceDialogs() {
         <div class="basic-modal__head">
           <div>
             <h3 id="masterDataDialogTitle">维护${pageConfig.title}</h3>
-            <p>MES 维护执行快照、生效范围和审批留痕，不直接改写 ERP/PLM/WMS/QMS 原始档案。</p>
+            <p>MES 维护执行资料、生效范围和审批留痕；有外部系统时不改写原始档案，无外部系统时作为受控主数据维护入口。</p>
           </div>
           <button id="closeMasterDataDialogBtn" class="icon-button" type="button" aria-label="关闭维护弹窗">×</button>
         </div>
@@ -1571,7 +1536,7 @@ function mountMaintenanceDialogs() {
           <div class="basic-form-note" id="formDomainNote"></div>
           <div class="basic-modal__actions">
             <button id="cancelMasterDataDialogBtn" class="secondary-action" type="button">取消</button>
-            <button class="primary-action" type="submit">保存维护</button>
+            <button class="primary-action" type="submit">保存受控维护</button>
           </div>
         </form>
       </section>
@@ -1628,7 +1593,7 @@ function getFormDomainNote() {
   const notes = {
     bom: "BOM 明细入口只维护制造用量摘要、损耗率、替代料和版本明细摘要，不作为 PLM 设计 BOM 编辑器。",
     routing: "工艺路线明细入口只维护工序链、SOP 引用、参数规格和现场签收摘要，不作为 PLM 工艺文件编辑器。",
-    products: "产品版本状态描述产品资料从草稿、审批、影响评估到已发布的生命周期；已发布后才允许订单评审、BOM、工艺路线、标签和追溯引用。",
+    products: "产品版本状态描述产品资料从草稿、审批、影响评估到已发布的生命周期；支持外部同步和 MES 手工维护，已发布后才允许订单评审、BOM、工艺路线、标签和追溯引用。",
     materials: "投料准入状态描述物料是否允许进入齐套检查、领料和投料；可投料、待IQC放行、替代料评估中、冻结待复核比通用审批状态更贴近现场。",
     bom: "BOM版本状态描述制造 BOM 从草稿、审批、影响评估到已发布的生命周期；已发布后才允许齐套、领料和投料防错引用。",
     routing: "工艺版本状态描述工艺路线从草稿、审批、现场签收到已发布的生命周期；现场签收和质量触发未完成时不允许开工准入通过。",
@@ -1636,7 +1601,7 @@ function getFormDomainNote() {
     workshops: "资源排程状态描述车间、产线、班组和日历是否可被 APS、派工和现场看板引用，例如资源启用、可排程、日历待复核、负荷预警。",
     partners: "业务准入状态描述客户或供应商规则是否可被订单评审、IQC、标签和追溯引用，例如业务生效、待资料复核、待到货复核、冻结待复核。",
     workshops: "产线车间需维护车间、产线、班组、班次和产能日历；MES 不直接控制现场产线。",
-    partners: "客户供应商只维护 MES 执行引用、检验策略、标签和追溯口径，并保留 ERP/QMS 模拟同步来源；不承担 CRM/SRM、合同、价格、采购或库存管理。",
+    partners: "客户供应商可由外部同步或 MES 手工维护，但只覆盖生产执行所需的标签、包装、OQC、IQC、可供物料和追溯规则；不维护价格、合同、账期、财务。",
   };
   return notes[pageConfig.id] || "维护结果发布后只作为 MES 执行版本和下游校验口径，外部系统同步均为模拟记录。";
 }
@@ -1713,13 +1678,13 @@ function saveMasterDataForm(event) {
     rows.unshift(next);
     appendLog(pageConfig.id === "stations" ? `${next.id} 已新增，状态为待点检，等待设备、终端和准入规则复核` : `${next.id} 已新增，状态为草稿，等待提交审批`, next);
   }
-  window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, next, editingId ? "编辑主数据" : "新增主数据", { status: next.status, owner: next.owner, impact: next.impact });
+  window.MES_BUSINESS_FLOW?.applyMasterDataAction?.(pageConfig.id, next, editingId ? "编辑受控主数据" : "新增受控主数据", { status: next.status, owner: next.owner, impact: next.impact });
   state.activeId = next.id;
   closeMasterDataDialog();
   saveState();
   renderPageChrome();
   renderAll();
-  showToast(`${pageConfig.title}已保存`);
+  showToast(`${pageConfig.title}受控维护已保存`);
 }
 
 function copyVersion(row) {

@@ -69,7 +69,7 @@ window.MES_MASTER_DATA = (() => {
   const routings = [
     { id: "RT-TCU-100-V2.6", productCode: "TCU-100", name: "TCU-100 标准路线", version: "V2.6", source: "PLM 工艺发布", status: "已发布", steps: "SMT>DIP>烧录>装配>测试>老化>FQC>包装", sop: "SOP-TCU-2.6", owner: "工艺工程师 林澈", time: "06-18 09:58", risk: "老化测试为瓶颈资源", downstream: "生产排程、工序任务、工艺指导、检验履历" },
     { id: "RT-GW-240-V1.8", productCode: "GW-240", name: "GW-240 标准路线", version: "V1.8", source: "PLM 工艺发布", status: "已发布", steps: "SMT>烧录>功能测试>FQC>包装", sop: "SOP-GW-1.8", owner: "工艺工程师 林澈", time: "06-18 10:44", risk: "功能测试工位排队", downstream: "产能负荷、过程检验、报工" },
-    { id: "RT-HMI-70-V1.0", productCode: "HMI-70", name: "HMI-70 首版路线", version: "V1.0", source: "PLM 首版", status: "待现场签收", steps: "装配>测试>FQC>包装", sop: "SOP-HMI-1.0", owner: "车间工艺员 许诺", time: "06-18 14:22", risk: "终端 SOP 未签收，开工检查拦截", downstream: "SOP 查看、开工检查、成品检验" },
+    { id: "RT-HMI-70-V1.0", productCode: "HMI-70", name: "HMI-70 首版路线", version: "V1.0", source: "PLM 首版", status: "待现场签收", steps: "装配>测试>FQC>包装", sop: "SOP-HMI-1.0", owner: "车间工艺员 许诺", time: "06-18 14:22", risk: "终端 SOP 未签收，开工检查拦截", downstream: "工艺文件与作业指导、开工检查、成品检验" },
     { id: "RT-SRV-90-V1.4", productCode: "SRV-90", name: "SRV-90 加急路线", version: "V1.4", source: "PLM ECN-2406", status: "影响评估中", steps: "SMT>测试>老化>FQC", sop: "SOP-SRV-1.4", owner: "质量工程师 孟可", time: "06-18 15:42", risk: "检验放行条件未完成", downstream: "首件检验、计划调整、质量放行" },
   ];
 
@@ -111,6 +111,15 @@ window.MES_MASTER_DATA = (() => {
     { id: "MO-202606-0010", productCode: "SRV-90", product: "伺服驱动板 SRV-90", customer: "B 客户", customerId: "CUS-B", qty: 420, done: 260, due: "2026-06-26", line: "Line-A", status: "生产中", priority: "紧急", risk: "交期", quality: 97.2, oee: 84.3, review: "已通过", schedule: "待调整", kit: "齐套", batchPlan: "420", planner: "王计划", materialGap: "齐套" },
   ];
 
+  orders.forEach((order, index) => {
+    order.sourceType = index === 1 || index === 5 ? "MES 手工工单" : index === 3 ? "Excel 导入" : "外部系统同步";
+    order.sourceRef = order.sourceType === "MES 手工工单" ? "计划员手工录入并待评审" : order.sourceType === "Excel 导入" ? "Excel 导入批次 IMP-20260618" : "外部工单同步回执";
+    Object.assign(order, sourceMetadata(order.sourceType));
+    order.approvalStatus = order.review === "已通过" ? "已评审" : "待评审";
+    order.impactAssessment = "已纳入产品、客户、BOM、工艺、齐套、质量和排程影响检查";
+    order.auditTrail = [{ action: `${order.sourceType}创建`, owner: order.planner || "计划员", time: "06-18 09:00", source: order.sourceRef }];
+  });
+
   function productByCode(code) {
     return products.find((item) => item.code === code || item.name.includes(code));
   }
@@ -142,8 +151,24 @@ window.MES_MASTER_DATA = (() => {
 
   function toBasicRows() {
     const partnerById = (id) => partners.find((partner) => partner.id === id);
+    const sourceType = (source) => /MES 手工|MES 资源模型/.test(source || "") ? "MES 手工维护" : "外部同步";
+    const sourceSystem = (source = "") => {
+      if (/MES 手工|MES 资源模型/.test(source)) return "MES";
+      if (/PLM/.test(source)) return "PLM";
+      if (/ERP/.test(source)) return "ERP";
+      if (/QMS/.test(source)) return "QMS";
+      if (/WMS/.test(source)) return "WMS";
+      return "none";
+    };
+    const governance = (item) => ({
+      sourceType: sourceType(item.source),
+      sourceMode: sourceType(item.source) === "MES 手工维护" ? "mesManual" : "externalSync",
+      sourceSystem: sourceSystem(item.source),
+      approvalStatus: /待|评估|冻结/.test(item.status || "") ? "待复核/审批" : "已审批生效",
+      changeControl: "已记录责任人、时间戳、生效范围和下游引用影响",
+    });
     return {
-      products: products.map((item) => ({ id: item.id, name: item.name, version: item.version, source: item.source, status: item.status, ref: `${item.bom} / ${item.routing} / ${item.labelTemplate}`, impact: `${orders.find((order) => order.productCode === item.code)?.id || "待关联工单"} ${item.status.includes("待") ? "阻止排程" : "可排程"}`, owner: item.owner, time: item.time, scope: `${item.customer} / ${item.line} / 电子装配`, risk: item.risk, downstream: item.downstream })),
+      products: products.map((item) => ({ id: item.id, name: item.name, version: item.version, source: item.source, status: item.status, ref: `${item.bom} / ${item.routing} / ${item.labelTemplate}`, impact: `${orders.find((order) => order.productCode === item.code)?.id || "待关联工单"} ${item.status.includes("待") ? "阻止排程" : "可排程"}`, owner: item.owner, time: item.time, scope: `${item.customer} / ${item.line} / 电子装配`, risk: item.risk, downstream: item.downstream, ...governance(item) })),
       materials: materials.map((item) => {
         const supplier = partnerById(item.supplier);
         return {
@@ -167,14 +192,21 @@ window.MES_MASTER_DATA = (() => {
           scope: `${item.supplierName} / ${item.type}`,
           risk: item.risk,
           downstream: item.downstream,
+          ...governance(item),
         };
       }),
-      bom: bomHeaders.map((item) => ({ id: item.id, name: item.productName, version: item.version, source: item.source, status: item.status, ref: `${(bomLines[item.id] || []).length || 3} 个关键物料 / 损耗 ${item.lossRate}`, impact: `${orders.find((order) => order.productCode === item.productCode)?.id || "待关联工单"} ${item.risk}`, owner: item.owner, time: item.time, scope: `${item.productName} / ${item.version}`, risk: item.risk, downstream: item.downstream })),
-      routing: routings.map((item) => ({ id: item.id, name: item.name, version: item.version, source: item.source, status: item.status, ref: `${item.steps} / ${item.sop}`, impact: `${orders.find((order) => order.productCode === item.productCode)?.id || "待关联工单"} 引用`, owner: item.owner, time: item.time, scope: `${item.productCode} / ${item.sop}`, risk: item.risk, downstream: item.downstream })),
+      bom: bomHeaders.map((item) => ({ id: item.id, name: item.productName, version: item.version, source: item.source, status: item.status, ref: `${(bomLines[item.id] || []).length || 3} 个关键物料 / 损耗 ${item.lossRate}`, impact: `${orders.find((order) => order.productCode === item.productCode)?.id || "待关联工单"} ${item.risk}`, owner: item.owner, time: item.time, scope: `${item.productName} / ${item.version}`, risk: item.risk, downstream: item.downstream, ...governance(item) })),
+      routing: routings.map((item) => ({ id: item.id, name: item.name, version: item.version, source: item.source, status: item.status, ref: `${item.steps} / ${item.sop}`, impact: `${orders.find((order) => order.productCode === item.productCode)?.id || "待关联工单"} 引用`, owner: item.owner, time: item.time, scope: `${item.productCode} / ${item.sop}`, risk: item.risk, downstream: item.downstream, ...governance(item) })),
       stations: stations.map((item) => ({ ...item, version: item.line, source: "MES 维护 + 设备/终端状态", ref: `${item.equipment} / ${item.terminal}`, impact: `${item.operation} 开工准入`, scope: `${item.operation} / ${item.line}` })),
       workshops: workshops.map((item) => ({ ...item, version: item.shifts, ref: item.capacity, impact: item.risk, scope: `${item.level} / ${item.name}`, downstream: item.downstream })),
-      partners: partners.map((item) => ({ id: item.id, partnerType: item.type, name: item.name, version: item.level, source: item.source, status: item.status, qualification: item.qualification, qualityLevel: item.qualityLevel, ref: item.rule, supplyScope: item.supplyScope, traceRule: item.traceRule, iqcPolicy: item.iqcPolicy, impact: item.risk, owner: item.owner, time: item.time, scope: `${item.type} / ${item.name}`, risk: item.risk, downstream: item.downstream })),
+      partners: partners.map((item) => ({ id: item.id, partnerType: item.type, name: item.name, version: item.level, source: item.source, status: item.status, qualification: item.qualification, qualityLevel: item.qualityLevel, ref: item.rule, supplyScope: item.supplyScope, traceRule: item.traceRule, iqcPolicy: item.iqcPolicy, impact: item.risk, owner: item.owner, time: item.time, scope: `${item.type} / ${item.name}`, risk: item.risk, downstream: item.downstream, ...governance(item) })),
     };
+  }
+
+  function sourceMetadata(sourceType = "外部系统同步") {
+    if (sourceType === "MES 手工工单") return { sourceMode: "mesManual", sourceSystem: "MES" };
+    if (sourceType === "Excel 导入") return { sourceMode: "excelImport", sourceSystem: "none" };
+    return { sourceMode: "externalSync", sourceSystem: "ERP" };
   }
 
   function lineStation(line) {

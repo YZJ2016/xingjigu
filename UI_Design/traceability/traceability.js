@@ -1,23 +1,7 @@
 const pageConfig = window.TRACE_PAGE || { id: "product", title: "产品追溯", eyebrow: "追溯查询 / 产品追溯" };
 const STORAGE_KEY = `xingjigu_mes_trace_${pageConfig.id}_v2`;
 
-const modules = window.MES_NAV_MODULES || [
-  { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
-  { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
-  { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
-  { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
-  { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
-  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
-  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "点检计划", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
-  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机原因", "过程趋势", "电子看板"] },
-  { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
-  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
-  { id: "trace", title: "追溯查询", layer: "质量追溯", color: "#8e8e93", mark: "追", items: ["产品追溯", "批次追溯", "物料去向", "生产履历", "检验履历", "设备履历", "客户追溯报告"] },
-  { id: "reports", title: "报表与看板", layer: "经营分析", color: "#8e8e93", mark: "表", items: ["生产日报", "良率分析", "交付达成", "设备效率", "停机损失", "物料损耗", "管理驾驶舱"] },
-  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "客户供应商"] },
-  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "角色权限", "审批设置", "单据同步", "消息提醒", "操作记录", "数据备份"] },
-];
+const modules = window.MES_NAV_MODULES || [];
 
 const tracePages = {
   产品追溯: "product-trace.html",
@@ -36,7 +20,7 @@ const pageDefinitions = {
   production: { subtitle: "车间主任按工单、SN 或批次查询工序执行、人员、工位、参数、报工和交接记录", user: "车间主任", metrics: ["生产履历", "参数完整", "待补录", "异常锁定"], columns: ["履历对象", "工序 / 工位", "人员 / 班次", "参数记录", "报工结果", "状态", "来源", "责任人"], tableTitle: "生产履历查询结果", tableHint: "生产履历汇聚工位终端、扫码枪、HMI、PLC 和报工记录形成可审计证据", chainTitle: "生产执行证据", simulationTitle: "模拟工位终端履历补传触发", simulationHint: "模拟工位 HMI、扫码枪或 PLC 补传查询线索，不代表后台直接补做生产动作" },
   inspection: { subtitle: "质量员按 SN、批次或检验单查询 IQC、FAI、IPQC、FQC、NCR 和放行记录", user: "质量员", metrics: ["检验履历", "合格放行", "待判定", "NCR/MRB"], columns: ["检验对象", "检验类型", "关联工单", "检验结论", "不良 / NCR", "状态", "来源", "责任人"], tableTitle: "检验履历查询结果", tableHint: "检验履历用于证明质量放行依据、异常处置和复检闭环", chainTitle: "质量证据链", simulationTitle: "模拟 QMS 或客户稽核查询触发", simulationHint: "模拟 QMS、客户稽核或内部复核输入查询条件，不替代检验员现场判定" },
   equipment: { subtitle: "设备员按设备、工单或批次查询运行参数、报警、点检、维修、停机和校准记录", user: "设备员", metrics: ["设备履历", "运行正常", "待复核", "异常关联"], columns: ["设备 / 工装", "关联工单", "运行参数", "报警 / 停机", "维修点检", "状态", "来源", "责任人"], tableTitle: "设备履历查询结果", tableHint: "设备履历把 PLC、SCADA、点检、维修和生产批次绑定，用于质量追因和 TPM 改善", chainTitle: "设备状态证据", simulationTitle: "模拟 PLC/SCADA 查询触发", simulationHint: "模拟 PLC、SCADA 或设备 API 传入查询线索，不代表后台控制设备运行" },
-  customer: { subtitle: "质量经理汇总客户投诉、出货批次、产品 SN、质量证据、影响范围和对外报告审批状态", user: "质量经理", metrics: ["追溯报告", "已发布", "待审批", "召回/冻结"], columns: ["报告编号", "客户 / 投诉", "出货批次", "影响范围", "报告内容", "状态", "来源", "责任人"], tableTitle: "客户追溯报告", tableHint: "客户追溯报告输出前必须包含查询快照、影响范围、处置结论和审批留痕", chainTitle: "客户报告证据", simulationTitle: "模拟客户投诉单查询触发", simulationHint: "模拟客户投诉、客诉系统或审计要求触发报告生成，不代表后台直接对外发送报告" },
+  customer: { subtitle: "质量经理汇总客户投诉、出货批次、产品 SN、质量证据、影响范围和质量追溯报告审批状态，只生成报告快照，不扩展成 CRM 或客户服务系统", user: "质量经理", metrics: ["追溯报告", "已发布", "待审批", "召回/冻结"], columns: ["报告编号", "客户 / 投诉", "出货批次", "影响范围", "报告内容", "状态", "来源", "责任人"], tableTitle: "客户追溯报告快照", tableHint: "客户追溯报告输出前必须包含查询快照、影响范围、处置结论和审批留痕，不处理客户服务、赔付或 CRM 跟进", chainTitle: "客户报告证据", simulationTitle: "模拟客户投诉单查询触发", simulationHint: "模拟客户投诉、客诉系统或审计要求触发报告快照生成，不代表后台直接对外发送报告" },
 };
 
 const initialRows = {

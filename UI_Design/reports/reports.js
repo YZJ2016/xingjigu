@@ -1,23 +1,7 @@
 const pageConfig = window.REPORT_PAGE || { id: "daily", title: "生产日报", eyebrow: "报表与看板 / 生产日报" };
 const STORAGE_KEY = `xingjigu_mes_reports_${pageConfig.id}_v2`;
 
-const modules = window.MES_NAV_MODULES || [
-  { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
-  { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
-  { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场回执", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
-  { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
-  { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
-  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
-  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "点检计划", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
-  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机原因", "过程趋势", "电子看板"] },
-  { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
-  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
-  { id: "trace", title: "追溯查询", layer: "质量追溯", color: "#8e8e93", mark: "追", items: ["产品追溯", "批次追溯", "物料去向", "生产履历", "检验履历", "设备履历", "客户追溯报告"] },
-  { id: "reports", title: "报表与看板", layer: "经营分析", color: "#8e8e93", mark: "表", items: ["生产日报", "良率分析", "交付达成", "设备效率", "停机损失", "物料损耗", "管理驾驶舱"] },
-  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "客户供应商"] },
-  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "角色权限", "审批设置", "单据同步", "消息提醒", "操作记录", "数据备份"] },
-];
+const modules = window.MES_NAV_MODULES || [];
 
 const reportPages = {
   生产日报: "production-daily.html",
@@ -26,20 +10,20 @@ const reportPages = {
   设备效率: "equipment-efficiency.html",
   停机损失: "downtime-loss.html",
   物料损耗: "material-loss.html",
-  管理驾驶舱: "management-cockpit.html",
+  "MES 生产指标驾驶舱": "management-cockpit.html",
 };
 
 const pageDefinitions = {
   daily: {
-    subtitle: "生产经理和计划员按日查看订单、派工、报工、异常、入库和同步口径，确认日报能否对外发布给 BI 与经营层",
+    subtitle: "生产经理和计划员按日查看订单、派工、报工、异常、入库和同步口径，锁定 MES 日报快照供复核和外部读取",
     user: "生产经理",
     metricLabels: ["日报状态", "计划完成", "报工回传", "异常未闭环"],
     columns: ["日报对象", "产线 / 班次", "数据来源", "计划 / 完成", "质量 / OEE", "异常与缺口", "发布状态", "责任人"],
     tableTitle: "生产日报发布清单",
-    tableHint: "日报汇聚 ERP 工单、MES 报工、质量放行、设备状态和 WMS 入库，不替代现场报工动作",
+    tableHint: "日报汇聚 ERP 或 MES 手工工单、MES 报工、质量放行、设备状态、WMS 回执或 MES 入库记录，只发布快照，不改原始事实",
     insightTitle: "日报口径、缺口和追溯引用",
-    simulationTitle: "模拟 BI 拉取日报快照",
-    simulationHint: "模拟外部 BI 或管理驾驶舱读取 MES 日报，不表示后台直接改写生产实绩",
+    simulationTitle: "模拟锁定 / 读取日报快照",
+    simulationHint: "模拟外部 BI 或驾驶舱读取 MES 日报快照，不表示后台直接改写生产实绩",
   },
   yield: {
     subtitle: "质量工程师按产品、工序和批次分析良率，串联 IQC、首件、IPQC、过程检验、FQC 和 NCR 闭环",
@@ -53,12 +37,12 @@ const pageDefinitions = {
     simulationHint: "模拟外部质量复判或检验终端回执，后台只更新分析口径和闭环状态",
   },
   delivery: {
-    subtitle: "计划主管按客户订单监控交付达成，串联 ERP 交期、MES 完工、WMS 入库和未闭环风险",
+    subtitle: "计划主管按客户订单监控交付达成，有外部系统时串联 ERP 交期和 WMS 入库，无外部系统时引用 MES 手工订单、MES 入库和交付计划",
     user: "计划主管",
     metricLabels: ["OTD", "准时订单", "延期风险", "已入库待同步"],
     columns: ["客户订单", "生产订单", "ERP 交期", "MES 完工", "WMS 入库", "风险原因", "达成状态", "责任人"],
     tableTitle: "交付达成跟踪",
-    tableHint: "交付口径以 ERP 交期为目标，以 MES 完工与 WMS 入库回执作为事实来源",
+    tableHint: "交付口径以 ERP 交期或 MES 手工交付计划为目标，以 MES 完工、WMS 入库回执或 MES 入库记录作为事实来源",
     insightTitle: "交付风险、处置建议和计划联动",
     simulationTitle: "模拟 ERP / WMS 交付回执",
     simulationHint: "模拟 ERP 出货计划或 WMS 入库回执，不表示后台直接发货或入库",
@@ -104,8 +88,8 @@ const pageDefinitions = {
     tableTitle: "MES 生产指标池",
     tableHint: "驾驶舱仅展示 MES 已校验的生产事实和风险，不扩展财务、销售、采购或综合 BI 分析，也不替代现场终端执行动作",
     insightTitle: "生产关注、跨部门协同和复盘入口",
-    simulationTitle: "模拟 MES 生产指标刷新",
-    simulationHint: "模拟管理驾驶舱读取 MES 聚合指标，不表示后台直接调整计划、质量、物料或设备结果",
+    simulationTitle: "模拟锁定 MES 生产事实快照",
+    simulationHint: "模拟驾驶舱锁定或读取 MES 聚合事实快照，不表示后台直接调整计划、质量、物料或设备结果",
   },
 };
 
@@ -113,7 +97,7 @@ const initialRows = {
   daily: [
     { id: "DAY-20260620-A", name: "Line-A 白班生产日报", line: "Line-A", shift: "白班", order: "MO-202606-0001 / MO-202606-0004", source: "ERP 工单 + MES 报工 + WMS 入库", plan: "计划 1,420 / 完成 1,188", quality: "良率 98.6% / OEE 86.4%", status: "待发布", statusStyle: "orange", risk: "温度传感器缺料 200 件", owner: "生产经理 陈伟", updated: "2026-06-20 17:42", trace: "日报快照 RPT-DAY-A-0620", next: "缺料事项关闭后发布" },
     { id: "DAY-20260620-B", name: "Line-B 白班生产日报", line: "Line-B", shift: "白班", order: "MO-202606-0002 / MO-202606-0012", source: "MES 报工 + 测试台 API + FQC", plan: "计划 920 / 完成 395", quality: "良率 97.1% / OEE 82.3%", status: "需复核", statusStyle: "red", risk: "测试台 B2 故障未完成归因", owner: "车间主任 李航", updated: "2026-06-20 17:36", trace: "异常 EX-EQ-0203", next: "维修验收后重算日报" },
-    { id: "DAY-20260620-C", name: "Line-C 白班生产日报", line: "Line-C", shift: "白班", order: "MO-202606-0003 / MO-202606-0011", source: "SCADA + MES 报工 + 包装回执", plan: "计划 1,600 / 完成 1,404", quality: "良率 99.1% / OEE 88.2%", status: "可发布", statusStyle: "green", risk: "老化房 16:40 可能排队", owner: "生产主管 吴敏", updated: "2026-06-20 17:45", trace: "oee_daily / 包装履历", next: "同步管理驾驶舱" },
+    { id: "DAY-20260620-C", name: "Line-C 白班生产日报", line: "Line-C", shift: "白班", order: "MO-202606-0003 / MO-202606-0011", source: "SCADA + MES 报工 + 包装回执", plan: "计划 1,600 / 完成 1,404", quality: "良率 99.1% / OEE 88.2%", status: "可发布", statusStyle: "green", risk: "老化房 16:40 可能排队", owner: "生产主管 吴敏", updated: "2026-06-20 17:45", trace: "oee_daily / 包装履历", next: "同步MES 生产指标驾驶舱" },
     { id: "DAY-20260620-N", name: "夜班交接日报准备", line: "全部产线", shift: "夜班", order: "MO-202606-0010 / MO-202606-0005", source: "排程计划 + 未闭环风险", plan: "计划 740 / 待开工", quality: "待首件 / 设备待确认", status: "待生成", statusStyle: "blue", risk: "交期压缩与关键料未齐套", owner: "夜班主管 胡青", updated: "2026-06-20 18:00", trace: "班次交接 SH-0620-N", next: "夜班开工检查" },
   ],
   yield: [
@@ -201,7 +185,7 @@ function renderAppShell() {
       <div class="topbar-actions">
         <button id="simulateTopBtn" class="primary-action" type="button">${getReportGovernanceAction().primary}</button>
         <button id="resetReportsBtn" class="secondary-action" type="button">重置演示</button>
-        <a class="secondary-link" href="./management-cockpit.html">管理驾驶舱</a>
+        <a class="secondary-link" href="./management-cockpit.html">MES 生产指标驾驶舱</a>
         <a class="secondary-link" href="../index.html">返回首页</a>
         <div class="user-chip"><span class="avatar">表</span><span>${getDefinition().user}</span></div>
       </div>
@@ -472,7 +456,7 @@ function getReportGovernanceAction(row = getActive()) {
     daily: { primary: publish ? "发布日报快照" : "模拟日报刷新", secondary: publish ? "撤回日报发布" : "登记日报复核", status: publish ? "已发布" : "复核中", type: "日报发布治理", result: publish ? "生产日报已发布给 BI，口径锁定并保留撤回入口" : "生产日报已登记复核结论，待异常关闭后发布", hint: "支持日报发布、撤回、BI 读取状态和复核签名" },
     yield: { primary: "锁定良率口径", secondary: risky ? "下钻 NCR/MRB" : "登记质量复核", status: risky ? "NCR下钻中" : "口径已锁定", type: "良率口径治理", result: risky ? "已下钻不良、NCR/MRB 和返工闭环，并反写质量异常" : "良率分析口径已锁定，供 MES 生产指标驾驶舱引用", hint: "支持良率口径锁定、质量异常下钻和复核签名" },
     delivery: { primary: "锁定交付口径", secondary: risky ? "反写交付风险" : "登记交付复核", status: risky ? "风险已反写" : "口径已锁定", type: "交付风险反写", result: risky ? "延期/入库待同步风险已反写异常中心和订单风险" : "交付达成口径已锁定，等待 BI 读取", hint: "支持交付风险反写计划调整、异常中心和订单风险" },
-    equipment: { primary: "重算 OEE 口径", secondary: risky ? "下钻设备瓶颈" : "登记 OEE 复核", status: risky ? "瓶颈已反写" : "OEE已锁定", type: "OEE下钻治理", result: risky ? "设备瓶颈已反写设备异常和停机复盘" : "OEE 三分项口径已锁定", hint: "支持 OEE 口径锁定、设备瓶颈下钻和 TPM 改善反写" },
+    equipment: { primary: "重算 OEE 口径快照", secondary: risky ? "下钻设备瓶颈" : "登记 OEE 复核", status: risky ? "瓶颈已反写" : "OEE已锁定", type: "OEE下钻治理", result: risky ? "设备瓶颈已反写设备异常和停机复盘" : "OEE 三分项口径已锁定", hint: "支持 OEE 口径锁定、设备瓶颈下钻和 TPM 改善反写" },
     downtime: { primary: "锁定停机损失", secondary: risky ? "下钻停机归因" : "登记归因复核", status: risky ? "归因中" : "损失已锁定", type: "停机损失治理", result: risky ? "停机损失已下钻到 PLC 日志、班组补录和维修归因" : "停机损失已锁定并进入复盘", hint: "支持停机损失锁定、归因复核和改善闭环" },
     material: { primary: "锁定损耗口径", secondary: risky ? "反写损耗异常" : "登记核销复核", status: risky ? "损耗异常已反写" : "损耗已锁定", type: "物料损耗治理", result: risky ? "超耗/待核销风险已反写异常中心和物料核销" : "物料损耗口径已锁定，供成本归集", hint: "支持损耗口径锁定、余料核销和成本差异反写" },
     cockpit: { primary: "发布 MES 指标快照", secondary: risky ? "生成生产协调项" : "登记生产复核", status: risky ? "协调项已生成" : "指标快照已发布", type: "MES生产指标治理", result: risky ? "生产协调项已生成，反写交付、质量、设备或物料责任人" : "MES 生产指标快照已发布，保留口径和责任人", hint: "支持 MES 指标发布、生产协调项和事实下钻" },
@@ -518,7 +502,7 @@ function getReportManualActions() {
     equipment: [{ key: "comment", label: "添加批注" }, { key: "tpm", label: "生成 TPM 行动" }, { key: "export", label: "导出" }, { key: "repair", label: "转维修/复盘" }],
     downtime: [{ key: "reviewReason", label: "复核归因" }, { key: "review", label: "生成复盘" }, { key: "export", label: "导出" }],
     material: [{ key: "reviewLoss", label: "复核超耗" }, { key: "assign", label: "分派改善" }, { key: "export", label: "导出" }, { key: "feeding", label: "转投料/退料" }],
-    cockpit: [{ key: "config", label: "配置关注指标" }, { key: "meeting", label: "生成管理动作" }, { key: "export", label: "导出快照" }, { key: "publish", label: "发布会议版本", danger: true }],
+    cockpit: [{ key: "config", label: "配置关注指标" }, { key: "meeting", label: "生成生产协调项" }, { key: "export", label: "导出快照" }, { key: "publish", label: "锁定驾驶舱快照", danger: true }],
   };
   return map[pageConfig.id] || [{ key: "snapshot", label: "生成快照" }, { key: "review", label: "复核" }, { key: "export", label: "导出" }];
 }
