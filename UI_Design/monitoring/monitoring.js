@@ -1,7 +1,7 @@
 const pageConfig = window.MONITORING_PAGE || { id: "output", title: "实时产量", eyebrow: "过程监控 / 实时产量" };
 const STORAGE_KEY = `xingjigu_mes_monitoring_${pageConfig.id}_v2`;
 
-const modules = [
+const modules = window.MES_NAV_MODULES || [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
   { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
   { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },

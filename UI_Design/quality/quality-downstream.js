@@ -1,7 +1,7 @@
 const pageConfig = window.QUALITY_DOWNSTREAM_PAGE || { id: "process", title: "过程检验", eyebrow: "质量检验 / 过程检验" };
 const STORAGE_KEY = `xingjigu_mes_quality_downstream_${pageConfig.id}_v2`;
 
-const modules = [
+const modules = window.MES_NAV_MODULES || [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
   { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
   { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
@@ -26,7 +26,7 @@ const knownRoutes = {
   station: { 员工登录: "../station/employee-login.html", 扫码开工: "../station/scan-start.html", 工艺指导: "../station/work-instruction.html", 投料确认: "../station/feeding-confirmation.html", 过程记录: "../station/process-record.html", 工序报工: "../station/operation-report.html", 交接班: "../station/shift-handover.html" },
   materials: { 用料需求: "../materials/material-requirements.html", 领料申请: "../materials/picking-requests.html", 配送进度: "../materials/delivery-progress.html", 线边库存: "../materials/line-side-inventory.html", 投料记录: "../materials/feeding-records.html", 余料退回: "../materials/return-materials.html", 缺料预警: "../materials/shortage-alerts.html" },
   barcode: { 生产批次: "../barcode/production-batches.html", 产品序列号: "../barcode/product-serials.html", 物料标签: "../barcode/material-labels.html", 成品标签: "../barcode/finished-labels.html", 箱码托盘码: "../barcode/box-pallet-codes.html", 标签打印: "../barcode/label-printing.html", 补打申请: "../barcode/reprint-requests.html" },
-  quality: { 来料检验: "./incoming-inspection.html", 首件检验: "./first-article.html", 巡检任务: "./patrol-tasks.html", 过程检验: "./process-inspection.html", 成品检验: "./final-inspection.html", 不良记录: "./defect-records.html", 返工评审: "./rework-review.html" },
+  quality: { 来料检验: "./incoming-inspection.html", 首件检验: "./first-article.html", 巡检任务: "./patrol-tasks.html", 过程检验: "./process-inspection.html", 成品检验: "./final-inspection.html", 不良记录: "./defect-records.html", 返工评审: "./rework-review.html", 质量放行: "./release.html" },
 };
 
 const pageDefinitions = {
@@ -63,6 +63,23 @@ const pageDefinitions = {
     primaryMessage: "模拟 FQC 合格，已放行成品标签和入库准入",
     secondaryMessage: "模拟 FQC 拦截，包装标签冻结并进入返工评审",
     links: [["成品标签", "../barcode/finished-labels.html"], ["箱码托盘码", "../barcode/box-pallet-codes.html"], ["返工评审", "./rework-review.html"]],
+  },
+  release: {
+    titleSuffix: "准入放行工作台",
+    subtitle: "汇总 FQC 结论、NCR/MRB 状态、库存冻结、成品标签、包装层级和入库准入，质量人员签核后才允许成品入库或客户追溯报告引用",
+    user: "质量放行工程师",
+    metrics: ["放行批次", "待签核", "已放行", "拦截 / 冻结"],
+    columns: ["放行单", "工单 / 产品", "SN / 包装", "质量依据", "放行结论", "标签 / 入库", "处置动作", "责任人"],
+    tableTitle: "质量放行、冻结拦截与入库准入",
+    tableHint: "后台只负责放行签核、拦截处置和追溯留痕，不替代现场 FQC、包装扫码或 WMS 入库动作",
+    cardTitle: "FQC、NCR/MRB、标签和入库准入闭环",
+    simulationTitle: "模拟 FQC / WMS / 标签系统放行回执",
+    simulationHint: "模拟外部 FQC 检验台、WMS 冻结状态或标签系统回传，页面只登记签核、拦截和追溯引用",
+    primaryStatus: "质量已放行",
+    secondaryStatus: "质量已拦截",
+    primaryMessage: "模拟质量签核通过，已允许成品标签和入库准入",
+    secondaryMessage: "模拟质量签核拦截，已冻结入库准入并转异常闭环",
+    links: [["成品检验", "./final-inspection.html"], ["库存冻结", "../warehouse/inventory-freeze.html"], ["成品入库", "../warehouse/finished-goods-receipt.html"]],
   },
   defect: {
     titleSuffix: "NCR 缺陷工作台",
@@ -128,6 +145,19 @@ const initialRows = {
 };
 
 Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.qualityDownstream || {});
+
+if (!initialRows.release) {
+  initialRows.release = initialRows.final.map((item, index) => ({
+    ...item,
+    id: item.id.replace("FQC", "QREL"),
+    status: item.status === "已放行入库" ? "质量已放行" : item.status === "FQC 已拦截" ? "质量已拦截" : "待签核",
+    action: item.status === "FQC 已拦截" ? "冻结入库准入并转异常闭环" : "复核 FQC、NCR/MRB、标签和 WMS 准入",
+    source: `${item.source} + 质量放行签核规则`,
+    result: index === 1 ? "质量签核通过，允许成品入库" : item.result,
+    next: item.status === "FQC 已拦截" ? "进入异常处理、库存冻结和返工评审" : "签核通过后衔接成品入库和追溯报告",
+    risk: item.status === "FQC 已拦截" ? "禁止成品入库和客户发货" : item.risk,
+  }));
+}
 
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true, openMenus: { quality: true } };
