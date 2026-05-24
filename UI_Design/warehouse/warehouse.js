@@ -1,4 +1,4 @@
-const pageConfig = window.WAREHOUSE_PAGE || { id: "operation", title: "工序完工", eyebrow: "完工与入库 / 工序完工" };
+const pageConfig = window.WAREHOUSE_PAGE || { id: "operation", title: "工序完工复核", eyebrow: "完工与入库 / 工序完工复核" };
 const STORAGE_KEY = `xingjigu_mes_warehouse_${pageConfig.id}_v2`;
 
 const modules = window.MES_NAV_MODULES || [
@@ -20,6 +20,7 @@ const modules = window.MES_NAV_MODULES || [
 ];
 
 const warehousePages = {
+  工序完工复核: "operation-completion.html",
   工序完工: "operation-completion.html",
   完工确认: "completion-confirmation.html",
   包装作业: "packaging.html",
@@ -43,12 +44,12 @@ const navPages = {
 
 const pageDefinitions = {
   operation: {
-    subtitle: "接收工位终端和设备采集的工序完工回执，校验数量、工时、用料和质量状态，触发下道工序或末道完工确认",
+    subtitle: "复核工位终端和设备采集的模拟工序报工回执，校验数量、工时、用料和质量状态，触发 WIP 结转、下道工序或末道完工确认",
     user: "车间主任 / 报工审核员",
     metrics: ["完工回执", "待确认", "已结转", "异常拦截"],
     columns: ["完工单", "工单 / 派工", "工序 / 工位", "良品 / 不良 / 报废", "来源回执", "校验结果", "状态", "责任人"],
-    tableTitle: "工序完工回执",
-    tableHint: "后台确认现场模拟报工回执，不替代工位扫码报工动作",
+    tableTitle: "工序完工复核",
+    tableHint: "后台复核现场模拟报工回执、质量结论、用料核销和 WIP 结转，不替代工位扫码报工动作",
     cardTitle: "报工、WIP 与下道工序",
     simulationTitle: "模拟工位终端完工回执",
     simulationHint: "模拟工位 HMI、扫码枪、PLC 或测试台回传完工数据，后台只做校验、确认和追溯记录",

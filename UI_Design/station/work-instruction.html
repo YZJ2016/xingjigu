@@ -60,7 +60,7 @@
           <article>
             <span>签收完成</span>
             <strong id="metricSigned">0</strong>
-            <em>现场终端回传签收</em>
+            <em>模拟现场终端回传签收</em>
           </article>
           <article>
             <span>待下发 / 待签收</span>
@@ -122,7 +122,7 @@
               <div class="section-title">
                 <div>
                   <h3>下发与终端接收状态</h3>
-                  <p>确认 SOP、图纸、参数和检验要求已下发到正确工位终端</p>
+                  <p>后台只做资料版本下发、模拟签收回执查看、版本拦截和偏离处理，不替代现场终端真实签收或作业执行</p>
                 </div>
                 <span id="terminalTitle">ASM-WS-03</span>
               </div>
@@ -144,7 +144,7 @@
                 </div>
                 <div class="instruction-terminal-actions" aria-label="后台工艺指导管理动作">
                   <button id="signInstructionBtn" type="button">下发到工位终端</button>
-                  <button id="completeStepBtn" type="button">同步签收回执</button>
+                  <button id="completeStepBtn" type="button">同步模拟签收回执</button>
                   <button id="deviationBtn" type="button">登记偏离处理</button>
                   <button id="refreshVersionBtn" type="button">重新同步版本</button>
                 </div>
@@ -285,7 +285,7 @@
                 </div>
                 <div class="action-grid dispatch-actions">
                   <button id="detailSignBtn" type="button">下发到终端</button>
-                  <button id="detailStepBtn" type="button">同步签收回执</button>
+                  <button id="detailStepBtn" type="button">同步模拟签收回执</button>
                   <button id="detailDeviationBtn" class="danger-action" type="button">登记偏离处理</button>
                   <button id="releaseDeviationBtn" type="button">关闭偏离</button>
                 </div>

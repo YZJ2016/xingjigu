@@ -99,13 +99,13 @@ const pageDefinitions = {
   review: {
     subtitle: "生产、质量、设备和物料负责人对重大或重复异常做 RCA、CAPA、TPM 改善和有效性验证",
     user: "异常复盘负责人",
-    metrics: ["复盘单", "RCA 待补", "CAPA 执行", "已验证"],
-    columns: ["复盘单", "来源异常", "损失影响", "根因分类", "复盘状态", "改善措施", "验证结果", "责任人"],
-    tableTitle: "处理复盘与知识沉淀",
-    tableHint: "复盘沉淀根因、纠正预防措施、验证结果和复发风险，驱动 CAPA/TPM/工艺优化",
-    cardTitle: "RCA、CAPA 和有效性",
-    simulationTitle: "模拟 CAPA 验证回执",
-    simulationHint: "模拟质量、设备或生产主管提交验证结果，后台只记录复盘结论和知识沉淀",
+    metrics: ["CAPA/8D 单", "RCA 待补", "措施执行", "关闭/升级"],
+    columns: ["CAPA/8D 单", "来源异常 / 严重度", "RCA 根因", "纠正措施", "预防措施", "期限 / 状态", "验证结果", "责任人"],
+    tableTitle: "CAPA / RCA / 8D 改善闭环",
+    tableHint: "重大或重复异常必须记录 RCA、纠正措施、预防措施、责任人、期限、验证证据和关闭/升级结果",
+    cardTitle: "RCA、纠正预防和有效性验证",
+    simulationTitle: "模拟 CAPA / 8D 验证回执",
+    simulationHint: "模拟质量、设备、生产或客户代表提交验证结果，后台只记录 CAPA 证据、关闭和升级履历",
   },
 };
 
@@ -147,14 +147,17 @@ const initialRows = {
     { id: "EX-EQ-240620-04", type: "温控偏差", severity: "中", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "SCADA 温度趋势", status: "已验收", sla: "校准 18 分钟", owner: "设备员 黄宁", impact: "老化房 2 号温区偏差已恢复", action: "校准探头、保养记录、过程复检", trace: "downtime_record DT-240620-04" },
   ],
   review: [
-    { id: "RCA-240620-01", type: "设备复盘", severity: "高", line: "Line-A", station: "SMT-WS-01", order: "MO-202606-0001", dispatch: "D-001", source: "EX-EQ-240620-01", status: "CAPA 执行", sla: "06-22 前验证", owner: "设备主管 袁立", impact: "供料器异常停线 25 分钟，影响 80 台产出", action: "点检频次提升，供料器备件安全库存调整", trace: "exception_rca RCA-240620-01" },
-    { id: "RCA-240620-02", type: "质量复盘", severity: "高", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "NCR-240620-07", status: "RCA 待补", sla: "当日 17:00 前", owner: "质量主管 罗岚", impact: "测试不良 19 件隔离，返工工时预计 2.5 小时", action: "5Why 分析、测试治具复核、CAPA 验证", trace: "defect_record NCR-240620-07" },
-    { id: "RCA-240620-03", type: "缺料复盘", severity: "中", line: "Line-B", station: "ASM-WS-04", order: "MO-202606-0005", dispatch: "D-052", source: "EX-MAT-240620-02", status: "改善验证", sla: "下批订单验证", owner: "物料主管 何敏", impact: "冻结批次导致紧急订单开工延迟", action: "IQC 冻结联动安全库存和替代料清单", trace: "material_shortage SA-0002" },
-    { id: "RCA-240620-04", type: "停线复盘", severity: "停线", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "LS-240620-03", status: "已验证", sla: "复发观察 3 班次", owner: "工艺主管 林澈", impact: "温区偏差暂停进站 18 分钟", action: "温控点检纳入班前准入，SPC 阈值复核", trace: "process_trend AGING-01" },
+    { id: "CAPA-240620-01", type: "设备故障 8D", severity: "高", line: "Line-A", station: "SMT-WS-01", order: "MO-202606-0001", dispatch: "D-001", source: "EX-EQ-240620-01 / DT-240620-02", status: "措施执行中", sla: "2026-06-22 17:00 前验证", owner: "设备主管 袁立", impact: "供料器异常停线 25 分钟，影响 80 台产出", action: "纠正：更换供料器轴承并复测；预防：点检频次提升和备件安全库存调整", trace: "exception_capa CAPA-240620-01", rootCause: "供料器轴承磨损未被班前点检阈值识别，振动趋势预警未升级维修", correction: "更换供料器轴承，复核 SMT-01 12 号位振动值，补录维修验收", prevention: "点检标准增加振动趋势阈值，供料器轴承安全库存从 2 提至 4", dueAt: "2026-06-22 17:00", verificationResult: "待连续 2 班次无同类报警后关闭" },
+    { id: "CAPA-240620-02", type: "质量 NCR 8D", severity: "高", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "NCR-240620-07 / JIG-ICT-GW240-02", status: "RCA 待补", sla: "2026-06-20 17:00 前完成 RCA", owner: "质量主管 罗岚", impact: "测试不良 19 件隔离，返工工时预计 2.5 小时", action: "补齐 5Why、测试治具校准复核和复测验证计划", trace: "defect_record NCR-240620-07", rootCause: "待确认：测试治具针床接触、程序版本和校准到期共同影响", correction: "隔离影响 SN 段，切换备用治具并完成复测", prevention: "治具校准到期前 3 天触发开工准入预警，测试程序版本纳入首件确认", dueAt: "2026-06-20 17:00", verificationResult: "RCA 未签核，禁止关闭 CAPA" },
+    { id: "CAPA-240620-03", type: "缺料预防 CAPA", severity: "中", line: "Line-B", station: "ASM-WS-04", order: "MO-202606-0005", dispatch: "D-052", source: "EX-MAT-240620-02 / IQC 冻结", status: "待验证", sla: "下批订单首件前验证", owner: "物料主管 何敏", impact: "冻结批次导致紧急订单开工延迟", action: "纠正：替代料评审；预防：IQC 冻结联动安全库存和替代料清单", trace: "material_shortage SA-0002", rootCause: "IQC 冻结信息未及时同步齐套检查，指定批次安全库存策略缺失", correction: "完成替代料审批并重排 D-052 开工时间", prevention: "客户指定料维护冻结联动规则，齐套检查读取 QMS 冻结状态", dueAt: "2026-06-25 09:00", verificationResult: "待下批 PCM-60 齐套检查验证" },
+    { id: "CAPA-240620-04", type: "工艺停线 8D", severity: "停线", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "LS-240620-03 / CAL-AGING-TEMP-01", status: "已关闭", sla: "复发观察 3 班次", owner: "工艺主管 林澈", impact: "温区偏差暂停进站 18 分钟", action: "温控点检纳入班前准入，SPC 阈值复核，校准证据已补齐", trace: "process_trend AGING-01", rootCause: "温度探头标准器校准过期，恢复验证仍引用旧证据", correction: "停用过期标准器，使用有效标准器重新校准老化房温区", prevention: "校准有效期纳入开工准入和恢复验证门禁", dueAt: "2026-06-21 12:00", verificationResult: "连续 3 班次温区偏差小于 0.5 摄氏度，CAPA 已关闭" },
   ],
 };
 
-Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.exceptions || {});
+const masterExceptionRows = window.MES_MASTER_DATA?.demoRows?.exceptions || {};
+Object.entries(masterExceptionRows).forEach(([key, value]) => {
+  initialRows[key] = key === "review" ? [...(initialRows[key] || []), ...value] : value;
+});
 
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
@@ -470,9 +473,9 @@ function getLineStopStep(status) {
 }
 
 function getReviewStep(status) {
-  if (/已验证/.test(status)) return 3;
-  if (/执行|改善/.test(status)) return 2;
-  if (/CAPA/.test(status)) return 1;
+  if (/已验证|已关闭/.test(status)) return 3;
+  if (/待验证|执行|改善/.test(status)) return 2;
+  if (/CAPA|措施/.test(status)) return 1;
   return 0;
 }
 
@@ -520,6 +523,7 @@ function buildCells(item) {
   if (pageConfig.id === "shortage") return [item.id, twoLine(item.type, item.trace), twoLine(item.order, item.dispatch), item.impact, pill(item.status), item.action, item.trace, item.owner];
   if (pageConfig.id === "quality") return [item.id, twoLine(item.type, item.trace), twoLine(item.order, item.dispatch), item.source, pill(item.status), item.impact, item.action, item.owner];
   if (pageConfig.id === "equipment") return [item.id, twoLine(item.station, item.source), twoLine(item.order, item.dispatch), item.impact, pill(item.status), item.action, item.trace, item.owner];
+  if (pageConfig.id === "review") return [item.id, twoLine(item.source, item.severity), item.rootCause || item.impact, item.correction || item.action, item.prevention || item.trace, twoLine(item.dueAt || item.sla, pill(item.status)), item.verificationResult || item.action, item.owner];
   return [item.id, item.source, item.impact, item.type, pill(item.status), item.action, item.trace, item.owner];
 }
 
@@ -572,6 +576,7 @@ function renderDetail() {
     ["SLA/时间", active.sla],
     ["责任人", active.owner],
     ["影响说明", active.impact],
+    ...(pageConfig.id === "review" ? [["RCA 根因", active.rootCause], ["关闭期限", active.dueAt]] : []),
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   $("#timelineList").innerHTML = buildTimeline(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   $("#actionList").innerHTML = buildActions(active).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("") + renderManualActions(active);
@@ -582,6 +587,17 @@ function renderDetail() {
 }
 
 function buildTimeline(active) {
+  if (pageConfig.id === "review") {
+    return [
+      ["来源事件", active.source],
+      ["RCA 根因", active.rootCause || "待补充"],
+      ["纠正措施", active.correction || "待制定"],
+      ["预防措施", active.prevention || "待制定"],
+      ["期限与状态", `${active.dueAt || active.sla} · ${active.status}`],
+      ["验证结果", active.verificationResult || "待验证"],
+      ["追溯引用", active.trace],
+    ];
+  }
   return [
     ["异常触发", active.source],
     ["分级派单", `${active.severity} · ${active.owner}`],
@@ -591,6 +607,16 @@ function buildTimeline(active) {
 }
 
 function buildActions(active) {
+  if (pageConfig.id === "review") {
+    return [
+      ["当前处置", active.action],
+      ["RCA", active.rootCause || "待责任人补齐 5Why / 鱼骨图结论"],
+      ["纠正措施", active.correction || "待制定纠正措施"],
+      ["预防措施", active.prevention || "待制定预防措施"],
+      ["有效性验证", active.verificationResult || "关闭前需验证措施有效性"],
+      ["关闭/升级规则", /已关闭|已验证/.test(active.status) ? "已形成关闭证据，继续复发观察" : "逾期或验证失败需升级责任主管"],
+    ];
+  }
   const result = [
     ["生产联动", `${active.order} / ${active.dispatch} / ${active.station}`],
     ["临时措施", active.action],
@@ -661,7 +687,7 @@ function getManualActions(active = getActive()) {
     shortage: [{ key: "dispatch", label: "派单催料" }, { key: "compensate", label: "调拨/替代补偿" }, { key: "close", label: "关闭缺料", danger: true }],
     quality: [{ key: "contain", label: "隔离围堵" }, { key: "mrb", label: "MRB 审批" }, { key: "close", label: "关闭 CAPA", danger: true }],
     equipment: [{ key: "dispatch", label: "派维修" }, { key: "acceptance", label: "试运行验收" }, { key: "close", label: "验收关闭", danger: true }],
-    review: [{ key: "newReview", label: "新建复盘" }, { key: "capa", label: "分派 CAPA" }, { key: "archive", label: "归档复盘", danger: true }],
+    review: [{ key: "newReview", label: "新建 CAPA/8D" }, { key: "rca", label: "补齐 RCA" }, { key: "capa", label: "分派纠正预防" }, { key: "verifyCapa", label: "验证措施" }, { key: "archive", label: "关闭/归档 CAPA", danger: true }],
   };
   return [...(map[pageConfig.id] || []), ...common].filter((action) => action.key !== "close" || !/已关闭|已归档/.test(active?.status || ""));
 }
@@ -693,10 +719,17 @@ function buildManualResult(key, label) {
   const statusMap = {
     new: "草稿", dispatch: "已派单", withdraw: "已撤回", accept: "已响应", transfer: "已转派", escalate: "已升级",
     close: "已关闭", newStop: "待审批", approve: "已审批", release: "已解除", compensate: "补偿中",
-    contain: "围堵中", mrb: "MRB 审批中", acceptance: "待验收", newReview: "复盘草稿", capa: "CAPA 执行", archive: "已归档",
+    contain: "围堵中", mrb: "MRB 审批中", acceptance: "待验收", newReview: "CAPA 草稿", rca: "RCA 已补齐", capa: "措施执行中", verifyCapa: "待验证", archive: "已关闭",
     edit: "人工复核", history: undefined,
   };
-  return { status: statusMap[key], action: `${label}：已记录原因、责任人、时间戳、关联单据和恢复/审批依据` };
+  const active = getActive();
+  if (pageConfig.id === "review" && key === "rca" && active) active.rootCause = active.rootCause && !active.rootCause.includes("待确认") ? active.rootCause : "已补齐 5Why：准入规则未覆盖校准/治具风险，责任部门已签核";
+  if (pageConfig.id === "review" && key === "capa" && active) {
+    active.correction = active.correction || "纠正措施已分派到责任班组";
+    active.prevention = active.prevention || "预防措施已纳入准入规则和点检标准";
+  }
+  if (pageConfig.id === "review" && key === "verifyCapa" && active) active.verificationResult = "模拟验证通过，等待责任主管关闭";
+  return { status: statusMap[key], action: `${label}：已记录原因、责任人、期限、关联单据和 CAPA/8D 证据` };
 }
 
 function confirmDanger(label, id) {

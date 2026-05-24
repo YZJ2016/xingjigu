@@ -26,7 +26,7 @@ const knownRoutes = {
   station: { 员工登录: "../station/employee-login.html", 扫码开工: "../station/scan-start.html", 工艺指导: "../station/work-instruction.html", 投料确认: "../station/feeding-confirmation.html", 过程记录: "../station/process-record.html", 工序报工: "../station/operation-report.html", 交接班: "../station/shift-handover.html" },
   materials: { 用料需求: "../materials/material-requirements.html", 领料申请: "../materials/picking-requests.html", 配送进度: "../materials/delivery-progress.html", 线边库存: "../materials/line-side-inventory.html", 投料记录: "../materials/feeding-records.html", 余料退回: "../materials/return-materials.html", 缺料预警: "../materials/shortage-alerts.html" },
   barcode: { 生产批次: "../barcode/production-batches.html", 产品序列号: "../barcode/product-serials.html", 物料标签: "../barcode/material-labels.html", 成品标签: "../barcode/finished-labels.html", 箱码托盘码: "../barcode/box-pallet-codes.html", 标签打印: "../barcode/label-printing.html", 补打申请: "../barcode/reprint-requests.html" },
-  quality: { 来料检验: "./incoming-inspection.html", 首件检验: "./first-article.html", 巡检任务: "./patrol-tasks.html", 过程检验: "./process-inspection.html", 成品检验: "./final-inspection.html", 不良记录: "./defect-records.html", 返工评审: "./rework-review.html", 质量放行: "./release.html" },
+  quality: { 来料检验: "./incoming-inspection.html", 首件检验: "./first-article.html", 巡检任务: "./patrol-tasks.html", 过程检验: "./process-inspection.html", 成品检验: "./final-inspection.html", 质量放行: "./release.html", 出货检验: "./outgoing-inspection.html", 不良记录: "./defect-records.html", 返工评审: "./rework-review.html" },
 };
 
 const pageDefinitions = {
@@ -80,6 +80,23 @@ const pageDefinitions = {
     primaryMessage: "模拟质量签核通过，已允许成品标签和入库准入",
     secondaryMessage: "模拟质量签核拦截，已冻结入库准入并转异常闭环",
     links: [["成品检验", "./final-inspection.html"], ["库存冻结", "../warehouse/inventory-freeze.html"], ["成品入库", "../warehouse/finished-goods-receipt.html"]],
+  },
+  oqc: {
+    titleSuffix: "OQC 出货检验工作台",
+    subtitle: "在 FQC 与质量放行之后，按客户要求、出货批次、标签版本、抽样计划和校准证据完成出货前复核，结论进入客户追溯报告",
+    user: "OQC 出货检验员",
+    metrics: ["OQC 批次", "待检/待复核", "出货放行", "拦截/让步"],
+    columns: ["OQC 单", "出货批次 / 客户", "订单 / 产品", "FQC 与放行依据", "抽样 / 标签", "出货结论", "客户报告与追溯", "责任人"],
+    tableTitle: "出货检验、客户要求与发货放行",
+    tableHint: "OQC 不替代 FQC 成品放行；仅在客户或业务配置启用时，对出货批次、标签和报告证据做最终复核",
+    cardTitle: "FQC、质量放行、OQC 与客户追溯边界",
+    simulationTitle: "模拟 OQC 检验台 / 客户标签复核回执",
+    simulationHint: "模拟外部 OQC 检验台、扫码枪或客户标签系统回传，页面只登记出货放行、拦截和客户报告引用",
+    primaryStatus: "OQC 已放行",
+    secondaryStatus: "出货已拦截",
+    primaryMessage: "模拟 OQC 合格，出货批次可进入客户追溯报告",
+    secondaryMessage: "模拟 OQC 拦截，已冻结出货批次并要求质量复核",
+    links: [["质量放行", "./release.html"], ["成品检验", "./final-inspection.html"], ["客户追溯报告", "../traceability/customer-report.html"]],
   },
   defect: {
     titleSuffix: "NCR 缺陷工作台",
@@ -142,9 +159,18 @@ const initialRows = {
     { id: "MRB-260620-03", order: "NCR-260620-05", dispatch: "RW-111", operation: "返工贴标", line: "Line-C", product: "客户 I 控制盒", sn: "BOX-07", batch: "LOT-BOXI-20260620-001", equipment: "PRINTER-PKG-02", materialBatch: "BOXI-L20260614", source: "FQC 标签复核 NCR-260620-05", parameter: "处置方式：返工贴标；路线：包装工位 -> 标签补打 -> FQC 复扫", status: "复检合格关闭", action: "补打标签已复扫合格", owner: "FQC 何洁 / 包装班长 李娟", time: "2026-06-20 16:20", result: "条码等级 B，箱码 BOX-07 追溯已更新", next: "恢复成品入库准入", risk: "客户标签版本 V1.4 已锁定" },
     { id: "MRB-260620-04", order: "NCR-260620-08", dispatch: "SCR-001", operation: "报废评审", line: "Line-A", product: "智能温控控制器 TCU-100", sn: "SN-TCU100-000077", batch: "LOT-TCU100-20260620-001", equipment: "DIP-WS-03", materialBatch: "SEN-L20260605", source: "工位自检 + IPQC 复判", parameter: "处置方式：待判定；疑似 PCB 铜皮损伤", status: "报废待审批", action: "等待质量经理与生产经理审批", owner: "MRB 评审员 林澈", time: "2026-06-20 16:34", result: "返工风险高，需确认是否报废", next: "审批后冻结 SN 并回写物料损耗", risk: "需核算责任工序和物料批次" },
   ],
+  oqc: [
+    { id: "OQC-20260620-001", order: "MO-202606-0002", dispatch: "SHP-GW240-0620A", operation: "出货检验", line: "OQC-A区", product: "工业网关 GW-240", sn: "SN-GW240-000001~000120", batch: "LOT-GW240-20260620-002", equipment: "FQC-BENCH-02 / OQC-SCAN-01", materialBatch: "BOXB-L20260614", source: "FQC-20260620-001 + QREL-20260620-001 + WMS 出货批次", parameter: "客户 B AQL II 抽 32；标签模板 TPL-FG-B-V3；校准证书 CERT-FQC-2606", status: "待检", action: "复核客户标签、FQC 放行和出货报告证据", owner: "OQC 沈清", time: "2026-06-20 17:10", result: "FQC 待签核，OQC 暂不放行", next: "FQC 和质量放行完成后生成客户追溯报告", risk: "FQC 未放行前禁止出货" },
+    { id: "OQC-20260620-002", order: "MO-202606-0001", dispatch: "SHP-TCU100-0620A", operation: "出货检验", line: "OQC-A区", product: "智能温控控制器 TCU-100", sn: "SN-TCU100-000001~000080", batch: "LOT-TCU100-20260620-001", equipment: "OQC-BENCH-01", materialBatch: "BOXA-L20260614", source: "FQC-20260620-002 + 质量放行签核 + 成品入库回执", parameter: "客户 A 抽 20；箱标等级 B 级以上；报告引用 CAL-TORQUE-030", status: "OQC 已放行", action: "允许发货，客户报告可引用", owner: "OQC 许宁", time: "2026-06-20 17:25", result: "OQC 合格，标签、箱码、SN 范围一致", next: "生成客户追溯报告并同步发货放行", risk: "无" },
+    { id: "OQC-20260620-003", order: "MO-202606-0011", dispatch: "SHP-BOXI-0620A", operation: "出货检验", line: "OQC-B区", product: "客户 I 控制盒", sn: "BOX-07 / SN-BOXI-000121~000140", batch: "LOT-BOXI-20260620-001", equipment: "OQC-SCAN-02", materialBatch: "BOXI-L20260614", source: "FQC 标签复核 + 包装箱码扫描", parameter: "客户 I 标签版本 V1.4；抽箱 5；BOX-07 条码等级 C", status: "出货已拦截", action: "冻结 BOX-07 出货并转返工贴标复核", owner: "OQC 何洁", time: "2026-06-20 17:40", result: "客户标签等级不满足 B 级要求", next: "返工贴标复扫合格后重新 OQC", risk: "单箱禁止发货，客户报告不得引用" },
+    { id: "OQC-20260620-004", order: "MO-202606-0008", dispatch: "SHP-MTR80-0620A", operation: "出货检验", line: "OQC-C区", product: "智能电表采集器 MTR-80", sn: "SN-MTR80-000001~000060", batch: "LOT-MTR80-20260620-001", equipment: "OQC-BENCH-03", materialBatch: "PWRIC-L20260602", source: "FQC-20260620-003 拦截 + MRB-260620-01", parameter: "客户出货检验启用；FQC 拦截未关闭；老化复检未完成", status: "待质量复核", action: "保持出货冻结，等待 MRB 与 FQC 解冻", owner: "质量工程师 林澈", time: "2026-06-20 17:48", result: "OQC 不接收未完成 FQC 放行的批次", next: "MRB 复检合格后重新生成 OQC 任务", risk: "禁止客户发货和报告生成" },
+  ],
 };
 
-Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.qualityDownstream || {});
+const masterQualityDownstreamRows = window.MES_MASTER_DATA?.demoRows?.qualityDownstream || {};
+Object.entries(masterQualityDownstreamRows).forEach(([key, value]) => {
+  initialRows[key] = key === "oqc" ? [...(initialRows[key] || []), ...value] : value;
+});
 
 if (!initialRows.release) {
   initialRows.release = initialRows.final.map((item, index) => ({
@@ -296,6 +322,7 @@ function renderTable() {
 function buildCells(item) {
   if (pageConfig.id === "process") return [item.id, twoLine(item.order, `${item.dispatch} · ${item.operation}`), twoLine(item.sn, item.batch), twoLine(item.source, item.equipment), item.parameter, pill(item.status), item.action, item.owner];
   if (pageConfig.id === "final") return [item.id, twoLine(item.order, item.product), twoLine(item.sn, item.batch), item.source, pill(item.status), item.next, item.action, item.owner];
+  if (pageConfig.id === "oqc") return [item.id, twoLine(item.dispatch, item.line), twoLine(item.order, item.product), item.source, twoLine(item.parameter.split("；")[0], item.parameter.split("；")[1] || item.batch), pill(item.status), item.next, item.owner];
   if (pageConfig.id === "defect") return [item.id, twoLine(item.sn, item.batch), twoLine(item.operation, item.equipment), item.parameter, `${item.materialBatch} / ${item.owner}`, pill(item.status), item.action, item.owner];
   return [item.id, item.order, item.parameter.split("；")[0], item.parameter.split("；")[1] || item.operation, item.owner, item.result, item.next, pill(item.status)];
 }
@@ -354,6 +381,7 @@ function buildActions(active) {
   const map = {
     process: "过程检验合格允许报工；超限时拦截工序报工并生成 NCR 或质量异常。",
     final: "FQC 放行后允许成品标签和入库；拦截时冻结标签并进入 NCR/MRB。",
+    oqc: "OQC 只处理客户出货前检验；必须先满足 FQC、质量放行、标签版本、冻结状态和校准证据要求。",
     defect: "NCR 支持隔离、复判、让步、报废和返工评审入口，结论回写 SN 履历。",
     rework: "MRB 下发返工路线、责任工位和复检要求，现场执行后回写追溯。",
   };
@@ -382,6 +410,7 @@ function getMaintenanceRecipe() {
   const map = {
     process: ["过程检验任务", "录入并复核过程结论", "放行/拦截后关闭", "IPQC 过程质量员 王珊"],
     final: ["FQC 检验任务", "复核 FQC 放行结论", "放行/隔离后关闭", "FQC 检验员 孟可"],
+    oqc: ["OQC 出货检验任务", "复核客户要求和出货证据", "放行/拦截后关闭", "OQC 出货检验员 沈清"],
     defect: ["NCR 不良记录", "复判并隔离/让步", "关闭 NCR 记录", "质量工程师 林澈"],
     rework: ["MRB 返工评审", "会签并下发返工路线", "复检验收关闭", "MRB 评审员 周妍"],
   };
@@ -510,6 +539,10 @@ function applyPrimaryOutcome(active) {
     active.action = "成品标签可打印 / WMS 可入库";
     active.result = "模拟 FQC 合格，标签和入库准入已放行";
     active.next = "成品标签打印并同步入库单";
+  } else if (pageConfig.id === "oqc") {
+    active.action = "出货批次可放行，客户报告可引用";
+    active.result = "模拟 OQC 合格，FQC、质量放行、标签和校准证据已复核";
+    active.next = "生成客户追溯报告并同步发货放行";
   } else if (pageConfig.id === "defect") {
     active.action = "复判关闭，保留追溯记录";
     active.result = "模拟复判确认已关闭 NCR";
@@ -530,6 +563,10 @@ function applySecondaryOutcome(active) {
     active.action = "冻结成品标签并转 MRB";
     active.result = "模拟 FQC 拦截，不允许入库";
     active.next = "进入返工评审并回写追溯";
+  } else if (pageConfig.id === "oqc") {
+    active.action = "冻结出货批次并转质量复核";
+    active.result = "模拟 OQC 拦截，客户标签、抽样或放行依据未通过";
+    active.next = "保持 WMS 出货冻结，复核后重新 OQC";
   } else if (pageConfig.id === "defect") {
     active.action = "隔离批次并转 MRB";
     active.result = "模拟缺陷复判不合格，影响范围已隔离";

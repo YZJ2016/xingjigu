@@ -60,12 +60,12 @@
           <article>
             <span>已确认</span>
             <strong id="metricConfirmed">0</strong>
-            <em>现场扫码回执已绑定批次</em>
+            <em>模拟现场扫码回执已绑定批次</em>
           </article>
           <article>
             <span>待投料回执</span>
             <strong id="metricWaiting">0</strong>
-            <em>等待工位终端或 PDA 回传</em>
+            <em>等待模拟工位终端或 PDA 回传</em>
           </article>
           <article>
             <span>拦截待处置</span>
@@ -120,8 +120,8 @@
             <section class="feeding-terminal-panel feeding-terminal-panel--primary">
               <div class="section-title">
                 <div>
-                  <h3>现场投料扫码回执监控</h3>
-                  <p>后台只接收模拟扫码枪、PDA、料盒标签和称重设备投料回传</p>
+                  <h3>模拟现场投料扫码回执监控</h3>
+                  <p>后台只做投料规则、模拟回执查看、批次校验、拦截补偿、核销和追溯记录，不替代真实投料或真实扣料</p>
                 </div>
                 <span id="terminalTitle">ASM-WS-03</span>
               </div>
@@ -147,9 +147,9 @@
                   </div>
                 </div>
                 <div class="feeding-terminal-actions">
-                  <button id="syncFeedBtn" type="button">同步投料回执</button>
+                  <button id="syncFeedBtn" type="button">同步模拟投料回执</button>
                   <button id="simulateScaleBtn" type="button">同步模拟称重回传</button>
-                  <button id="simulateBlockBtn" type="button">登记错料拦截</button>
+                  <button id="simulateBlockBtn" type="button">登记模拟错料拦截</button>
                   <button id="nextFeedBtn" type="button">切换投料任务</button>
                 </div>
               </div>
@@ -213,7 +213,7 @@
               <div class="section-title">
                 <div>
                   <h3>投料确认任务</h3>
-                  <p>选择任务后在左侧执行投料防错和批次核验</p>
+                  <p>选择任务后在左侧查看模拟投料回执、防错校验和批次核验</p>
                 </div>
               </div>
               <div id="feedingTaskList" class="feeding-task-list"></div>
@@ -266,9 +266,9 @@
                   </label>
                 </div>
                 <div class="action-grid dispatch-actions">
-                  <button id="detailConfirmBtn" type="button">同步确认回执</button>
+                  <button id="detailConfirmBtn" type="button">同步模拟确认回执</button>
                   <button id="varianceBtn" type="button">登记用料差异</button>
-                  <button id="detailBlockBtn" class="danger-action" type="button">登记投料拦截</button>
+                  <button id="detailBlockBtn" class="danger-action" type="button">登记模拟投料拦截</button>
                   <button id="releaseBlockBtn" type="button">处置后放行</button>
                 </div>
               </section>

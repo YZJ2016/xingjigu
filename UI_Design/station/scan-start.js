@@ -4,7 +4,7 @@ const modules = window.MES_NAV_MODULES || [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
   { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
   { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
+  { id: "station", title: "工位作业", layer: "现场回执", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
   { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
   { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
   { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
@@ -43,7 +43,7 @@ const initialTasks = [
     startTime: "",
     firstPiece: "待触发",
     gates: { identity: "通过", dispatch: "通过", material: "通过", equipment: "通过", quality: "待确认" },
-    notes: "员工已绑定工位，等待模拟扫码枪扫描派工单码后开工",
+    notes: "员工已绑定工位，等待模拟扫码枪回传派工单码后记录开工回执",
   },
   {
     id: "ST-002",
@@ -69,7 +69,7 @@ const initialTasks = [
     startTime: "08:12",
     firstPiece: "IPQC 巡检已配置",
     gates: { identity: "通过", dispatch: "通过", material: "通过", equipment: "通过", quality: "通过" },
-    notes: "已扫码开工并形成 DIP 工序 WIP",
+    notes: "已接收模拟扫码开工回执并形成 DIP 工序 WIP",
   },
   {
     id: "ST-005",
@@ -95,7 +95,7 @@ const initialTasks = [
     startTime: "",
     firstPiece: "测试治具待复核",
     gates: { identity: "通过", dispatch: "通过", material: "通过", equipment: "拦截", quality: "待确认" },
-    notes: "测试台点检未完成，禁止扫码开工",
+    notes: "测试台点检未完成，后台拦截模拟扫码开工回执",
   },
   {
     id: "ST-111",
@@ -121,14 +121,14 @@ const initialTasks = [
     startTime: "",
     firstPiece: "箱码复核待触发",
     gates: { identity: "待确认", dispatch: "通过", material: "通过", equipment: "通过", quality: "通过" },
-    notes: "接班人员未完成身份确认，等待模拟工牌登录后扫码",
+    notes: "接班人员未完成身份确认，等待模拟工牌/NFC 和扫码枪回执",
   },
 ];
 
 const initialHistory = [
-  { id: "SH-001", taskId: "ST-002", time: "08:12", action: "扫码开工", scanType: "模拟派工单码", scanCode: "D-002", station: "DIP-WS-01", equipment: "防错夹具 JIG-DIP-04", dispatchNo: "D-002", operation: "DIP 插件", owner: "钱佳", result: "开工成功，WIP 800 台进入 DIP 工序" },
-  { id: "SH-002", taskId: "ST-005", time: "08:36", action: "开工拦截", scanType: "模拟设备信号", scanCode: "TEST-A-01", station: "TEST-WS-01", equipment: "测试台 TEST-A-01", dispatchNo: "D-005", operation: "功能测试", owner: "设备员", result: "设备点检未完成，禁止开工" },
-  { id: "SH-003", taskId: "ST-004", time: "09:05", action: "准入校验", scanType: "模拟派工单码", scanCode: "D-004", station: "ASM-WS-03", equipment: "电批 EC-ASM-03", dispatchNo: "D-004", operation: "整机装配", owner: "赵杰", result: "身份、派工、物料、设备通过，等待开工扫码" },
+  { id: "SH-001", taskId: "ST-002", time: "08:12", action: "模拟扫码开工回执", scanType: "模拟派工单码", scanCode: "D-002", station: "DIP-WS-01", equipment: "防错夹具 JIG-DIP-04", dispatchNo: "D-002", operation: "DIP 插件", owner: "钱佳", result: "模拟开工回执通过，WIP 800 台进入 DIP 工序" },
+  { id: "SH-002", taskId: "ST-005", time: "08:36", action: "模拟开工拦截", scanType: "模拟设备信号", scanCode: "TEST-A-01", station: "TEST-WS-01", equipment: "测试台 TEST-A-01", dispatchNo: "D-005", operation: "功能测试", owner: "设备员", result: "设备点检未完成，后台拦截模拟开工回执" },
+  { id: "SH-003", taskId: "ST-004", time: "09:05", action: "模拟准入校验", scanType: "模拟派工单码", scanCode: "D-004", station: "ASM-WS-03", equipment: "电批 EC-ASM-03", dispatchNo: "D-004", operation: "整机装配", owner: "赵杰", result: "身份、派工、物料、设备通过，等待模拟扫码枪开工回执" },
 ];
 
 let tasks = structuredClone(initialTasks);
@@ -415,7 +415,7 @@ function renderLogs() {
         <em>${log.result}</em>
       </div>
     `).join("")
-    : `<div class="integration-item"><span>暂无</span><strong>${active.notes}</strong><em>等待现场扫码回执或设备信号</em></div>`;
+    : `<div class="integration-item"><span>暂无</span><strong>${active.notes}</strong><em>等待模拟现场扫码回执或设备信号</em></div>`;
 }
 
 function getExpectedCode(item) {
@@ -490,17 +490,17 @@ function updateTask(id, patch, message) {
 function startTask(task, message) {
   const invalid = Object.values(task.gates).some((gate) => gate === "拦截");
   if (invalid) {
-    showToast("存在准入拦截项，不能扫码开工");
+    showToast("存在准入拦截项，不能同步模拟开工回执");
     return;
   }
   if (task.gates.identity !== "通过" || task.gates.dispatch !== "通过") {
-    showToast("人员或派工未确认，不能扫码开工");
+    showToast("人员或派工未确认，不能同步模拟开工回执");
     return;
   }
   const gates = { ...task.gates, quality: task.gates.quality === "待确认" ? "待确认" : "通过" };
   const nextStatus = gates.quality === "待确认" ? "首件待确认" : "生产中";
   appendHistory(task, {
-    action: "扫码开工",
+    action: "模拟扫码开工回执",
     scanType: state.scanMode,
     scanCode: getExpectedCode(task),
     owner: task.operator,
@@ -513,7 +513,7 @@ function startTask(task, message) {
     inputQty: task.inputQty || task.planQty,
     gates,
     firstPiece: gates.quality === "待确认" ? "首件待确认，等待质量员判定" : task.firstPiece,
-    notes: "已同步现场开工回执，人员、设备、派工和条码已建立过程履历",
+    notes: "已同步模拟现场开工回执，人员、设备、派工和条码已建立过程履历",
   }, message);
 }
 
@@ -531,12 +531,12 @@ function blockTask(task, reason, owner) {
     owner,
     result: reason,
   });
-  updateTask(task.id, { status: "已拦截", gates, notes: `${reason}，责任人：${owner}` }, "已拦截当前扫码开工");
+  updateTask(task.id, { status: "已拦截", gates, notes: `${reason}，责任人：${owner}` }, "已拦截当前模拟扫码开工回执");
 }
 
 function releaseTask(task) {
   const gates = Object.fromEntries(Object.entries(task.gates).map(([key, value]) => [key, value === "拦截" ? "通过" : value]));
-  updateTask(task.id, { status: "待扫码", gates, notes: "拦截已解除，等待现场重新扫码回执" }, "开工拦截已解除");
+  updateTask(task.id, { status: "待扫码", gates, notes: "拦截已解除，等待模拟现场重新扫码回执" }, "开工拦截已解除");
 }
 
 function appendHistory(task, patch) {
@@ -625,24 +625,24 @@ function bindEvents() {
       blockTask(task, "条码不属于当前派工单", "班组长");
       return;
     }
-    startTask(task, "已同步现场扫码开工回执");
+    startTask(task, "已同步模拟现场扫码开工回执");
     $("#scanCodeInput").value = "";
   });
   $("#simulateDeviceBtn").addEventListener("click", () => {
     const task = getActiveTask();
-    appendHistory(task, { action: "设备启动信号", scanType: "模拟设备信号", scanCode: task.equipment, owner: task.operator, result: "设备启动信号已绑定当前派工单" });
+    appendHistory(task, { action: "模拟设备就绪信号", scanType: "模拟设备信号", scanCode: task.equipment, owner: task.operator, result: "模拟设备就绪信号已绑定当前派工单，后台未控制设备启停" });
     window.MES_BUSINESS_FLOW?.applyStationAction?.(task.orderId, "deviceStartSignal", {
       dispatchId: task.dispatchNo,
       station: task.station,
       equipment: task.equipment,
       status: "设备信号已绑定",
       owner: task.operator,
-      result: "模拟设备启动信号已绑定当前派工单",
+      result: "模拟设备就绪信号已绑定当前派工单，后台未控制设备启停",
     });
-    recordLog(task.id, "已同步现场设备启动信号", "设备信号与开工记录已关联");
+    recordLog(task.id, "已同步模拟现场设备就绪信号", "设备信号与开工记录已关联，后台未控制设备启停");
     saveState();
     renderAll();
-    showToast("设备启动信号已同步");
+    showToast("模拟设备就绪信号已同步");
   });
   $("#simulateBlockBtn").addEventListener("click", () => blockTask(getActiveTask(), state.blockReason, state.owner));
   $("#switchTaskBtn").addEventListener("click", () => {
@@ -653,7 +653,7 @@ function bindEvents() {
     showToast(`已切换到 ${getActiveTask().dispatchNo}`);
   });
   $("#refreshScanBtn").addEventListener("click", () => {
-    recordLog(getActiveTask().id, "已刷新扫码开工监控", "已重新读取现场扫码回执和准入状态");
+    recordLog(getActiveTask().id, "已刷新扫码开工监控", "已重新读取模拟现场扫码回执和准入状态");
     saveState();
     renderLogs();
     showToast("扫码开工监控已刷新");
@@ -688,7 +688,7 @@ function bindEvents() {
     renderLogs();
     showToast("扫码准入校验已重新执行");
   });
-  $("#detailStartBtn").addEventListener("click", () => startTask(getActiveTask(), "已从详情同步开工回执"));
+  $("#detailStartBtn").addEventListener("click", () => startTask(getActiveTask(), "已从详情同步模拟开工回执"));
   $("#firstPieceBtn").addEventListener("click", () => {
     const task = getActiveTask();
     updateTask(task.id, { status: "首件待确认", firstPiece: "首件待确认，等待质量员判定", gates: { ...task.gates, quality: "待确认" } }, "已转入首件确认");
@@ -699,7 +699,7 @@ function bindEvents() {
     tasks = tasks.map((item) => {
       if (item.status !== "已拦截") return item;
       const gates = Object.fromEntries(Object.entries(item.gates).map(([key]) => [key, "通过"]));
-      return { ...item, status: "待扫码", gates, notes: "已处理准入异常，允许现场重新扫码" };
+      return { ...item, status: "待扫码", gates, notes: "已处理准入异常，允许模拟现场重新扫码回执" };
     });
     recordLog(state.activeTaskId, "已批量解除准入拦截", "拦截项已转为通过");
     saveState();

@@ -21,6 +21,8 @@ const modules = window.MES_NAV_MODULES || [
 
 const equipmentPages = {
   设备状态: "equipment-status.html",
+  工装夹具: "tooling-fixtures.html",
+  量检具校准: "calibration.html",
   点检计划: "inspection-plan.html",
   点检任务: "inspection-plan.html",
   保养计划: "maintenance-plan.html",
@@ -108,6 +110,28 @@ const pageDefinitions = {
     simulationTitle: "模拟 OEE 日报重算",
     simulationHint: "模拟状态日志、产量和质量结果聚合，不代表后台直接修改设备实绩",
   },
+  tooling: {
+    subtitle: "设备员和工艺员维护工装、夹具、测试治具台账，按绑定工序、寿命、点检和校准状态影响开工准入",
+    user: "工装管理员",
+    metrics: ["工装台账", "可用", "寿命/校准风险", "准入联动"],
+    columns: ["工装 / 编号", "类型 / 绑定工序", "工位 / 工单", "状态来源", "寿命 / 校准", "当前状态", "开工准入影响", "责任人"],
+    tableTitle: "工装夹具与测试治具台账",
+    tableHint: "后台维护工装状态、寿命计数、绑定工序和准入规则，现场扫码装夹只作为模拟回执记录",
+    cardTitle: "工装状态、寿命和准入闭环",
+    simulationTitle: "模拟现场扫码装夹 / 治具计数回执",
+    simulationHint: "模拟工位终端、扫码枪或测试治具回传，不表示后台直接执行装夹或测试",
+  },
+  calibration: {
+    subtitle: "质量和设备人员管理检具、量具、测试台校准状态、有效期、证书证据和检验引用，过期时拦截开工或质量判定",
+    user: "计量校准管理员",
+    metrics: ["量检具", "校准有效", "到期/过期", "质量引用"],
+    columns: ["量检具 / 编号", "类型 / 使用范围", "关联工序", "证据来源", "有效期 / 证书", "当前状态", "检验与准入影响", "责任人"],
+    tableTitle: "量检具、检具与测试台校准状态",
+    tableHint: "校准证据可被首件、过程检验、FQC、OQC 和开工准入引用；后台只登记模拟校准回执和证据",
+    cardTitle: "校准证据、有效期和质量引用",
+    simulationTitle: "模拟校准证书 / 计量系统回执",
+    simulationHint: "模拟外部计量系统、校准机构或检验台回传，不替代真实校准实验室作业",
+  },
 };
 
 const initialRows = {
@@ -153,9 +177,24 @@ const initialRows = {
     { id: "OEE-240620-TESTB2", equipment: "功能测试台 B2", equipmentNo: "TEST-B2", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "测试台 API + FQC 结果", status: "异常下钻", statusDetail: "可用率 74.8% / 性能率 86.0% / 质量率 97.2%", duration: "计划 390 / 停机 72 分钟", oee: 62.5, downtime: 72, owner: "维修员 吴启", risk: "通信故障拉低可用率", next: "维修工单闭环后重算", trace: "MR-240620-03 / DT-240620-02" },
     { id: "OEE-240620-AGING01", equipment: "老化房 1", equipmentNo: "AGING-01", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "SCADA + 通道占用", status: "瓶颈资源", statusDetail: "可用率 96.8% / 性能率 92.0% / 质量率 99.0%", duration: "计划 480 / 停机 12 分钟", oee: 88.2, downtime: 12, owner: "设备主管 袁立", risk: "通道占用高，影响排程", next: "APS 瓶颈预警", trace: "通道履历 / 老化批次" },
   ],
+  tooling: [
+    { id: "TOOL-SMT-FDR-12", equipment: "SMT 供料器 12 位", equipmentNo: "FDR-12", line: "Line-A", station: "SMT-WS-01", order: "MO-202606-0001", dispatch: "D-001", source: "工装台账 + 模拟扫码枪绑定", status: "待点检", statusDetail: "工装 / SMT 贴片 / 寿命 18600/20000 次", duration: "校准有效至 2026-07-15", oee: 0, downtime: 0, owner: "设备员 周诚", risk: "班前点检未完成将拦截 SMT 开工准入", next: "完成点检后允许 D-001 开工", trace: "tooling_asset TOOL-SMT-FDR-12 / start_check gate-tooling" },
+    { id: "FIX-DIP-TCU-A02", equipment: "TCU DIP 定位夹具 A02", equipmentNo: "FIX-A02", line: "Line-A", station: "DIP-WS-02", order: "MO-202606-0001", dispatch: "D-002", source: "工艺路线 RT-TCU-100-V2.6 + 工装台账", status: "可用", statusDetail: "夹具 / DIP 插件 / 寿命 8200/15000 次", duration: "校准有效至 2026-08-10", oee: 0, downtime: 0, owner: "工艺员 林澈", risk: "绑定工序、版本和工位一致", next: "开工检查可引用夹具版本和签收记录", trace: "routing RT-TCU-100-V2.6 / fixture_binding" },
+    { id: "JIG-ICT-GW240-02", equipment: "GW-240 ICT 测试治具 02", equipmentNo: "ICT-JIG-02", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "测试台 API + 治具计数器", status: "校准到期", statusDetail: "测试治具 / 功能测试 / 寿命 29600/30000 次", duration: "校准到期 2026-06-20", oee: 0, downtime: 0, owner: "计量员 许宁", risk: "校准到期，阻止新批次功能测试开工", next: "登记模拟校准回执或更换备用治具", trace: "calibration_due CAL-ICT-02 / NCR-240620-07" },
+    { id: "FIX-ASM-HMI-01", equipment: "HMI 外壳压合夹具 01", equipmentNo: "ASM-FIX-01", line: "Line-C", station: "ASM-C-01", order: "MO-202606-0012", dispatch: "D-123", source: "工装台账 + 首件检验反馈", status: "维修中", statusDetail: "夹具 / 装配压合 / 寿命 12400/18000 次", duration: "维修预计 14:30 完成", oee: 0, downtime: 25, owner: "维修员 梁溪", risk: "压合定位偏差，批量装配保持锁定", next: "维修验收和首件复验通过后解锁", trace: "MRB-260620-02 / fixture_repair" },
+  ],
+  calibration: [
+    { id: "CAL-TORQUE-030", equipment: "数显扭矩扳手 0-30N", equipmentNo: "GAUGE-TQ-030", line: "Line-C", station: "ASM-C-01", order: "MO-202606-0012", dispatch: "D-123", source: "计量台账 + 校准证书 CERT-TQ-2605", status: "校准有效", statusDetail: "量具 / 装配扭矩 / 证书 CERT-TQ-2605", duration: "有效期至 2026-11-30", oee: 0, downtime: 0, owner: "计量员 许宁", risk: "首件和巡检可引用校准证据", next: "扭矩记录写入过程检验履历", trace: "calibration_record CERT-TQ-2605" },
+    { id: "CAL-CALIPER-150", equipment: "数显卡尺 0-150mm", equipmentNo: "GAUGE-DC-150", line: "IQC-A区", station: "IQC-A", order: "ASN-CASE-TOP-L20260612", dispatch: "IQC-0004", source: "外部校准机构回执 CERT-DC-2604", status: "即将到期", statusDetail: "量具 / IQC 尺寸抽检 / 证书 CERT-DC-2604", duration: "有效期至 2026-06-25", oee: 0, downtime: 0, owner: "IQC 孟可", risk: "到期前未复校将影响 IQC 和首件尺寸判定", next: "排入 06-24 校准计划", trace: "incoming_inspection IQC-240620-09" },
+    { id: "CAL-FQC-BENCH-02", equipment: "FQC 功能检验台 02", equipmentNo: "FQC-BENCH-02", line: "Line-B", station: "FQC-B", order: "MO-202606-0002", dispatch: "PKG-021", source: "FQC 检验台自检 + 计量证据", status: "校准有效", statusDetail: "测试台 / FQC 与 OQC 引用 / 证书 CERT-FQC-2606", duration: "有效期至 2026-09-18", oee: 0, downtime: 0, owner: "FQC 孟可", risk: "FQC 放行和 OQC 客户报告可引用", next: "出货检验报告引用证书号", trace: "FQC-20260620-001 / OQC-20260620-001" },
+    { id: "CAL-AGING-TEMP-01", equipment: "老化房温度探头标准器", equipmentNo: "STD-TEMP-01", line: "Line-C", station: "AGING-C", order: "MO-202606-0003", dispatch: "D-033", source: "SCADA 温控偏差 + 校准计划", status: "校准过期", statusDetail: "标准器 / 老化温控校准 / 证书 CERT-TEMP-2506", duration: "有效期已过 2026-06-18", oee: 0, downtime: 60, owner: "设备员 黄宁", risk: "过期标准器不可用于老化房恢复验证", next: "生成校准异常并保持老化进站拦截", trace: "LS-240620-03 / process_hold AGING-01" },
+  ],
 };
 
-Object.assign(initialRows, window.MES_MASTER_DATA?.demoRows?.equipment || {});
+const masterEquipmentRows = window.MES_MASTER_DATA?.demoRows?.equipment || {};
+Object.entries(masterEquipmentRows).forEach(([key, value]) => {
+  initialRows[key] = /^(tooling|calibration)$/.test(key) ? [...(initialRows[key] || []), ...value] : value;
+});
 
 let rows = structuredClone(initialRows[pageConfig.id]);
 let state = { activeId: rows[0]?.id || "", search: "", status: "all", line: "all", detailOpen: true };
@@ -347,6 +386,8 @@ function renderBusinessFocus() {
     downtime: ["停机归因矩阵", "按 PLC 停机事实、班组补录和维修结果沉淀 OEE 扣减依据"],
     spares: ["备件领用与安装追溯", "按维修/保养工单、WMS 出库、安装设备和成本归集闭环"],
     efficiency: ["OEE 三分项", "按可用率、性能率、质量率下钻停机、维修和质量原因"],
+    tooling: ["工装夹具准入矩阵", "按工装状态、绑定工序、寿命计数和校准风险判断派工开工准入"],
+    calibration: ["量检具校准有效性", "按证书、有效期、使用范围和质量引用判断检验结果是否可采信"],
   };
   const [title, hint] = modeMap[pageConfig.id] || modeMap.status;
   focus.innerHTML = `
@@ -447,6 +488,12 @@ function buildCells(item) {
   if (pageConfig.id === "spares") {
     return [item.id, item.source, twoLine(item.statusDetail, item.trace), item.duration, pill(item.status), item.equipment, item.risk, item.owner];
   }
+  if (pageConfig.id === "tooling") {
+    return [twoLine(item.equipment, item.equipmentNo), twoLine(item.statusDetail.split(" / ")[0], item.statusDetail.split(" / ")[1] || item.station), twoLine(item.station, `${item.order} / ${item.dispatch}`), item.source, twoLine(item.statusDetail.split(" / ")[2] || "寿命待维护", item.duration), pill(item.status), item.risk, item.owner];
+  }
+  if (pageConfig.id === "calibration") {
+    return [twoLine(item.equipment, item.equipmentNo), twoLine(item.statusDetail.split(" / ")[0], item.statusDetail.split(" / ")[1] || item.station), twoLine(item.station, `${item.order} / ${item.dispatch}`), item.source, twoLine(item.duration, item.statusDetail.split(" / ")[2] || item.trace), pill(item.status), item.risk, item.owner];
+  }
   return [twoLine(item.equipment, item.equipmentNo), `${item.line} / ${item.station}`, item.duration, item.source, item.statusDetail, `${item.oee}%`, item.next, item.owner];
 }
 
@@ -484,6 +531,8 @@ function getBoundaryText() {
   if (pageConfig.id === "status" || pageConfig.id === "downtime" || pageConfig.id === "efficiency") return "模拟 PLC/SCADA/设备 API 回传状态，后台不直接控制设备";
   if (pageConfig.id === "inspection") return "模拟 PDA、扫码枪、工牌/NFC 点检回执，后台不替代现场点检";
   if (pageConfig.id === "spares") return "模拟 WMS、PDA、扫码枪出库和安装回执，后台不移动实物备件";
+  if (pageConfig.id === "tooling") return "模拟工位终端、扫码枪或测试治具计数回执，后台不替代现场装夹和测试";
+  if (pageConfig.id === "calibration") return "模拟计量系统、校准机构或检验台回执，后台不替代真实校准";
   return "模拟维修移动端或 HMI 回执，后台不直接执行维修保养动作";
 }
 
@@ -555,6 +604,8 @@ function getMaintenanceRecipe() {
     downtime: ["停机归因补录", "复核 OEE 扣减口径", "关闭停机复盘", "停机分析员 周诚"],
     spares: ["备件领用申请", "审批并发起 WMS 出库", "登记安装并关闭", "备件管理员 林蔚"],
     efficiency: ["TPM 改善项", "分派责任并复核 OEE", "关闭改善验收", "设备效率分析员 袁立"],
+    tooling: ["工装夹具台账变更", "复核绑定工序和寿命状态", "验收工装准入", "工装管理员 周诚"],
+    calibration: ["量检具校准任务", "登记模拟校准证据", "关闭校准准入风险", "计量校准管理员 许宁"],
   };
   const [create, process, close, owner] = map[pageConfig.id] || map.repair;
   return { create, process, close, owner };
@@ -660,6 +711,8 @@ function updateActiveStatus(status, message) {
   if (pageConfig.id === "downtime" && status.includes("归因")) active.next = "进入 OEE 和复盘";
   if (pageConfig.id === "spares" && status.includes("出库")) active.next = "绑定安装记录并归集成本";
   if (pageConfig.id === "efficiency" && status.includes("重算")) active.next = "刷新 OEE 三分项和改善建议";
+  if (pageConfig.id === "tooling" && status.includes("准入复核通过")) active.next = "开工准入读取工装版本、寿命和绑定工序";
+  if (pageConfig.id === "calibration" && status.includes("校准有效")) active.next = "首件、过程检验、FQC 和 OQC 可引用校准证据";
   window.MES_BUSINESS_FLOW?.applyEquipmentAction?.(active, /验收|完成|归因|重算/.test(status) ? "equipmentClose" : "equipmentAdvance", {
     status,
     owner: active.owner,
@@ -684,6 +737,8 @@ function simulateStatus() {
     downtime: "已归因",
     spares: "已出库",
     efficiency: "已重算",
+    tooling: "准入复核通过",
+    calibration: "校准有效",
   };
   updateActiveStatus(statusMap[pageConfig.id], `${getActive().id} 已接收${getDefinition().simulationTitle}${value ? `：${value}` : ""}`);
   showToast("模拟回执已记录");

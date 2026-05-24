@@ -4,7 +4,7 @@ const modules = window.MES_NAV_MODULES || [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
   { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
   { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
+  { id: "station", title: "工位作业", layer: "现场回执", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
   { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
   { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
   { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
@@ -155,10 +155,10 @@ const initialFeedings = [
 ];
 
 const initialHistory = [
-  { id: "FH-001", feedingId: "FD-002-A", time: "08:18", action: "投料确认", scanType: "模拟批次标签", scanCode: "CN1-L20260605", material: "5P 接线端子 CN1", batch: "CN1-L20260605", station: "DIP-WS-01", dispatchNo: "D-002", qty: "800 PCS", result: "批次、IQC、BOM 和线边库位校验通过，已绑定投料记录" },
-  { id: "FH-002", feedingId: "FD-021-A", time: "09:12", action: "投料拦截", scanType: "模拟批次标签", scanCode: "RES10K-L20260528", material: "10K 电阻卷料", batch: "RES10K-L20260528", station: "SMT-WS-02", dispatchNo: "D-021", qty: "0 PCS", result: "扫描批次与排程锁定批次不一致，禁止投料" },
+  { id: "FH-001", feedingId: "FD-002-A", time: "08:18", action: "模拟投料确认回执", scanType: "模拟批次标签", scanCode: "CN1-L20260605", material: "5P 接线端子 CN1", batch: "CN1-L20260605", station: "DIP-WS-01", dispatchNo: "D-002", qty: "800 PCS", result: "批次、IQC、BOM 和线边库位校验通过，已绑定投料记录" },
+  { id: "FH-002", feedingId: "FD-021-A", time: "09:12", action: "模拟投料拦截", scanType: "模拟批次标签", scanCode: "RES10K-L20260528", material: "10K 电阻卷料", batch: "RES10K-L20260528", station: "SMT-WS-02", dispatchNo: "D-021", qty: "0 PCS", result: "模拟扫描批次与排程锁定批次不一致，后台拦截投料回执" },
   { id: "FH-003", feedingId: "FD-111-A", time: "09:46", action: "差异登记", scanType: "模拟余料标签", scanCode: "BOX-PACK-J-003", material: "客户 J 包装盒", batch: "BOXJ-L20260614", station: "PACK-WS-02", dispatchNo: "D-111", qty: "130 PCS", result: "领用多 10 PCS，等待余料退回核销" },
-  { id: "FH-004", feedingId: "FD-004-A", time: "10:05", action: "待投料", scanType: "模拟物料标签", scanCode: "CASE-A-L20260610", material: "外壳上盖", batch: "CASE-A-L20260610", station: "ASM-WS-03", dispatchNo: "D-004", qty: "0 PCS", result: "等待现场扫码枪/PDA 回传投料确认" },
+  { id: "FH-004", feedingId: "FD-004-A", time: "10:05", action: "待模拟投料回执", scanType: "模拟物料标签", scanCode: "CASE-A-L20260610", material: "外壳上盖", batch: "CASE-A-L20260610", station: "ASM-WS-03", dispatchNo: "D-004", qty: "0 PCS", result: "等待模拟现场扫码枪/PDA 回传投料确认" },
 ];
 
 let feedings = structuredClone(initialFeedings);
@@ -430,7 +430,7 @@ function renderDetail() {
   const gates = [
     ["派工匹配", item.gates.dispatch, `${item.dispatchNo} 属于 ${item.station}`],
     ["BOM 物料", item.gates.bom, `${item.materialNo} 是当前工序需求物料`],
-    ["批次防错", item.gates.batch, item.scannedBatch || "等待现场扫码回传"],
+    ["批次防错", item.gates.batch, item.scannedBatch || "等待模拟现场扫码回传"],
     ["质量放行", item.gates.quality, `${item.iqc}，${item.freeze}`],
     ["线边签收", item.gates.location, `${item.sideLocation} · ${item.picked}`],
     ["用量核销", item.gates.usage, `${item.feedQty}/${item.demandQty} ${item.unit}`],
@@ -457,7 +457,7 @@ function renderLogs() {
         <em>${log.result}</em>
       </div>
     `).join("")
-    : `<div class="integration-item"><span>暂无</span><strong>${active.variance || "等待现场扫码枪/PDA 投料回传"}</strong><em>后台记录校验、拦截、放行和核销结果</em></div>`;
+    : `<div class="integration-item"><span>暂无</span><strong>${active.variance || "等待模拟现场扫码枪/PDA 投料回传"}</strong><em>后台记录校验、拦截、放行和核销结果</em></div>`;
 }
 
 function getExpectedCode(item) {
@@ -555,7 +555,7 @@ function confirmFeeding(item, message) {
   }
   const gates = Object.fromEntries(Object.keys(item.gates).map((key) => [key, "通过"]));
   appendHistory(item, {
-    action: "投料确认",
+    action: "模拟投料确认回执",
     scanType: state.feedMode,
     scanCode: batch,
     batch: state.feedMode === "模拟批次标签" ? batch : item.lockedBatch,
@@ -582,7 +582,7 @@ function blockFeeding(item, reason, owner) {
   else gates.usage = "拦截";
   const scanCode = $("#feedCodeInput").value.trim() || getExpectedCode(item);
   appendHistory(item, {
-    action: "投料拦截",
+    action: "模拟投料拦截",
     scanType: state.feedMode,
     scanCode,
     batch: state.feedMode === "模拟批次标签" ? scanCode : item.scannedBatch || item.lockedBatch,
@@ -623,12 +623,12 @@ function releaseFeeding(item) {
     scanType: "后台处置",
     scanCode: item.scannedBatch || item.lockedBatch,
     qty: `${item.feedQty} ${item.unit}`,
-    result: "异常已处置，允许现场重新扫码或继续核销",
+    result: "异常已处置，允许模拟现场重新扫码或继续核销",
   });
   updateFeeding(item.id, {
     status: item.status === "差异待核销" ? "已确认" : "待投料",
     gates,
-    variance: item.status === "差异待核销" ? "差异已核销" : "拦截已解除，等待现场重新扫码",
+    variance: item.status === "差异待核销" ? "差异已核销" : "拦截已解除，等待模拟现场重新扫码",
     materials: item.materials.map((material) => material.status === "拦截" ? { ...material, status: "待确认" } : material),
   }, "投料异常已处置放行");
 }
@@ -711,7 +711,7 @@ function bindEvents() {
       showToast(`已切换为${state.feedMode}`);
     });
   });
-  $("#syncFeedBtn").addEventListener("click", () => confirmFeeding(getActiveFeeding(), "已同步现场投料确认回执"));
+  $("#syncFeedBtn").addEventListener("click", () => confirmFeeding(getActiveFeeding(), "已同步模拟现场投料确认回执"));
   $("#simulateScaleBtn").addEventListener("click", () => {
     const item = getActiveFeeding();
     appendHistory(item, { action: "模拟称重回传", scanType: "模拟电子秤信号", scanCode: item.containerCode, qty: `${item.demandQty} ${item.unit}`, result: "模拟称重结果已绑定当前派工单和物料批次" });
@@ -729,7 +729,7 @@ function bindEvents() {
     showToast(`已切换到 ${getActiveFeeding().materialName}`);
   });
   $("#refreshFeedingBtn").addEventListener("click", () => {
-    recordLog(getActiveFeeding().id, "已刷新投料监控", "已重新读取现场扫码、线边库和质量状态");
+    recordLog(getActiveFeeding().id, "已刷新投料监控", "已重新读取模拟现场扫码、线边库和质量状态");
     saveState();
     renderLogs();
     showToast("投料监控已刷新");
@@ -752,7 +752,7 @@ function bindEvents() {
     renderLogs();
     showToast("投料校验已重新执行");
   });
-  $("#detailConfirmBtn").addEventListener("click", () => confirmFeeding(getActiveFeeding(), "已从详情同步投料确认回执"));
+  $("#detailConfirmBtn").addEventListener("click", () => confirmFeeding(getActiveFeeding(), "已从详情同步模拟投料确认回执"));
   $("#varianceBtn").addEventListener("click", () => markVariance(getActiveFeeding()));
   $("#detailBlockBtn").addEventListener("click", () => blockFeeding(getActiveFeeding(), state.blockReason, state.owner));
   $("#releaseBlockBtn").addEventListener("click", () => releaseFeeding(getActiveFeeding()));
@@ -764,11 +764,11 @@ function bindEvents() {
         ...item,
         status: "待投料",
         gates,
-        variance: "批量处置完成，等待现场重新扫码",
+        variance: "批量处置完成，等待模拟现场重新扫码",
         materials: item.materials.map((material) => material.status === "拦截" ? { ...material, status: "待确认" } : material),
       };
     });
-    recordLog(state.activeFeedingId, "已批量解除物料拦截", "拦截项已转为通过，等待现场重新扫码");
+    recordLog(state.activeFeedingId, "已批量解除物料拦截", "拦截项已转为通过，等待模拟现场重新扫码");
     saveState();
     renderAll();
     showToast("已批量解除物料拦截");

@@ -44,7 +44,7 @@
             <h1>工序报工校验与实绩回传</h1>
           </div>
           <div class="topbar-actions">
-            <button id="batchSubmitBtn" class="primary-action" type="button">批量提交待报工</button>
+            <button id="batchSubmitBtn" class="primary-action" type="button">批量同步模拟报工回执</button>
             <button id="resetReportBtn" class="secondary-action" type="button">重置报工演示</button>
             <a class="secondary-link" href="./process-record.html">过程记录</a>
             <a class="secondary-link" href="./feeding-confirmation.html">投料确认</a>
@@ -65,7 +65,7 @@
           <article>
             <span>待报工</span>
             <strong id="metricWaiting">0</strong>
-            <em>现场完成后待提交</em>
+            <em>现场完成后待模拟回执</em>
           </article>
           <article>
             <span>校验拦截</span>
@@ -128,7 +128,8 @@
               <div class="report-focus">
                 <section class="report-terminal-panel">
                   <div class="section-title">
-                    <h3>现场报工回执监控</h3>
+                    <h3>模拟现场报工回执监控</h3>
+                    <p>后台只做模拟 HMI/PDA 报工回执查看、数量校验、接口补偿和追溯归档，不替代真实报工或 ERP 入账</p>
                     <span id="terminalTitle">ASM-WS-03</span>
                   </div>
                   <div class="report-terminal">
@@ -152,9 +153,9 @@
                       </div>
                     </div>
                     <div class="report-terminal-actions">
-                      <button id="syncReportBtn" type="button">同步报工回执</button>
-                      <button id="simulateErpBtn" type="button">同步 ERP 回传</button>
-                      <button id="simulateBlockBtn" type="button">登记报工拦截</button>
+                      <button id="syncReportBtn" type="button">同步模拟报工回执</button>
+                      <button id="simulateErpBtn" type="button">同步模拟 ERP 回传</button>
+                      <button id="simulateBlockBtn" type="button">登记模拟报工拦截</button>
                       <button id="nextReportBtn" type="button">切换报工任务</button>
                     </div>
                   </div>
@@ -259,9 +260,9 @@
                 </label>
               </div>
               <div class="action-grid dispatch-actions">
-                <button id="detailSubmitBtn" type="button">同步报工回执</button>
-                <button id="erpRetryBtn" type="button">重试 ERP 回传</button>
-                <button id="detailBlockBtn" class="danger-action" type="button">登记报工拦截</button>
+                  <button id="detailSubmitBtn" type="button">同步模拟报工回执</button>
+                  <button id="erpRetryBtn" type="button">重试模拟 ERP 回传</button>
+                  <button id="detailBlockBtn" class="danger-action" type="button">登记模拟报工拦截</button>
                 <button id="releaseBlockBtn" type="button">处置后放行</button>
               </div>
             </section>

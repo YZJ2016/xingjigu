@@ -42,7 +42,7 @@
             <h1>人员到岗与工位绑定监控</h1>
           </div>
           <div class="topbar-actions">
-            <button id="batchLoginBtn" class="primary-action" type="button">同步推荐绑定回执</button>
+            <button id="batchLoginBtn" class="primary-action" type="button">批量同步模拟绑定回执</button>
             <button id="resetLoginBtn" class="secondary-action" type="button">重置身份演示</button>
             <a class="secondary-link" href="../dispatch/start-check.html">开工检查</a>
             <a class="secondary-link" href="../index.html">返回首页</a>
@@ -117,7 +117,7 @@
               <div class="section-title">
                 <div>
                   <h3>现场身份回执监控</h3>
-                  <p>后台只接收模拟工位终端、工牌、NFC 或设备账号身份回传</p>
+                  <p>后台只做准入配置、查看模拟回执、校验拦截、异常补偿和履历追溯，不替代现场真实刷卡、NFC 或设备账号登录</p>
                 </div>
                 <span id="terminalStationText">ASM-WS-03</span>
               </div>
@@ -145,8 +145,8 @@
                 <div class="terminal-actions terminal-actions--grouped">
                   <div>
                     <span>现场回执</span>
-                    <button id="scanLoginBtn" type="button">同步身份绑定回执</button>
-                    <button id="logoutActiveBtn" type="button">登记退出回执</button>
+                    <button id="scanLoginBtn" type="button">同步模拟身份绑定回执</button>
+                    <button id="logoutActiveBtn" type="button">登记模拟退出回执</button>
                   </div>
                   <div>
                     <span>工位视角</span>
@@ -154,7 +154,7 @@
                   </div>
                   <div>
                     <span>异常补偿</span>
-                    <button id="faultExitBtn" type="button">登记设备故障代退出</button>
+                    <button id="faultExitBtn" type="button">登记模拟设备故障代退出</button>
                     <button id="makeupRecordBtn" type="button">补录上下工位</button>
                   </div>
                 </div>
@@ -289,8 +289,8 @@
                   </label>
                 </div>
                 <div class="action-grid dispatch-actions">
-                  <button id="loginBtn" type="button">同步绑定回执</button>
-                  <button id="logoutBtn" type="button">登记退出回执</button>
+                  <button id="loginBtn" type="button">同步模拟绑定回执</button>
+                  <button id="logoutBtn" type="button">登记模拟退出回执</button>
                   <button id="qualifyBtn" type="button">发起资质复核通过</button>
                   <button id="replaceBtn" type="button">登记换人到岗</button>
                   <button id="handoverBtn" type="button">记录交接</button>

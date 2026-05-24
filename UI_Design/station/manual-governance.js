@@ -45,7 +45,7 @@
         <div>
           <span>工位作业复核</span>
           <h3>${pageTitle}</h3>
-          <p>后台只维护补录原因、复核结论、解除拦截申请、履历和转异常记录；扫码、投料、报工、刷卡/NFC、PLC/设备信号均为模拟外部回执。</p>
+          <p>后台只维护配置、回执查看、校验拦截、补偿复核、履历和追溯记录；扫码、投料、报工、刷卡/NFC、PDA、HMI、PLC/设备信号均为模拟外部回执，不替代现场真实动作。</p>
         </div>
         <button type="button" data-station-manual-toggle>${state.open ? "关闭" : "打开"}</button>
       </div>

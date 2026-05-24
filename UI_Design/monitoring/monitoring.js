@@ -84,11 +84,11 @@ const pageDefinitions = {
     simulationHint: "模拟外部报警信号，不表示后台直接制造或关闭现场报警",
   },
   downtime: {
-    subtitle: "停机分析员按 PLC 状态日志、班组补录和维修结果做原因归因，驱动 OEE 扣减、复盘和计划重排",
+    subtitle: "停机分析员按 PLC 状态日志、班组补录和维修结果做停机归因，驱动 OEE 扣减、复盘和计划重排",
     user: "停机分析员",
     metrics: ["停机笔数", "待归因", "影响分钟", "已复核"],
     columns: ["停机事件", "设备 / 工单", "来源", "开始 / 时长", "原因代码", "状态", "OEE / 排程影响", "责任人"],
-    tableTitle: "停机原因归因",
+    tableTitle: "停机归因记录",
     tableHint: "停机事实先来自设备状态日志，原因代码经班组和设备责任人复核后进入 OEE 与改善",
     cardTitle: "停机事实、原因和改善",
     simulationTitle: "模拟 PLC / 班组 HMI 停机回执",

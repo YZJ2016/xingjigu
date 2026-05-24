@@ -4,7 +4,7 @@ const modules = window.MES_NAV_MODULES || [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
   { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
   { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
+  { id: "station", title: "工位作业", layer: "现场回执", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
   { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
   { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
   { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
@@ -125,8 +125,8 @@ const initialInstructions = [
       { type: "质量", name: "首件测试项目", status: "待确认", desc: "需质量员确认测试样本", source: "QMS 检验规范", owner: "质量工程师 何工", approveStatus: "待确认", publishedAt: "2026-06-19 10:35", effectiveRange: "功能测试首件", syncStatus: "等待质量确认", changeReason: "测试参数变化触发首件复核" },
     ],
     steps: [
-      { title: "读取产品序列号", desc: "测试台读取 SN 并绑定当前 D-005 派工单。", tool: "测试台扫码项", check: "SN 归属", status: "当前" },
-      { title: "执行通信测试", desc: "加载 TEST-PARA-202606 后执行 RS485 通信测试。", tool: "测试台 TEST-A-01", check: "参数版本", status: "拦截" },
+      { title: "读取产品序列号", desc: "模拟测试台读取 SN 并绑定当前 D-005 派工单。", tool: "模拟测试台扫码项", check: "SN 归属", status: "当前" },
+      { title: "执行通信测试", desc: "模拟测试台加载 TEST-PARA-202606 后回传 RS485 通信测试结果。", tool: "模拟测试台 TEST-A-01", check: "参数版本", status: "拦截" },
       { title: "上传测试曲线", desc: "测试结果与曲线绑定序列号进入过程履历。", tool: "设备回传项", check: "曲线完整", status: "待执行" },
     ],
   },
@@ -170,7 +170,7 @@ const initialHistory = [
   { id: "IH-001", instructionId: "WI-002", time: "08:10", action: "签收回执", dispatchNo: "D-002", operation: "DIP 插件", station: "DIP-WS-01", equipment: "防错夹具 JIG-DIP-04", owner: "钱佳", version: "SOP-TCU-DIP V2.8", result: "已确认插件顺序、极性防错和焊前目检要求" },
   { id: "IH-002", instructionId: "WI-005", time: "08:42", action: "版本拦截", dispatchNo: "D-005", operation: "功能测试", station: "TEST-WS-01", equipment: "测试台 TEST-A-01", owner: "设备员", version: "SOP-TCU-TEST V3.5", result: "测试参数仍为 V3.4，禁止继续测试" },
   { id: "IH-003", instructionId: "WI-111", time: "09:24", action: "偏离呼叫", dispatchNo: "D-111", operation: "包装入库", station: "PACK-WS-02", equipment: "Pack-C", owner: "陈洁", version: "SOP-THS-PACK V1.6", result: "客户标签模板切换，等待工艺员确认" },
-  { id: "IH-004", instructionId: "WI-004", time: "09:35", action: "终端加载", dispatchNo: "D-004", operation: "整机装配", station: "ASM-WS-03", equipment: "电批 EC-ASM-03", owner: "赵杰", version: "SOP-TCU-ASM V4.0", result: "后台已下发装配指导，等待现场签收回执" },
+  { id: "IH-004", instructionId: "WI-004", time: "09:35", action: "终端加载", dispatchNo: "D-004", operation: "整机装配", station: "ASM-WS-03", equipment: "电批 EC-ASM-03", owner: "赵杰", version: "SOP-TCU-ASM V4.0", result: "后台已下发装配指导，等待模拟现场签收回执" },
 ];
 
 let instructions = structuredClone(initialInstructions);
@@ -527,7 +527,7 @@ function getActiveAsset(item) {
 
 function getTerminalHint(item) {
   if (item.status === "待下发") return "后台尚未下发到现场终端";
-  if (item.status === "已下发") return `已下发 ${item.deliveredAt || ""}，等待现场签收回执`;
+  if (item.status === "已下发") return `已下发 ${item.deliveredAt || ""}，等待模拟现场签收回执`;
   if (item.status === "签收完成") return `签收 ${item.signedAt || ""}，执行进度 ${item.currentStep + 1}/${item.steps.length}`;
   if (item.status === "偏离待处理") return item.deviation || "现场偏离待工艺员处理";
   return getGateText(item);
@@ -642,7 +642,7 @@ function completeCurrentStep(item) {
     owner: item.operator,
     result: `已完成步骤 ${String(item.currentStep + 1).padStart(2, "0")}，过程记录已关联派工单`,
   });
-  updateInstruction(item.id, { currentStep: nextStep, steps }, "已同步现场执行进度");
+  updateInstruction(item.id, { currentStep: nextStep, steps }, "已同步模拟现场执行进度回执");
 }
 
 function raiseDeviation(item, reason, owner) {

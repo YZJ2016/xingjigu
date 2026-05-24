@@ -4,7 +4,7 @@ const modules = window.MES_NAV_MODULES || [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
   { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
   { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
+  { id: "station", title: "工位作业", layer: "现场回执", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
   { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
   { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
   { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
@@ -32,7 +32,7 @@ const initialRecords = [
     operator: "赵杰",
     employeeId: "E1003",
     parameter: "锁付扭矩",
-    source: "设备 PLC",
+    source: "模拟设备 PLC",
     value: "",
     unit: "N·m",
     lower: 0.39,
@@ -47,10 +47,10 @@ const initialRecords = [
     alarm: "",
     gates: { start: "通过", material: "通过", parameter: "待确认", equipment: "通过", quality: "待确认", trace: "待确认" },
     parameters: [
-      { name: "锁付扭矩", value: "", lower: 0.39, target: 0.42, upper: 0.45, unit: "N·m", source: "设备 PLC", status: "待确认", rule: "每颗螺钉强制采集" },
-      { name: "锁付角度", value: "", lower: 165, target: 180, upper: 195, unit: "deg", source: "设备 PLC", status: "待确认", rule: "与扭矩曲线绑定" },
-      { name: "锁付结果", value: "待回传", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "工位 HMI", status: "待确认", rule: "NG 禁止流转" },
-      { name: "壳体目检", value: "待录入", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "人工录入", status: "待确认", rule: "首件与巡检引用" },
+      { name: "锁付扭矩", value: "", lower: 0.39, target: 0.42, upper: 0.45, unit: "N·m", source: "模拟设备 PLC", status: "待确认", rule: "每颗螺钉强制采集" },
+      { name: "锁付角度", value: "", lower: 165, target: 180, upper: 195, unit: "deg", source: "模拟设备 PLC", status: "待确认", rule: "与扭矩曲线绑定" },
+      { name: "锁付结果", value: "待回传", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "模拟工位 HMI", status: "待确认", rule: "NG 禁止流转" },
+      { name: "壳体目检", value: "待录入", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "模拟人工录入", status: "待确认", rule: "首件与巡检引用" },
     ],
   },
   {
@@ -66,7 +66,7 @@ const initialRecords = [
     operator: "钱佳",
     employeeId: "E1011",
     parameter: "插件极性确认",
-    source: "工位 HMI",
+    source: "模拟工位 HMI",
     value: "OK",
     unit: "OK/NG",
     lower: 0,
@@ -81,9 +81,9 @@ const initialRecords = [
     alarm: "",
     gates: { start: "通过", material: "通过", parameter: "通过", equipment: "通过", quality: "通过", trace: "通过" },
     parameters: [
-      { name: "插件极性确认", value: "OK", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "工位 HMI", status: "通过", rule: "防错夹具联动" },
-      { name: "焊前目检", value: "OK", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "人工录入", status: "通过", rule: "IPQC 抽检引用" },
-      { name: "夹具到位信号", value: "1", lower: 1, target: 1, upper: 1, unit: "bit", source: "设备 PLC", status: "通过", rule: "未到位禁止提交" },
+      { name: "插件极性确认", value: "OK", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "模拟工位 HMI", status: "通过", rule: "防错夹具联动" },
+      { name: "焊前目检", value: "OK", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "模拟人工录入", status: "通过", rule: "IPQC 抽检引用" },
+      { name: "夹具到位信号", value: "1", lower: 1, target: 1, upper: 1, unit: "bit", source: "模拟设备 PLC", status: "通过", rule: "未到位禁止提交" },
     ],
   },
   {
@@ -99,7 +99,7 @@ const initialRecords = [
     operator: "孙磊",
     employeeId: "E1052",
     parameter: "RS485 响应时间",
-    source: "测试台",
+    source: "模拟测试台",
     value: "118",
     unit: "ms",
     lower: 0,
@@ -114,9 +114,9 @@ const initialRecords = [
     alarm: "测试响应时间趋势上升",
     gates: { start: "通过", material: "通过", parameter: "待确认", equipment: "通过", quality: "待确认", trace: "通过" },
     parameters: [
-      { name: "RS485 响应时间", value: "118", lower: 0, target: 80, upper: 120, unit: "ms", source: "测试台", status: "待确认", rule: "连续接近上限触发 SPC 预警" },
-      { name: "温控精度", value: "0.42", lower: 0, target: 0.3, upper: 0.5, unit: "degC", source: "测试台", status: "通过", rule: "首件与抽检引用" },
-      { name: "通信稳定性", value: "OK", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "测试台", status: "通过", rule: "NG 禁止流转" },
+      { name: "RS485 响应时间", value: "118", lower: 0, target: 80, upper: 120, unit: "ms", source: "模拟测试台", status: "待确认", rule: "连续接近上限触发 SPC 预警" },
+      { name: "温控精度", value: "0.42", lower: 0, target: 0.3, upper: 0.5, unit: "degC", source: "模拟测试台", status: "通过", rule: "首件与抽检引用" },
+      { name: "通信稳定性", value: "OK", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "模拟测试台", status: "通过", rule: "NG 禁止流转" },
     ],
   },
   {
@@ -132,7 +132,7 @@ const initialRecords = [
     operator: "李敏",
     employeeId: "E1017",
     parameter: "贴片偏移 X",
-    source: "设备 PLC",
+    source: "模拟设备 PLC",
     value: "0.18",
     unit: "mm",
     lower: -0.12,
@@ -147,9 +147,9 @@ const initialRecords = [
     alarm: "贴片机视觉偏移报警",
     gates: { start: "通过", material: "通过", parameter: "拦截", equipment: "拦截", quality: "待确认", trace: "通过" },
     parameters: [
-      { name: "贴片偏移 X", value: "0.18", lower: -0.12, target: 0, upper: 0.12, unit: "mm", source: "设备 PLC", status: "拦截", rule: "超限自动拦截当前板" },
-      { name: "贴片偏移 Y", value: "0.08", lower: -0.12, target: 0, upper: 0.12, unit: "mm", source: "设备 PLC", status: "通过", rule: "AOI 复判引用" },
-      { name: "吸嘴真空", value: "72", lower: 70, target: 82, upper: 95, unit: "kPa", source: "设备 PLC", status: "待确认", rule: "低于下限触发设备点检" },
+      { name: "贴片偏移 X", value: "0.18", lower: -0.12, target: 0, upper: 0.12, unit: "mm", source: "模拟设备 PLC", status: "拦截", rule: "超限自动拦截当前板" },
+      { name: "贴片偏移 Y", value: "0.08", lower: -0.12, target: 0, upper: 0.12, unit: "mm", source: "模拟设备 PLC", status: "通过", rule: "AOI 复判引用" },
+      { name: "吸嘴真空", value: "72", lower: 70, target: 82, upper: 95, unit: "kPa", source: "模拟设备 PLC", status: "待确认", rule: "低于下限触发设备点检" },
     ],
   },
   {
@@ -165,7 +165,7 @@ const initialRecords = [
     operator: "陈洁",
     employeeId: "E1082",
     parameter: "箱码复核",
-    source: "人工录入",
+    source: "模拟人工录入",
     value: "OK",
     unit: "OK/NG",
     lower: 0,
@@ -180,18 +180,18 @@ const initialRecords = [
     alarm: "",
     gates: { start: "通过", material: "通过", parameter: "通过", equipment: "通过", quality: "通过", trace: "通过" },
     parameters: [
-      { name: "箱码复核", value: "OK", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "人工录入", status: "通过", rule: "箱码与 SN 集合一致" },
-      { name: "标签清晰度", value: "OK", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "人工录入", status: "通过", rule: "客户标签复核" },
-      { name: "装箱数量", value: "20", lower: 20, target: 20, upper: 20, unit: "PCS", source: "工位 HMI", status: "通过", rule: "固定箱规" },
+      { name: "箱码复核", value: "OK", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "模拟人工录入", status: "通过", rule: "箱码与 SN 集合一致" },
+      { name: "标签清晰度", value: "OK", lower: 0, target: 1, upper: 1, unit: "OK/NG", source: "模拟人工录入", status: "通过", rule: "客户标签复核" },
+      { name: "装箱数量", value: "20", lower: 20, target: 20, upper: 20, unit: "PCS", source: "模拟工位 HMI", status: "通过", rule: "固定箱规" },
     ],
   },
 ];
 
 const initialHistory = [
-  { id: "PH-001", recordId: "PR-002-DIP", time: "08:32", action: "过程回传", source: "工位 HMI", parameter: "插件极性确认", value: "OK", station: "DIP-WS-01", dispatchNo: "D-002", owner: "钱佳", result: "极性防错确认通过，过程履历已绑定" },
-  { id: "PH-002", recordId: "PR-005-TEST", time: "09:18", action: "SPC 预警", source: "测试台", parameter: "RS485 响应时间", value: "118 ms", station: "TEST-WS-01", dispatchNo: "D-005", owner: "质量员", result: "连续 5 台接近上限，等待工艺确认" },
-  { id: "PH-003", recordId: "PR-021-SMT", time: "09:27", action: "过程拦截", source: "设备 PLC", parameter: "贴片偏移 X", value: "0.18 mm", station: "SMT-WS-02", dispatchNo: "D-021", owner: "设备员", result: "超出规格上限，当前板禁止流转" },
-  { id: "PH-004", recordId: "PR-004-TQ", time: "10:12", action: "待回传", source: "设备 PLC", parameter: "锁付扭矩", value: "待回传", station: "ASM-WS-03", dispatchNo: "D-004", owner: "赵杰", result: "等待电批控制器回传扭矩曲线" },
+  { id: "PH-001", recordId: "PR-002-DIP", time: "08:32", action: "模拟过程回传", source: "模拟工位 HMI", parameter: "插件极性确认", value: "OK", station: "DIP-WS-01", dispatchNo: "D-002", owner: "钱佳", result: "极性防错确认通过，过程履历已绑定" },
+  { id: "PH-002", recordId: "PR-005-TEST", time: "09:18", action: "模拟 SPC 预警", source: "模拟测试台", parameter: "RS485 响应时间", value: "118 ms", station: "TEST-WS-01", dispatchNo: "D-005", owner: "质量员", result: "连续 5 台接近上限，等待工艺确认" },
+  { id: "PH-003", recordId: "PR-021-SMT", time: "09:27", action: "模拟过程拦截", source: "模拟设备 PLC", parameter: "贴片偏移 X", value: "0.18 mm", station: "SMT-WS-02", dispatchNo: "D-021", owner: "设备员", result: "超出规格上限，当前板禁止流转" },
+  { id: "PH-004", recordId: "PR-004-TQ", time: "10:12", action: "待模拟回传", source: "模拟设备 PLC", parameter: "锁付扭矩", value: "待回传", station: "ASM-WS-03", dispatchNo: "D-004", owner: "赵杰", result: "等待模拟电批控制器回传扭矩曲线" },
 ];
 
 let records = structuredClone(initialRecords);
@@ -205,7 +205,7 @@ let state = {
   source: "all",
   detailOpen: true,
   taskDrawerOpen: true,
-  processSource: "设备 PLC",
+  processSource: "模拟设备 PLC",
   reason: "参数超过规格上限",
   owner: "工艺员",
 };
@@ -495,7 +495,7 @@ function renderLogs() {
         <em>${log.result}</em>
       </div>
     `).join("")
-    : `<div class="integration-item"><span>暂无</span><strong>${active.alarm || "等待现场设备、HMI 或人工记录回传"}</strong><em>后台记录采集、预警、拦截和放行结果</em></div>`;
+    : `<div class="integration-item"><span>暂无</span><strong>${active.alarm || "等待模拟现场设备、HMI 或人工记录回传"}</strong><em>后台记录采集、预警、拦截和放行结果</em></div>`;
 }
 
 function formatValue(item) {
@@ -577,7 +577,7 @@ function syncProcessRecord(item, message) {
   };
   const result = outOfSpec ? "采集值超出规格，当前工序已拦截" : nearLimit ? "采集值接近规格边界，已触发 SPC 预警" : "采集值在规格窗口内，过程履历已绑定";
   appendHistory(item, {
-    action: outOfSpec ? "过程拦截" : nearLimit ? "SPC 预警" : "过程回传",
+    action: outOfSpec ? "模拟过程拦截" : nearLimit ? "模拟 SPC 预警" : "模拟过程回传",
     source: state.processSource,
     value: `${value} ${item.unit}`,
     owner: item.operator,
@@ -617,7 +617,7 @@ function blockRecord(item, reason, owner) {
   const gates = { ...item.gates, parameter: "拦截", quality: "待确认" };
   if (reason.includes("设备")) gates.equipment = "拦截";
   appendHistory(item, {
-    action: "过程拦截",
+    action: "模拟过程拦截",
     source: state.processSource,
     value: $("#processValueInput").value.trim() || formatValue(item),
     owner,
@@ -638,7 +638,7 @@ function releaseRecord(item) {
     source: "后台处置",
     value: formatValue(item),
     owner: state.owner,
-    result: "异常已处置，允许现场重新采集或继续流转",
+    result: "异常已处置，允许模拟现场重新采集或继续流转",
   });
   updateRecord(item.id, {
     status: "正常",
@@ -726,11 +726,11 @@ function bindEvents() {
       showToast(`已切换为模拟${state.processSource}回传`);
     });
   });
-  $("#syncProcessBtn").addEventListener("click", () => syncProcessRecord(getActiveRecord(), "已同步现场过程采集回执"));
+  $("#syncProcessBtn").addEventListener("click", () => syncProcessRecord(getActiveRecord(), "已同步模拟现场过程采集回执"));
   $("#simulateAlarmBtn").addEventListener("click", () => blockRecord(getActiveRecord(), "设备报警未复位", "设备员"));
   $("#manualJudgeBtn").addEventListener("click", () => {
     const item = getActiveRecord();
-    appendHistory(item, { action: "人工判定", source: "人工录入", value: $("#processValueInput").value.trim() || "OK", owner: state.owner, result: "人工判定已进入过程履历，等待质量复核引用" });
+    appendHistory(item, { action: "模拟人工判定", source: "模拟人工录入", value: $("#processValueInput").value.trim() || "OK", owner: state.owner, result: "模拟人工判定已进入过程履历，等待质量复核引用" });
     recordLog(item.id, "已登记人工判定", "人工记录已绑定当前派工单和 SN/批次");
     saveState();
     renderAll();
@@ -744,7 +744,7 @@ function bindEvents() {
     showToast(`已切换到 ${getActiveRecord().parameter}`);
   });
   $("#refreshProcessBtn").addEventListener("click", () => {
-    recordLog(getActiveRecord().id, "已刷新过程采集监控", "已重新读取设备、HMI、质量和追溯状态");
+    recordLog(getActiveRecord().id, "已刷新过程采集监控", "已重新读取模拟设备、HMI、质量和追溯状态");
     saveState();
     renderLogs();
     showToast("过程采集监控已刷新");
@@ -779,7 +779,7 @@ function bindEvents() {
     renderLogs();
     showToast("过程采集校验已重新执行");
   });
-  $("#detailSyncBtn").addEventListener("click", () => syncProcessRecord(getActiveRecord(), "已从详情同步过程采集回执"));
+  $("#detailSyncBtn").addEventListener("click", () => syncProcessRecord(getActiveRecord(), "已从详情同步模拟过程采集回执"));
   $("#warningBtn").addEventListener("click", () => markWarning(getActiveRecord()));
   $("#blockProcessBtn").addEventListener("click", () => blockRecord(getActiveRecord(), state.reason, state.owner));
   $("#releaseProcessBtn").addEventListener("click", () => releaseRecord(getActiveRecord()));
@@ -805,7 +805,7 @@ function bindEvents() {
     records = structuredClone(initialRecords);
     history = structuredClone(initialHistory);
     logs = [];
-    state = { activeRecordId: "PR-004-TQ", search: "", status: "all", line: "all", source: "all", detailOpen: true, taskDrawerOpen: true, processSource: "设备 PLC", reason: "参数超过规格上限", owner: "工艺员" };
+    state = { activeRecordId: "PR-004-TQ", search: "", status: "all", line: "all", source: "all", detailOpen: true, taskDrawerOpen: true, processSource: "模拟设备 PLC", reason: "参数超过规格上限", owner: "工艺员" };
     $("#processSearch").value = "";
     $("#processStatusFilter").value = "all";
     $("#processLineFilter").value = "all";

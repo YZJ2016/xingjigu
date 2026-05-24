@@ -44,7 +44,7 @@
             <h1>过程参数采集与质量预警</h1>
           </div>
           <div class="topbar-actions">
-            <button id="batchAcknowledgeBtn" class="primary-action" type="button">批量确认采集异常</button>
+            <button id="batchAcknowledgeBtn" class="primary-action" type="button">批量确认模拟采集异常</button>
             <button id="resetProcessBtn" class="secondary-action" type="button">重置过程演示</button>
             <a class="secondary-link" href="./feeding-confirmation.html">投料确认</a>
             <a class="secondary-link" href="./work-instruction.html">工艺指导</a>
@@ -65,7 +65,7 @@
           <article>
             <span>待回传</span>
             <strong id="metricWaiting">0</strong>
-            <em>等待设备、HMI 或人工记录</em>
+            <em>等待模拟设备、HMI 或人工记录回执</em>
           </article>
           <article>
             <span>预警中</span>
@@ -109,10 +109,10 @@
                 来源
                 <select id="processSourceFilter">
                   <option value="all">全部来源</option>
-                  <option value="设备 PLC">设备 PLC</option>
-                  <option value="工位 HMI">工位 HMI</option>
-                  <option value="测试台">测试台</option>
-                  <option value="人工录入">人工录入</option>
+                  <option value="模拟设备 PLC">模拟设备 PLC</option>
+                  <option value="模拟工位 HMI">模拟工位 HMI</option>
+                  <option value="模拟测试台">模拟测试台</option>
+                  <option value="模拟人工录入">模拟人工录入</option>
                 </select>
               </label>
             </div>
@@ -121,7 +121,7 @@
               <div class="section-title">
                 <div>
                   <h3>现场采集回传监控</h3>
-                  <p>后台接收模拟设备 PLC、工位 HMI、测试台和人工录入的过程数据</p>
+                  <p>后台只做模拟过程回执查看、规格校验、预警拦截、补偿登记和追溯归档，不替代真实 PLC/HMI 控制或设备操作</p>
                 </div>
                 <span id="terminalTitle">ASM-WS-03</span>
               </div>
@@ -140,16 +140,16 @@
                   <span>模拟现场过程数据回传</span>
                   <input id="processValueInput" type="text" placeholder="模拟设备/PLC/HMI/人工回传数值，例如 0.42" />
                   <div class="scan-mode-tabs" aria-label="模拟过程采集来源">
-                    <button type="button" data-process-source="设备 PLC">模拟设备 PLC</button>
-                    <button type="button" data-process-source="工位 HMI">模拟工位 HMI</button>
-                    <button type="button" data-process-source="测试台">模拟测试台</button>
-                    <button type="button" data-process-source="人工录入">模拟人工录入</button>
+                    <button type="button" data-process-source="模拟设备 PLC">模拟设备 PLC</button>
+                    <button type="button" data-process-source="模拟工位 HMI">模拟工位 HMI</button>
+                    <button type="button" data-process-source="模拟测试台">模拟测试台</button>
+                    <button type="button" data-process-source="模拟人工录入">模拟人工录入</button>
                   </div>
                 </div>
                 <div class="process-terminal-actions">
-                  <button id="syncProcessBtn" type="button">同步过程回执</button>
-                  <button id="simulateAlarmBtn" type="button">同步模拟设备报警</button>
-                  <button id="manualJudgeBtn" type="button">登记人工判定</button>
+                    <button id="syncProcessBtn" type="button">同步模拟过程回执</button>
+                    <button id="simulateAlarmBtn" type="button">同步模拟设备报警</button>
+                    <button id="manualJudgeBtn" type="button">登记模拟人工判定</button>
                   <button id="nextProcessBtn" type="button">切换采集任务</button>
                 </div>
               </div>
@@ -189,7 +189,7 @@
 
             <section class="dispatch-table-panel">
               <div class="section-title">
-                <h3>过程回传、预警与处置履历</h3>
+                <h3>模拟过程回传、预警与处置履历</h3>
                 <button id="refreshProcessBtn" type="button">刷新监控</button>
               </div>
               <div class="operation-table-wrap">
@@ -270,9 +270,9 @@
                   </label>
                 </div>
                 <div class="action-grid dispatch-actions">
-                  <button id="detailSyncBtn" type="button">同步采集回执</button>
+                  <button id="detailSyncBtn" type="button">同步模拟采集回执</button>
                   <button id="warningBtn" type="button">登记 SPC 预警</button>
-                  <button id="blockProcessBtn" class="danger-action" type="button">拦截当前工序</button>
+                  <button id="blockProcessBtn" class="danger-action" type="button">登记模拟工序拦截</button>
                   <button id="releaseProcessBtn" type="button">处置后放行</button>
                 </div>
               </section>

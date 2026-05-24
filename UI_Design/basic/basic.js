@@ -6,18 +6,18 @@ const modules = window.MES_NAV_MODULES || [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
   { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
   { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
+  { id: "station", title: "工位作业", layer: "现场回执", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
   { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
   { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
-  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
-  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "点检计划", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
-  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机原因", "过程趋势", "电子看板"] },
+  { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "质量放行", "出货检验", "不良记录", "返工评审"] },
+  { id: "equipment", title: "设备与保养", layer: "设备部门", color: "#ff9f0a", mark: "设", items: ["设备状态", "工装夹具", "量检具校准", "点检计划", "保养计划", "维修工单", "停机记录", "备件领用", "设备效率"] },
+  { id: "process", title: "过程监控", layer: "生产现场", color: "#ff9f0a", mark: "控", items: ["实时产量", "设备运行", "工艺参数", "报警记录", "停机归因", "过程趋势", "电子看板"] },
   { id: "exceptions", title: "异常处理", layer: "现场协同", color: "#ff3b30", mark: "异", items: ["异常上报", "待处理异常", "停线申请", "缺料处理", "质量问题", "设备故障", "处理复盘"] },
-  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
+  { id: "warehouse", title: "完工与入库", layer: "仓储协同", color: "#34c759", mark: "入", items: ["工序完工复核", "完工确认", "包装作业", "成品入库", "库存冻结", "退料入库", "单据同步"] },
   { id: "trace", title: "追溯查询", layer: "质量追溯", color: "#8e8e93", mark: "追", items: ["产品追溯", "批次追溯", "物料去向", "生产履历", "检验履历", "设备履历", "客户追溯报告"] },
   { id: "reports", title: "报表与看板", layer: "经营分析", color: "#8e8e93", mark: "表", items: ["生产日报", "良率分析", "交付达成", "设备效率", "停机损失", "物料损耗", "管理驾驶舱"] },
-  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "客户供应商"] },
-  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "角色权限", "审批设置", "单据同步", "消息提醒", "操作记录", "数据备份"] },
+  { id: "basic", title: "基础资料", layer: "资料维护", color: "#007aff", mark: "基", items: ["产品资料", "物料资料", "BOM 清单", "工艺路线", "工序工位", "产线车间", "规则与代码", "班次日历", "客户供应商"] },
+  { id: "system", title: "系统设置", layer: "管理配置", color: "#6e6e73", mark: "系", items: ["人员账号", "人员资质", "角色权限", "审批设置", "接口补偿配置", "消息提醒", "操作记录", "数据备份"] },
 ];
 
 const pageMaps = {
@@ -28,14 +28,16 @@ const pageMaps = {
     工艺路线: "routing.html",
     工序工位: "operation-stations.html",
     产线车间: "workshops.html",
+    规则与代码: "rules-codes.html",
+    班次日历: "shift-calendar.html",
     客户供应商: "partners.html",
   },
   orders: { 生产订单: "../orders/production-orders.html", 订单评审: "../orders/order-reviews.html", 生产排程: "../orders/production-schedule.html", 产能负荷: "../orders/capacity-load.html", 交期预警: "../orders/delivery-warning.html", 计划调整: "../orders/plan-adjustment.html", 齐套检查: "../orders/kit-check.html" },
   dispatch: { 派工单: "../dispatch/dispatch-orders.html", 工序任务: "../dispatch/operation-tasks.html", 班组任务: "../dispatch/team-tasks.html", 任务下达: "../dispatch/task-release.html", 任务变更: "../dispatch/task-change.html", "SOP 查看": "../dispatch/sop-view.html", 开工检查: "../dispatch/start-check.html" },
   station: { 员工登录: "../station/employee-login.html", 扫码开工: "../station/scan-start.html", 工艺指导: "../station/work-instruction.html", 投料确认: "../station/feeding-confirmation.html", 过程记录: "../station/process-record.html", 工序报工: "../station/operation-report.html", 交接班: "../station/shift-handover.html" },
   materials: { 用料需求: "../materials/material-requirements.html", 领料申请: "../materials/picking-requests.html", 配送进度: "../materials/delivery-progress.html", 线边库存: "../materials/line-side-inventory.html", 投料记录: "../materials/feeding-records.html", 余料退回: "../materials/return-materials.html", 缺料预警: "../materials/shortage-alerts.html" },
-  quality: { 来料检验: "../quality/incoming-inspection.html", 首件检验: "../quality/first-article.html", 巡检任务: "../quality/patrol-tasks.html", 过程检验: "../quality/process-inspection.html", 成品检验: "../quality/final-inspection.html", 不良记录: "../quality/defect-records.html", 返工评审: "../quality/rework-review.html" },
-  equipment: { 设备状态: "../equipment/equipment-status.html", 点检计划: "../equipment/inspection-plan.html", 保养计划: "../equipment/maintenance-plan.html", 维修工单: "../equipment/repair-orders.html", 停机记录: "../equipment/downtime-records.html", 备件领用: "../equipment/spare-parts.html", 设备效率: "../equipment/equipment-efficiency.html" },
+  quality: { 来料检验: "../quality/incoming-inspection.html", 首件检验: "../quality/first-article.html", 巡检任务: "../quality/patrol-tasks.html", 过程检验: "../quality/process-inspection.html", 成品检验: "../quality/final-inspection.html", 质量放行: "../quality/release.html", 出货检验: "../quality/outgoing-inspection.html", 不良记录: "../quality/defect-records.html", 返工评审: "../quality/rework-review.html" },
+  equipment: { 设备状态: "../equipment/equipment-status.html", 工装夹具: "../equipment/tooling-fixtures.html", 量检具校准: "../equipment/calibration.html", 点检计划: "../equipment/inspection-plan.html", 保养计划: "../equipment/maintenance-plan.html", 维修工单: "../equipment/repair-orders.html", 停机记录: "../equipment/downtime-records.html", 备件领用: "../equipment/spare-parts.html", 设备效率: "../equipment/equipment-efficiency.html" },
 };
 
 const pageDefinitions = {
@@ -106,13 +108,13 @@ const pageDefinitions = {
     simulationHint: "模拟排程或设备停机日历同步，后台不直接控制现场产线",
   },
   partners: {
-    subtitle: "按客户与供应商分型维护业务伙伴档案；供应商侧聚焦供货资质、可供物料、批次追溯和来料检验策略引用",
+    subtitle: "仅维护客户与供应商在 MES 执行中的引用边界：客户标签/追溯报告要求、供应商资质状态、来料检验策略和批次追溯规则",
     user: "业务资料管理员",
     metrics: ["伙伴档案", "业务生效", "待复核", "供应风险"],
-    columns: ["伙伴编码", "角色 / 名称", "状态 / 资质", "规则引用范围", "业务准入状态", "业务影响", "责任人", "时间戳"],
-    tableTitle: "客户供应商与业务规则",
-    tableHint: "客户侧传递订单、标签和交付要求；供应商侧传递合格供方、可供物料、IQC 策略和批次追溯约束",
-    cardTitle: "客户供应商驱动关系",
+    columns: ["伙伴编码", "角色 / 名称", "MES引用状态 / 资质", "标签 / 检验 / 追溯范围", "执行准入状态", "执行影响", "责任人", "时间戳"],
+    tableTitle: "客户供应商 MES 执行引用规则",
+    tableHint: "客户侧只传递标签模板、追溯报告和交付优先级引用；供应商侧只传递合格供方状态、可供物料、IQC 策略和批次追溯约束，不维护 CRM/SRM、合同、价格、采购或库存业务",
+    cardTitle: "客户供应商 MES 引用关系",
     simulationTitle: "模拟 ERP / QMS 伙伴同步",
     simulationHint: "模拟客户优先级或供应商质量等级同步，页面只记录 MES 生效与影响范围",
   },
@@ -158,7 +160,7 @@ const initialRows = {
   partners: [
     { id: "CUS-A", partnerType: "客户", name: "A 客户", version: "优先级高", source: "ERP 客户资料", status: "业务生效", qualification: "年度框架订单有效", qualityLevel: "交付优先级 A", ref: "客户标签模板 A-V1.4", supplyScope: "TCU-100 / 客户 A 包装盒", traceRule: "按成品 SN、箱码、托盘码生成客户追溯报告", iqcPolicy: "不适用，客户侧引用 FQC / OQC 要求", impact: "MO-202606-0001 按高优先级排程", owner: "业务资料管理员 沈清", time: "06-18 09:02", scope: "客户 / TCU-100 / 成品标签", risk: "标签补打需审批", downstream: "订单评审、成品标签、客户追溯报告" },
     { id: "CUS-B", partnerType: "客户", name: "B 客户", version: "交期敏感", source: "ERP 客户资料", status: "业务生效", qualification: "重点客户有效", qualityLevel: "OTD 重点监控", ref: "OTD 重点监控 / 客户 B 标签模板", supplyScope: "GW-240 / SRV-90", traceRule: "按订单交付批次生成受控追溯资料", iqcPolicy: "不适用，客户侧引用 OQC 放行策略", impact: "GW-240 与 SRV-90 交期预警", owner: "计划主管 李敏", time: "06-18 10:08", scope: "客户 / GW-240 / SRV-90", risk: "交期压缩需计划调整", downstream: "交期预警、计划调整、交付达成" },
-    { id: "SUP-SEN-01", partnerType: "供应商", name: "传感器供应商 S-01", version: "A级供应商", source: "QMS 供应商档案", status: "待到货复核", qualification: "合格供方 / 资质有效至 2026-12-31", qualityLevel: "A级 / 近 3 批 IQC 合格率 98.8%", ref: "IQC-SEN-AQL-II / SEN-L20260605", supplyScope: "MAT-SEN-T100 温度传感器；可供 TCU-100、SEN-20", traceRule: "供应商批次 + 来料批次必填，投料后绑定工单、工序和成品 SN", iqcPolicy: "正常检验；逾期到货自动转加严复核", impact: "TCU-100 第二批缺 200 件，需跟踪到货和 IQC 放行", owner: "采购跟单 袁青", time: "06-18 11:10", scope: "供应商 / 温度传感器 / TCU-100", risk: "到货延迟影响第二批开工", downstream: "来料检验、缺料预警、批次追溯" },
+    { id: "SUP-SEN-01", partnerType: "供应商", name: "传感器供应商 S-01", version: "A级供应商", source: "QMS 供应商档案", status: "待到货复核", qualification: "合格供方 / 资质有效至 2026-12-31", qualityLevel: "A级 / 近 3 批 IQC 合格率 98.8%", ref: "IQC-SEN-AQL-II / SEN-L20260605", supplyScope: "MAT-SEN-T100 温度传感器；可供 TCU-100、SEN-20", traceRule: "供应商批次 + 来料批次必填，投料后绑定工单、工序和成品 SN", iqcPolicy: "正常检验；逾期到货自动转加严复核", impact: "TCU-100 第二批缺 200 件，需跟踪到货回执和 IQC 放行", owner: "供应商质量员 袁青", time: "06-18 11:10", scope: "供应商 / 温度传感器 / TCU-100", risk: "到货延迟影响第二批开工", downstream: "来料检验、缺料预警、批次追溯" },
     { id: "SUP-PWR-02", partnerType: "供应商", name: "电源芯片供应商 P-02", version: "质量观察", source: "QMS 冻结规则", status: "冻结待复核", qualification: "临时放行需 MRB 审批", qualityLevel: "观察级 / 近期失效率超阈值", ref: "MRB-PWR-202606 / PWRIC-L20260602", supplyScope: "MAT-PWR-IC60 电源芯片；仅限 PCM-60 指定批次", traceRule: "客户指定批次 + MRB 放行号必填，冻结批次禁止进入投料准入", iqcPolicy: "加严检验；功能项全检后才允许库存解冻", impact: "PCM-60 指定批次冻结，影响 MO-202606-0005 备料", owner: "质量员 孟可", time: "06-18 11:42", scope: "供应商 / 电源芯片 / D 客户", risk: "需 MRB 或替代料审批", downstream: "来料检验、库存冻结、缺料处理" },
   ],
 };
@@ -1634,7 +1636,7 @@ function getFormDomainNote() {
     workshops: "资源排程状态描述车间、产线、班组和日历是否可被 APS、派工和现场看板引用，例如资源启用、可排程、日历待复核、负荷预警。",
     partners: "业务准入状态描述客户或供应商规则是否可被订单评审、IQC、标签和追溯引用，例如业务生效、待资料复核、待到货复核、冻结待复核。",
     workshops: "产线车间需维护车间、产线、班组、班次和产能日历；MES 不直接控制现场产线。",
-    partners: "客户供应商需维护标签要求、供应商质量等级和追溯口径，并保留 ERP/QMS 模拟同步来源。",
+    partners: "客户供应商只维护 MES 执行引用、检验策略、标签和追溯口径，并保留 ERP/QMS 模拟同步来源；不承担 CRM/SRM、合同、价格、采购或库存管理。",
   };
   return notes[pageConfig.id] || "维护结果发布后只作为 MES 执行版本和下游校验口径，外部系统同步均为模拟记录。";
 }

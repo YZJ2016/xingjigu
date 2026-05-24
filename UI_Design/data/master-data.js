@@ -281,16 +281,40 @@ window.MES_MASTER_DATA = (() => {
     });
   }
 
+  const toolingCalibrationOqcCapaRows = {
+    equipment: {
+      tooling: [
+        { id: "MD-TOOL-JIG-GW240", equipment: "GW-240 功能测试治具", equipmentNo: "JIG-GW240-02", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "主数据工装台账 + 模拟扫码绑定", status: "校准到期", statusDetail: "测试治具 / 功能测试 / 寿命 29600/30000 次", duration: "校准到期 2026-06-20", oee: 0, downtime: 0, owner: "计量员 许宁", risk: "校准到期，阻止新批次功能测试开工", next: "登记模拟校准回执后恢复准入", trace: "tooling_master MD-TOOL-JIG-GW240" },
+      ],
+      calibration: [
+        { id: "MD-CAL-FQC-BENCH-02", equipment: "FQC 功能检验台 02", equipmentNo: "FQC-BENCH-02", line: "Line-B", station: "FQC-B", order: "MO-202606-0002", dispatch: "PKG-021", source: "主数据计量台账 + 校准证书", status: "校准有效", statusDetail: "测试台 / FQC 与 OQC 引用 / 证书 CERT-FQC-2606", duration: "有效期至 2026-09-18", oee: 0, downtime: 0, owner: "FQC 孟可", risk: "FQC 放行和 OQC 客户报告可引用", next: "出货检验报告引用证书号", trace: "calibration_master CERT-FQC-2606" },
+      ],
+    },
+    qualityDownstream: {
+      oqc: [
+        { id: "MD-OQC-GW240-001", order: "MO-202606-0002", dispatch: "SHP-GW240-0620A", operation: "出货检验", line: "OQC-A区", product: "工业网关 GW-240", sn: "SN-GW240-000001~000120", batch: "LOT-GW240-20260620-002", equipment: "FQC-BENCH-02 / OQC-SCAN-01", materialBatch: "BOXB-L20260614", source: "FQC + 质量放行 + WMS 出货批次", parameter: "客户 B AQL II 抽 32；标签模板 TPL-FG-B-V3；校准证书 CERT-FQC-2606", status: "待检", action: "复核客户标签、FQC 放行和出货报告证据", owner: "OQC 沈清", time: "2026-06-20 17:10", result: "FQC 待签核，OQC 暂不放行", next: "FQC 和质量放行完成后生成客户追溯报告", risk: "FQC 未放行前禁止出货" },
+      ],
+    },
+    exceptions: {
+      review: [
+        { id: "MD-CAPA-240620-01", type: "质量 NCR 8D", severity: "高", line: "Line-B", station: "TEST-WS-02", order: "MO-202606-0002", dispatch: "D-024", source: "NCR-240620-07 / JIG-ICT-GW240-02", status: "RCA 待补", sla: "2026-06-20 17:00 前完成 RCA", owner: "质量主管 罗岚", impact: "测试不良 19 件隔离，返工工时预计 2.5 小时", action: "补齐 5Why、测试治具校准复核和复测验证计划", trace: "defect_record NCR-240620-07", rootCause: "待确认测试治具针床接触、程序版本和校准到期影响", correction: "隔离影响 SN 段，切换备用治具并完成复测", prevention: "治具校准到期前 3 天触发开工准入预警", dueAt: "2026-06-20 17:00", verificationResult: "RCA 未签核，禁止关闭 CAPA" },
+      ],
+    },
+  };
+
   function toDemoRows() {
     const quality = toQualityRows();
+    const equipmentRows = toEquipmentRows();
+    const qualityDownstreamRows = quality.downstream;
+    const exceptionRows = toExceptionRows();
     return {
       materials: toMaterialRows(),
       barcode: toBarcodeRows(),
       qualityUpstream: quality.upstream,
-      qualityDownstream: quality.downstream,
-      equipment: toEquipmentRows(),
+      qualityDownstream: { ...qualityDownstreamRows, ...toolingCalibrationOqcCapaRows.qualityDownstream },
+      equipment: { ...equipmentRows, ...toolingCalibrationOqcCapaRows.equipment },
       monitoring: toMonitoringRows(),
-      exceptions: toExceptionRows(),
+      exceptions: { ...exceptionRows, ...toolingCalibrationOqcCapaRows.exceptions },
       warehouse: toWarehouseRows(),
       traceability: toTraceRows(),
       reports: { daily: toReportRows(), yield: toReportRows(), delivery: toReportRows(), equipment: toReportRows(), downtime: toReportRows(), material: toReportRows(), cockpit: toReportRows() },

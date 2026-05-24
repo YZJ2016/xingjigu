@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星技谷 MES | 班次日历</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./foundation-governance.css?v=focus-matrix-1" />
+  </head>
+  <body>
+    <script>window.FOUNDATION_PAGE = { id: "calendar" };</script>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="MES 业务导航菜单"><div class="brand"><div class="brand-mark">X</div><div><div class="brand-name">星技谷 MES</div><div class="brand-subtitle">生产运营中枢</div></div></div><div class="menu-heading">业务导航</div><nav id="foundationModuleMenu" class="module-menu"></nav><div class="sidebar-footer"><div class="factory-card"><div class="factory-card__label">当前工厂</div><div class="factory-card__name">华东一厂 · 电子装配车间</div><div class="factory-card__meta"><span>班次日历</span><span>排程 / 产能 / 保养</span></div></div></div></aside>
+      <main class="main foundation-main">
+        <header class="topbar"><div><div id="pageEyebrow" class="eyebrow"></div><h1 id="pageTitle"></h1><p id="pageSubtitle"></p></div><div class="topbar-actions"><button id="primaryActionBtn" class="primary-action" type="button">发布复核通过</button><button id="secondaryActionBtn" class="secondary-action" type="button">退回补充依据</button><button id="resetFoundationBtn" class="secondary-action" type="button">重置演示</button><a class="secondary-link" href="../orders/capacity-load.html">产能负荷</a><a class="secondary-link" href="../index.html">返回首页</a><div class="user-chip"><span class="avatar">历</span><span id="userRole"></span></div></div></header>
+        <section id="foundationMetrics" class="foundation-metrics"></section>
+        <section class="foundation-layout"><div class="foundation-left"><section class="foundation-panel"><div class="foundation-toolbar"><label>搜索<input id="searchInput" type="search" placeholder="日历、班次、资源、例外窗口" /></label><label>状态<select id="statusFilter"></select></label><label>类型<select id="typeFilter"></select></label></div></section><section class="foundation-panel"><h3 id="tableTitle"></h3><p id="tableHint"></p><div class="foundation-table-wrap"><table class="foundation-table"><thead id="tableHead"></thead><tbody id="foundationTableBody"></tbody></table></div></section><section class="foundation-panel"><h3>排程影响</h3><div id="foundationCards" class="foundation-grid"></div></section></div><aside class="foundation-side"><section class="foundation-detail"><div id="detailStatus"></div><h3 id="detailTitle"></h3><p id="detailSubtitle"></p><div id="detailKv" class="foundation-kv"></div></section><section class="foundation-detail"><h3>日历履历</h3><div id="timelineList" class="foundation-timeline"></div></section><section class="foundation-detail foundation-action"><h3 id="actionTitle"></h3><textarea rows="4" placeholder="填写例外停线、加班窗口、保养窗口或审批意见"></textarea><div class="action-row"><button class="primary-action" type="button">发布复核通过</button><button class="secondary-action" type="button">退回补充依据</button></div></section></aside></section>
+      </main>
+    </div>
+    <script src="../navigation.js"></script>
+    <script src="./foundation-governance.js?v=focus-matrix-1"></script>
+  </body>
+</html>

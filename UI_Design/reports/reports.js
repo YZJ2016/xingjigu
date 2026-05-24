@@ -5,7 +5,7 @@ const modules = window.MES_NAV_MODULES || [
   { id: "workbench", title: "首页工作台", layer: "日常工作", color: "#007aff", mark: "首", items: ["生产总览", "今日待办", "异常提醒", "交期预警", "车间看板", "我的审批"] },
   { id: "orders", title: "订单与计划", layer: "计划部门", color: "#5856d6", mark: "计", items: ["生产订单", "订单评审", "生产排程", "产能负荷", "交期预警", "计划调整", "齐套检查"] },
   { id: "dispatch", title: "派工与生产任务", layer: "车间管理", color: "#34c759", mark: "任", items: ["派工单", "工序任务", "班组任务", "任务下达", "任务变更", "SOP 查看", "开工检查"] },
-  { id: "station", title: "工位作业", layer: "现场操作", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
+  { id: "station", title: "工位作业", layer: "现场回执", color: "#00a6a6", mark: "位", items: ["员工登录", "扫码开工", "工艺指导", "投料确认", "过程记录", "工序报工", "交接班"] },
   { id: "materials", title: "物料与线边库", layer: "物料管理", color: "#34c759", mark: "料", items: ["用料需求", "领料申请", "配送进度", "线边库存", "投料记录", "余料退回", "缺料预警"] },
   { id: "barcode", title: "条码与标签", layer: "现场标识", color: "#00a6a6", mark: "码", items: ["生产批次", "产品序列号", "物料标签", "成品标签", "箱码托盘码", "标签打印", "补打申请"] },
   { id: "quality", title: "质量检验", layer: "质量部门", color: "#ff3b30", mark: "质", items: ["来料检验", "首件检验", "巡检任务", "过程检验", "成品检验", "不良记录", "返工评审", "质量放行"] },
@@ -97,15 +97,15 @@ const pageDefinitions = {
     simulationHint: "模拟 WMS、PDA 或电子秤回传余料与报废，不表示后台直接执行仓储作业",
   },
   cockpit: {
-    subtitle: "厂长和运营负责人跨订单、质量、设备、物料、异常和交付查看经营驾驶舱，定位需要当日协调的管理动作",
-    user: "运营负责人",
-    metricLabels: ["综合达成", "交付风险", "质量损失", "设备瓶颈"],
-    columns: ["经营主题", "范围 / 对象", "可信来源", "当前值", "目标 / 阈值", "风险解释", "管理动作", "责任人"],
-    tableTitle: "管理驾驶舱指标池",
-    tableHint: "驾驶舱仅展示 MES 已校验的生产事实和风险，不替代各现场终端执行动作",
-    insightTitle: "管理关注、跨部门协同和复盘入口",
-    simulationTitle: "模拟经营驾驶舱刷新",
-    simulationHint: "模拟 BI 驾驶舱读取 MES 聚合指标，不表示后台直接调整计划、质量或设备结果",
+    subtitle: "厂长和生产负责人查看 MES 生产指标驾驶舱，限定订单执行、质量放行、设备状态、物料损耗、异常闭环和交付达成等 MES 事实",
+    user: "生产负责人",
+    metricLabels: ["生产达成", "交付风险", "质量闭环", "设备瓶颈"],
+    columns: ["MES生产主题", "范围 / 对象", "MES可信来源", "当前值", "目标 / 阈值", "风险解释", "生产协调动作", "责任人"],
+    tableTitle: "MES 生产指标池",
+    tableHint: "驾驶舱仅展示 MES 已校验的生产事实和风险，不扩展财务、销售、采购或综合 BI 分析，也不替代现场终端执行动作",
+    insightTitle: "生产关注、跨部门协同和复盘入口",
+    simulationTitle: "模拟 MES 生产指标刷新",
+    simulationHint: "模拟管理驾驶舱读取 MES 聚合指标，不表示后台直接调整计划、质量、物料或设备结果",
   },
 };
 
@@ -147,10 +147,10 @@ const initialRows = {
     { id: "MAT-FEEDER-SMT", name: "SMT 供料器损耗关联", line: "Line-A", shift: "白班", order: "MO-202606-0001", source: "设备点检 + 投料记录", plan: "标准损耗 0.5% / 当前 0.9%", quality: "抛料偏高", status: "待改善", statusStyle: "orange", risk: "供料器振动可能导致抛料", owner: "设备员 周诚", updated: "2026-06-20 17:05", trace: "IP-20260620-01", next: "设备点检复核" },
   ],
   cockpit: [
-    { id: "CKP-DELIVERY", name: "交付达成经营主题", line: "全部产线", shift: "白班", order: "重点客户 A/B/I", source: "ERP 订单 + MES 完工 + WMS 入库", plan: "OTD 91.6% / 目标 95%", quality: "延期风险 3 单", status: "需协调", statusStyle: "red", risk: "测试瓶颈与关键料未齐套", owner: "运营负责人 许航", updated: "2026-06-20 18:00", trace: "管理驾驶舱快照 CKP-0620", next: "计划、设备、物料联合处置" },
-    { id: "CKP-QUALITY", name: "质量损失经营主题", line: "全部产线", shift: "白班", order: "TCU-100 / GW-240 / HMI-100", source: "FAI + IPQC + FQC + NCR", plan: "综合良率 98.2% / 目标 98.8%", quality: "NCR 未闭环 2 项", status: "观察", statusStyle: "orange", risk: "测试失败与首件尺寸待复判", owner: "质量负责人 周雅", updated: "2026-06-20 17:55", trace: "质量日报 QA-0620", next: "MRB 与返工评审" },
-    { id: "CKP-EQUIPMENT", name: "设备瓶颈经营主题", line: "Line-B / Line-C", shift: "白班", order: "MO-202606-0002 / MO-202606-0003", source: "PLC + 维修 + OEE", plan: "OEE 84.1% / 目标 86%", quality: "停机损失 112 分钟", status: "瓶颈", statusStyle: "red", risk: "测试台 B2 与老化房通道占用", owner: "设备负责人 袁立", updated: "2026-06-20 17:50", trace: "OEE-0620", next: "维修验收与瓶颈排程" },
-    { id: "CKP-MATERIAL", name: "物料损耗经营主题", line: "Line-A / Line-B", shift: "白班", order: "MO-202606-0001 / MO-202606-0002", source: "BOM + 投料 + WMS", plan: "损耗率 0.82% / 目标 0.6%", quality: "超耗工单 2 单", status: "待核销", statusStyle: "orange", risk: "缺料与不良隔离共同影响成本", owner: "物料成本员 高宁", updated: "2026-06-20 17:46", trace: "MAT-0620", next: "余料退回与批次追溯" },
+    { id: "CKP-DELIVERY", name: "交付达成 MES 生产主题", line: "全部产线", shift: "白班", order: "重点客户 A/B/I", source: "ERP 工单 + MES 完工 + WMS 入库回执", plan: "OTD 91.6% / 目标 95%", quality: "延期风险 3 单", status: "需协调", statusStyle: "red", risk: "测试瓶颈与关键料未齐套", owner: "生产负责人 许航", updated: "2026-06-20 18:00", trace: "MES生产指标快照 CKP-0620", next: "计划、设备、物料联合处置" },
+    { id: "CKP-QUALITY", name: "质量闭环 MES 生产主题", line: "全部产线", shift: "白班", order: "TCU-100 / GW-240 / HMI-100", source: "FAI + IPQC + FQC + NCR", plan: "综合良率 98.2% / 目标 98.8%", quality: "NCR 未闭环 2 项", status: "观察", statusStyle: "orange", risk: "测试失败与首件尺寸待复判", owner: "质量负责人 周雅", updated: "2026-06-20 17:55", trace: "质量日报 QA-0620", next: "MRB 与返工评审" },
+    { id: "CKP-EQUIPMENT", name: "设备瓶颈 MES 生产主题", line: "Line-B / Line-C", shift: "白班", order: "MO-202606-0002 / MO-202606-0003", source: "PLC + 维修 + OEE", plan: "OEE 84.1% / 目标 86%", quality: "停机损失 112 分钟", status: "瓶颈", statusStyle: "red", risk: "测试台 B2 与老化房通道占用", owner: "设备负责人 袁立", updated: "2026-06-20 17:50", trace: "OEE-0620", next: "维修验收与瓶颈排程" },
+    { id: "CKP-MATERIAL", name: "物料损耗 MES 生产主题", line: "Line-A / Line-B", shift: "白班", order: "MO-202606-0001 / MO-202606-0002", source: "BOM + 投料 + WMS 回执", plan: "损耗率 0.82% / 目标 0.6%", quality: "超耗工单 2 单", status: "待核销", statusStyle: "orange", risk: "缺料与不良隔离共同影响用料核销", owner: "物料员 高宁", updated: "2026-06-20 17:46", trace: "MAT-0620", next: "余料退回与批次追溯" },
   ],
 };
 
@@ -470,12 +470,12 @@ function getReportGovernanceAction(row = getActive()) {
   const risky = /延期|风险|损耗|瓶颈|NCR|超耗|需复核|红|故障|待归因/.test(`${row?.status || ""} ${row?.risk || ""}`);
   const map = {
     daily: { primary: publish ? "发布日报快照" : "模拟日报刷新", secondary: publish ? "撤回日报发布" : "登记日报复核", status: publish ? "已发布" : "复核中", type: "日报发布治理", result: publish ? "生产日报已发布给 BI，口径锁定并保留撤回入口" : "生产日报已登记复核结论，待异常关闭后发布", hint: "支持日报发布、撤回、BI 读取状态和复核签名" },
-    yield: { primary: "锁定良率口径", secondary: risky ? "下钻 NCR/MRB" : "登记质量复核", status: risky ? "NCR下钻中" : "口径已锁定", type: "良率口径治理", result: risky ? "已下钻不良、NCR/MRB 和返工闭环，并反写质量异常" : "良率分析口径已锁定，供经营驾驶舱引用", hint: "支持良率口径锁定、质量异常下钻和复核签名" },
+    yield: { primary: "锁定良率口径", secondary: risky ? "下钻 NCR/MRB" : "登记质量复核", status: risky ? "NCR下钻中" : "口径已锁定", type: "良率口径治理", result: risky ? "已下钻不良、NCR/MRB 和返工闭环，并反写质量异常" : "良率分析口径已锁定，供 MES 生产指标驾驶舱引用", hint: "支持良率口径锁定、质量异常下钻和复核签名" },
     delivery: { primary: "锁定交付口径", secondary: risky ? "反写交付风险" : "登记交付复核", status: risky ? "风险已反写" : "口径已锁定", type: "交付风险反写", result: risky ? "延期/入库待同步风险已反写异常中心和订单风险" : "交付达成口径已锁定，等待 BI 读取", hint: "支持交付风险反写计划调整、异常中心和订单风险" },
     equipment: { primary: "重算 OEE 口径", secondary: risky ? "下钻设备瓶颈" : "登记 OEE 复核", status: risky ? "瓶颈已反写" : "OEE已锁定", type: "OEE下钻治理", result: risky ? "设备瓶颈已反写设备异常和停机复盘" : "OEE 三分项口径已锁定", hint: "支持 OEE 口径锁定、设备瓶颈下钻和 TPM 改善反写" },
     downtime: { primary: "锁定停机损失", secondary: risky ? "下钻停机归因" : "登记归因复核", status: risky ? "归因中" : "损失已锁定", type: "停机损失治理", result: risky ? "停机损失已下钻到 PLC 日志、班组补录和维修归因" : "停机损失已锁定并进入复盘", hint: "支持停机损失锁定、归因复核和改善闭环" },
     material: { primary: "锁定损耗口径", secondary: risky ? "反写损耗异常" : "登记核销复核", status: risky ? "损耗异常已反写" : "损耗已锁定", type: "物料损耗治理", result: risky ? "超耗/待核销风险已反写异常中心和物料核销" : "物料损耗口径已锁定，供成本归集", hint: "支持损耗口径锁定、余料核销和成本差异反写" },
-    cockpit: { primary: "发布驾驶舱快照", secondary: risky ? "生成管理协调项" : "登记经营复核", status: risky ? "协调项已生成" : "驾驶舱已发布", type: "经营驾驶舱治理", result: risky ? "跨部门管理协调项已生成，反写交付、质量、设备或物料责任人" : "管理驾驶舱快照已发布给经营层", hint: "支持驾驶舱发布、跨部门协调项和指标下钻" },
+    cockpit: { primary: "发布 MES 指标快照", secondary: risky ? "生成生产协调项" : "登记生产复核", status: risky ? "协调项已生成" : "指标快照已发布", type: "MES生产指标治理", result: risky ? "生产协调项已生成，反写交付、质量、设备或物料责任人" : "MES 生产指标快照已发布，保留口径和责任人", hint: "支持 MES 指标发布、生产协调项和事实下钻" },
   };
   return map[pageConfig.id] || { primary: "模拟报表刷新", secondary: "登记复核结论", status: "已复核", type: "报表治理", result: "报表复核已登记", hint: "登记发布、复核、撤回和下钻动作" };
 }

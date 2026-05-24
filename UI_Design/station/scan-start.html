@@ -120,7 +120,7 @@
               <div class="section-title">
                 <div>
                   <h3>现场扫码回执监控</h3>
-                  <p>后台只接收模拟工位终端、扫码枪和设备信号回传</p>
+                  <p>后台只做准入规则、模拟回执查看、校验拦截、异常转单和追溯记录，不替代真实扫码或设备启动</p>
                 </div>
                 <span id="terminalTitle">ASM-WS-03</span>
               </div>
@@ -146,9 +146,9 @@
                   </div>
                 </div>
                 <div class="scan-terminal-actions">
-                  <button id="scanStartBtn" type="button">同步开工回执</button>
-                  <button id="simulateDeviceBtn" type="button">同步设备启动信号</button>
-                  <button id="simulateBlockBtn" type="button">登记条码不匹配拦截</button>
+                  <button id="scanStartBtn" type="button">同步模拟开工回执</button>
+                  <button id="simulateDeviceBtn" type="button">同步模拟设备就绪信号</button>
+                  <button id="simulateBlockBtn" type="button">登记模拟条码不匹配拦截</button>
                   <button id="switchTaskBtn" type="button">切换工位任务</button>
                 </div>
               </div>
@@ -260,9 +260,9 @@
                   </label>
                 </div>
                 <div class="action-grid dispatch-actions">
-                  <button id="detailStartBtn" type="button">同步开工回执</button>
+                  <button id="detailStartBtn" type="button">同步模拟开工回执</button>
                   <button id="firstPieceBtn" type="button">转首件确认</button>
-                  <button id="detailBlockBtn" class="danger-action" type="button">拦截开工</button>
+                  <button id="detailBlockBtn" class="danger-action" type="button">登记模拟开工拦截</button>
                   <button id="releaseBlockBtn" type="button">解除拦截</button>
                 </div>
               </section>

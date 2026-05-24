@@ -65,7 +65,7 @@
           <article>
             <span>待接收</span>
             <strong id="metricReceiving">0</strong>
-            <em>接班人待刷卡确认</em>
+            <em>接班人待模拟刷卡确认</em>
           </article>
           <article>
             <span>异常未闭环</span>
@@ -127,7 +127,7 @@
               <div class="handover-focus">
                 <section class="handover-terminal-panel">
                   <div class="section-title">
-                    <h3>模拟工位交接终端</h3>
+                    <h3>模拟工位交接终端回执</h3>
                     <span id="terminalTitle">ASM-WS-03</span>
                   </div>
                   <div class="handover-terminal">
@@ -142,7 +142,7 @@
                       <em id="terminalShift">白班转夜班</em>
                     </div>
                     <div class="handover-sim-panel" aria-label="模拟交接确认输入">
-                      <span>模拟外部确认</span>
+                      <span>模拟工牌/NFC 外部确认</span>
                       <div class="handover-input-grid">
                         <input id="handoverCardInput" type="text" placeholder="模拟工牌/NFC，例如 E1003" />
                         <select id="handoverConfirmMode">
@@ -265,8 +265,8 @@
                 </label>
               </div>
               <div class="action-grid dispatch-actions">
-                <button id="detailOutBtn" type="button">交班确认</button>
-                <button id="detailInBtn" type="button">接班确认</button>
+                <button id="detailOutBtn" type="button">模拟交班确认</button>
+                <button id="detailInBtn" type="button">模拟接班确认</button>
                 <button id="detailRiskBtn" class="danger-action" type="button">登记异常移交</button>
                 <button id="closeRiskBtn" type="button">闭环移交事项</button>
               </div>
