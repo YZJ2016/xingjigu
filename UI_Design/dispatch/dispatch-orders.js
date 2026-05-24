@@ -294,8 +294,11 @@ function renderFrameMenu() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    if (!saved) return;
-    dispatchOrders = saved.dispatchOrders || dispatchOrders;
+    dispatchOrders = window.MES_DISPATCH_LEDGER?.getOrderRows?.() || saved?.dispatchOrders || dispatchOrders;
+    if (!saved) {
+      mergeFlowDispatchRows();
+      return;
+    }
     dispatchLogs = saved.dispatchLogs || dispatchLogs;
     state = { ...state, ...(saved.dispatchState || {}) };
   } catch (error) {
@@ -306,6 +309,13 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ dispatchOrders, dispatchLogs, dispatchState: state }));
+}
+
+function syncDispatchOrdersFromLedger() {
+  const ledgerRows = window.MES_DISPATCH_LEDGER?.getOrderRows?.();
+  if (!ledgerRows?.length) return;
+  dispatchOrders = ledgerRows;
+  if (!dispatchOrders.some((item) => item.id === state.activeDispatchId)) state.activeDispatchId = dispatchOrders[0]?.id || "";
 }
 
 function mergeFlowDispatchRows() {
@@ -335,6 +345,7 @@ function getVisibleDispatchOrders() {
 }
 
 function renderAll() {
+  syncDispatchOrdersFromLedger();
   mergeFlowDispatchRows();
   renderDetailPanelState();
   renderMetrics();
@@ -355,9 +366,9 @@ function renderDetailPanelState() {
 
 function renderMetrics() {
   $("#metricDraft").textContent = dispatchOrders.filter((item) => item.status === "待下达").length;
-  $("#metricReleased").textContent = dispatchOrders.filter((item) => item.status === "待接单").length;
+  $("#metricReleased").textContent = dispatchOrders.filter((item) => ["待接单", "待开工", "可开工"].includes(item.status)).length;
   $("#metricRunning").textContent = dispatchOrders.filter((item) => item.status === "生产中").length;
-  $("#metricBlocked").textContent = dispatchOrders.filter((item) => item.status === "异常锁定").length;
+  $("#metricBlocked").textContent = dispatchOrders.filter((item) => ["异常锁定", "下达拦截", "开工拦截", "报工拦截"].includes(item.status)).length;
 }
 
 function renderDispatchList() {
@@ -458,6 +469,7 @@ function renderDetail() {
     ["产线", item.line],
     ["工位", item.workstation],
     ["设备", item.equipment],
+    ["工装", item.tooling || "待绑定"],
     ["班组", item.team],
     ["操作员", item.operator],
     ["计划窗口", `${item.planStart}-${item.planEnd.split(" ").pop()}`],
@@ -468,7 +480,7 @@ function renderDetail() {
     <div class="gate-item ${getGateClass(gate.status)}">
       <span>${gate.label}</span>
       <strong>${gate.desc}</strong>
-      <span>${gate.status}</span>
+      <span>${gate.status} · ${gate.source || "MES 校验"}</span>
     </div>
   `).join("");
 
@@ -477,6 +489,8 @@ function renderDetail() {
     ["检验计划", item.inspection, item.inspection ? "已配置" : "待配置"],
     ["物料", item.material, getMaterialStatus(item)],
     ["下道任务", item.next, item.next === "入库" ? "末道" : "已关联"],
+    ["派工版本", item.ledger?.dispatchVersion || "V1", "已关联"],
+    ["追溯引用", item.ledger?.references?.traceId || "待生成", item.ledger?.references?.traceId ? "已关联" : "待确认"],
   ].map(([label, value, status]) => `
     <div class="readiness-item ${getGateClass(status)}">
       <span>${label}</span>
@@ -489,8 +503,14 @@ function renderDetail() {
 function renderLogs() {
   const active = getActiveDispatch();
   const logs = dispatchLogs.filter((log) => log.dispatchId === active.id).slice(0, 5);
-  $("#dispatchLogList").innerHTML = logs.length
-    ? logs.map((log) => `
+  const ledgerLogs = (active.ledger?.records || []).slice(0, 5).map((record) => ({
+    dispatchId: active.id,
+    action: `${record.action}（${record.source || "MES 后台"}）`,
+    time: record.time,
+  }));
+  const visibleLogs = [...logs, ...ledgerLogs].slice(0, 5);
+  $("#dispatchLogList").innerHTML = visibleLogs.length
+    ? visibleLogs.map((log) => `
       <div class="integration-item">
         <span>${log.dispatchId}</span>
         <strong>${log.action}</strong>
@@ -503,12 +523,12 @@ function renderLogs() {
 function buildGateItems(item) {
   const materialStatus = getMaterialStatus(item);
   return [
-    { label: "派工状态", desc: item.status === "待下达" ? "尚未推送到工位终端" : "已进入现场队列", status: item.status === "待下达" ? "待确认" : "通过" },
-    { label: "工位匹配", desc: `${item.operation} 绑定 ${item.workstation}`, status: "通过" },
-    { label: "设备可用", desc: item.status === "异常锁定" ? `${item.equipment} 需设备组确认` : `${item.equipment} 可用`, status: item.status === "异常锁定" ? "拦截" : "通过" },
-    { label: "人员资质", desc: item.operator === "待分配" || item.operator === "待接单" ? "操作员待班组确认" : `${item.operator} 资质有效`, status: item.operator.includes("待") ? "待确认" : "通过" },
-    { label: "物料齐套", desc: item.material, status: materialStatus === "已准备" ? "通过" : "待确认" },
-    { label: "质量要求", desc: item.inspection, status: "通过" },
+    { label: "派工状态", desc: item.status === "待下达" ? "尚未推送到工位终端" : "已进入现场队列", status: item.status === "待下达" ? "待确认" : "通过", source: "派工主账本" },
+    { label: "工位匹配", desc: `${item.operation} 绑定 ${item.workstation}`, status: "通过", source: "基础资料" },
+    { label: "设备可用", desc: item.status === "异常锁定" ? `${item.equipment} 需设备组确认` : `${item.equipment} 可用`, status: item.status === "异常锁定" ? "拦截" : "通过", source: "模拟 PLC/设备状态" },
+    { label: "人员资质", desc: item.operator === "待分配" || item.operator === "待接单" ? "操作员待班组确认" : `${item.operator} 资质有效`, status: item.operator.includes("待") ? "待确认" : "通过", source: "人员资质矩阵" },
+    { label: "物料齐套", desc: item.material, status: materialStatus === "已准备" ? "通过" : "待确认", source: "齐套检查/WMS 模拟回执" },
+    { label: "质量要求", desc: item.inspection, status: "通过", source: "质量计划" },
   ];
 }
 
@@ -526,8 +546,8 @@ function getGateClass(status) {
 
 function getStatusStyle(status) {
   if (status === "生产中" || status === "已完工") return "green";
-  if (status === "异常锁定") return "red";
-  if (status === "待接单") return "orange";
+  if (["异常锁定", "下达拦截", "开工拦截", "报工拦截"].includes(status)) return "red";
+  if (["待接单", "待开工", "待报工", "可开工"].includes(status)) return "orange";
   return "blue";
 }
 
@@ -541,6 +561,22 @@ function selectDispatch(id) {
 function updateDispatch(id, patch, message) {
   const index = dispatchOrders.findIndex((item) => item.id === id);
   if (index < 0) return;
+  const ledgerPatch = {};
+  if (typeof patch.done === "number") ledgerPatch.outputQty = patch.done;
+  if (patch.operator) ledgerPatch.operator = patch.operator;
+  if (patch.team) ledgerPatch.team = patch.team;
+  if (patch.status) {
+    const result = window.MES_DISPATCH_LEDGER?.updateStatus?.(id, patch.status, {
+      ...ledgerPatch,
+      owner: patch.operator || dispatchOrders[index].operator || dispatchOrders[index].team,
+      source: message.includes("模拟") ? "模拟现场回执" : "MES 后台",
+      action: message,
+    });
+    if (result && !result.ok) {
+      showToast(result.reason);
+      return;
+    }
+  }
   dispatchOrders[index] = { ...dispatchOrders[index], ...patch };
   if (patch.status === "待接单") {
     window.MES_BUSINESS_FLOW?.applyDispatchAction?.(dispatchOrders[index].orderId, "release", { owner: dispatchOrders[index].operator || "车间主任" });
@@ -551,6 +587,7 @@ function updateDispatch(id, patch, message) {
   }
   state.activeDispatchId = id;
   recordLog(id, message);
+  if (!patch.status) window.MES_DISPATCH_LEDGER?.appendRecord?.(id, message, { source: "MES 后台" });
   saveState();
   renderAll();
   showToast(message);
@@ -601,6 +638,11 @@ function bindEvents() {
       return;
     }
     targets.forEach((item) => {
+      window.MES_DISPATCH_LEDGER?.updateStatus?.(item.id, "待接单", {
+        owner: item.operator || "车间主任",
+        source: "MES 后台",
+        action: "派工单已批量下达到工位终端",
+      });
       item.status = "待接单";
       recordLog(item.id, "派工单已批量下达到工位终端");
       window.MES_BUSINESS_FLOW?.applyDispatchAction?.(item.orderId, "release", { owner: item.operator || "车间主任" });
@@ -612,7 +654,8 @@ function bindEvents() {
   });
   $("#exportTaskBtn").addEventListener("click", () => {
     const item = getActiveDispatch();
-    recordLog(item.id, "已生成现场任务卡，包含 SOP、检验计划和物料清单");
+    recordLog(item.id, "已生成后台任务卡，包含 SOP、检验计划和物料清单");
+    window.MES_DISPATCH_LEDGER?.appendRecord?.(item.id, "已生成后台任务卡", { source: "MES 后台" });
     saveState();
     renderLogs();
     showToast("任务卡已生成");
@@ -639,7 +682,7 @@ function bindEvents() {
   $("#releaseBtn").addEventListener("click", () => updateDispatch(getActiveDispatch().id, { status: "待接单" }, "派工单已下达到班组和工位终端"));
   $("#acceptBtn").addEventListener("click", () => {
     const item = getActiveDispatch();
-    updateDispatch(item.id, { status: "待接单", operator: item.operator.includes("待") ? "班组已接单" : item.operator }, "班组已接单，等待扫码开工");
+    updateDispatch(item.id, { status: "待开工", operator: item.operator.includes("待") ? "班组长模拟接收" : item.operator }, "已接收模拟班组接收回执，等待开工检查");
   });
   $("#startBtn").addEventListener("click", () => {
     const item = getActiveDispatch();
@@ -648,11 +691,11 @@ function bindEvents() {
       showToast(`${blockedGate.label}未通过，不能开工`);
       return;
     }
-    updateDispatch(item.id, { status: "生产中", operator: item.operator.includes("待") ? "现场操作员" : item.operator }, "扫码开工成功，派工单进入生产中");
+    updateDispatch(item.id, { status: "生产中", operator: item.operator.includes("待") ? "现场操作员" : item.operator }, "模拟扫码开工回执通过，派工单进入生产中");
   });
   $("#completeBtn").addEventListener("click", () => {
     const item = getActiveDispatch();
-    updateDispatch(item.id, { status: "已完工", done: item.qty }, "工序已完工，已触发下道派工或入库准备");
+    updateDispatch(item.id, { status: "已完工", done: item.qty }, "模拟工位完工回执通过，已触发下道派工或入库准备");
   });
   $("#blockBtn").addEventListener("click", () => updateDispatch(getActiveDispatch().id, { status: "异常锁定" }, "派工单已异常锁定，等待责任人处理"));
   $("#reassignBtn").addEventListener("click", () => {
@@ -662,7 +705,8 @@ function bindEvents() {
   });
   $("#resetDispatchBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
-    dispatchOrders = structuredClone(window.MES_BUSINESS_FLOW?.getDispatchRows?.() || initialDispatchOrders);
+    window.MES_DISPATCH_LEDGER?.reset?.();
+    dispatchOrders = structuredClone(window.MES_DISPATCH_LEDGER?.getOrderRows?.() || window.MES_BUSINESS_FLOW?.getDispatchRows?.() || initialDispatchOrders);
     dispatchLogs = [];
     state = { activeDispatchId: "D-001", search: "", status: "all", line: "all", team: "all", detailOpen: true };
     $("#dispatchSearch").value = "";

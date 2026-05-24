@@ -149,6 +149,41 @@ let state = {
 
 const $ = (selector) => document.querySelector(selector);
 
+function nowText() {
+  return new Date().toLocaleString("zh-CN", { hour12: false });
+}
+
+function defaultSopEvidence(item) {
+  return {
+    sourceSystem: item.sourceSystem || "模拟 PLM 发布",
+    plmDocNo: item.plmDocNo || `PLM-${item.id}-${item.version.replace("V", "")}`,
+    approvalNo: item.approvalNo || `APR-${item.id}-202606`,
+    effectiveScope: item.effectiveScope || { product: item.product, operations: [item.operation], stations: [item.station], line: item.line },
+    terminalSync: item.terminalSync || [{
+      terminalId: `${item.station}-TERM`,
+      status: item.terminal.startsWith("已同步") ? "ACK" : "待同步",
+      ackAt: item.terminal.startsWith("已同步") ? "2026-06-20 07:40:00" : "",
+      retryCount: 0,
+      failureReason: item.terminal === "未同步" ? "模拟终端未返回 ACK" : "",
+    }],
+    signoffs: item.signoffs || (item.signStatus === "已签收" ? [{
+      team: item.line === "Line-C" ? "C1 班" : item.line === "Line-B" ? "B1 班" : "A1 班",
+      user: "班组长",
+      source: "模拟工位终端签收回执",
+      signedAt: "2026-06-20 07:45:00",
+    }] : []),
+    blockingReasons: item.blockingReasons || [],
+  };
+}
+
+function normalizeSop(item) {
+  return { ...item, ...defaultSopEvidence(item) };
+}
+
+function normalizeSops() {
+  sops = sops.map(normalizeSop);
+}
+
 function renderFrameMenu() {
   $("#sopModuleMenu").innerHTML = modules.map((module) => {
     const openClass = module.id === "dispatch" ? " is-open" : "";
@@ -216,6 +251,7 @@ function loadState() {
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  normalizeSops();
 }
 
 function saveState() {
@@ -299,7 +335,7 @@ function renderTerminalPreview() {
   $("#terminalPreview").innerHTML = `
     <div class="terminal-head">
       <div>
-        <span>工位终端任务卡</span>
+        <span>模拟工位终端任务卡</span>
         <strong>${item.operation} · ${item.product}</strong>
       </div>
       <span class="pill pill--${getStatusStyle(item.status)}">${item.status}</span>
@@ -352,11 +388,15 @@ function renderDetail() {
   $("#detailTitle").textContent = `${item.operation} · ${item.product}`;
   $("#detailGrid").innerHTML = [
     ["工单", item.orderId],
+    ["来源系统", item.sourceSystem],
+    ["PLM 单号", item.plmDocNo],
+    ["审批单", item.approvalNo],
     ["产线", item.line],
     ["工位", item.station],
     ["版本", item.version],
     ["生效日", item.effective],
     ["有效期", item.expires],
+    ["生效范围", `${item.effectiveScope.product} / ${item.effectiveScope.operations.join("、")} / ${item.effectiveScope.stations.join("、")}`],
     ["签收", item.signStatus],
     ["终端", item.terminal],
     ["负责人", item.owner],
@@ -371,13 +411,34 @@ function renderDetail() {
     </div>
   `).join("");
 
-  $("#attachmentList").innerHTML = item.attachments.map((attachment) => `
+  const syncItems = item.terminalSync.map((sync) => `
+    <div class="readiness-item ${sync.status === "ACK" ? "is-pass is-ready" : sync.status === "失败" ? "is-blocked" : "is-risk"}">
+      <span>终端同步回执</span>
+      <strong>${sync.terminalId} · ${sync.status} · 重试 ${sync.retryCount} 次</strong>
+      <span>${sync.failureReason || sync.ackAt || "待模拟回执"}</span>
+    </div>
+  `);
+  const signItems = (item.signoffs.length ? item.signoffs : [{ team: "待签收班组", user: "待模拟签收", source: "模拟签收回执未返回", signedAt: "" }]).map((signoff) => `
+    <div class="readiness-item ${signoff.signedAt ? "is-pass is-ready" : "is-blocked"}">
+      <span>模拟签收明细</span>
+      <strong>${signoff.team} · ${signoff.user}</strong>
+      <span>${signoff.source} ${signoff.signedAt}</span>
+    </div>
+  `);
+  const blockItems = item.blockingReasons.map((reason) => `
+    <div class="readiness-item is-blocked">
+      <span>开工阻断原因</span>
+      <strong>${reason}</strong>
+      <span>本页记录</span>
+    </div>
+  `);
+  $("#attachmentList").innerHTML = [...syncItems, ...signItems, ...blockItems, ...item.attachments.map((attachment) => `
     <div class="readiness-item is-pass is-ready">
       <span>附件</span>
       <strong>${attachment}</strong>
       <span>可查看</span>
     </div>
-  `).join("");
+  `)].join("");
 }
 
 function renderLogs() {
@@ -395,10 +456,14 @@ function renderLogs() {
 }
 
 function buildGateItems(item) {
+  const terminalFailed = item.terminalSync.some((sync) => sync.status === "失败");
+  const terminalAck = item.terminalSync.some((sync) => sync.status === "ACK");
+  const notSigned = item.signStatus !== "已签收" || !item.signoffs.length;
   return [
-    { label: "版本状态", desc: `${item.version} · ${item.status}`, status: item.status === "已发布" ? "通过" : item.status === "已过期" ? "拦截" : "待确认" },
-    { label: "班组签收", desc: item.signStatus, status: item.signStatus === "已签收" ? "通过" : "待确认" },
-    { label: "终端同步", desc: item.terminal, status: item.terminal.startsWith("已同步") ? "通过" : "待确认" },
+    { label: "版本状态", desc: `${item.sourceSystem} · ${item.approvalNo} · ${item.version} · ${item.status}`, status: item.status === "已发布" ? "通过" : item.status === "已过期" ? "拦截" : "待确认" },
+    { label: "生效范围", desc: `${item.effectiveScope.product} · ${item.effectiveScope.operations.join("、")} · ${item.effectiveScope.stations.join("、")}`, status: item.effectiveScope.stations.length ? "通过" : "拦截" },
+    { label: "班组签收", desc: notSigned ? "模拟签收回执未返回，开工检查应拦截" : item.signoffs.map((entry) => `${entry.team}/${entry.user}/${entry.signedAt}`).join("、"), status: notSigned ? "拦截" : "通过" },
+    { label: "终端同步", desc: item.terminalSync.map((sync) => `${sync.terminalId}/${sync.status}/重试${sync.retryCount}`).join("、"), status: terminalFailed ? "拦截" : terminalAck ? "通过" : "待确认" },
     { label: "参数确认", desc: item.params.map((param) => param.label).join("、"), status: item.params.some((param) => param.status === "风险") ? "拦截" : item.params.some((param) => param.status === "待确认") ? "待确认" : "通过" },
   ];
 }
@@ -434,6 +499,7 @@ function updateSop(id, patch, message) {
   const index = sops.findIndex((item) => item.id === id);
   if (index < 0) return;
   sops[index] = { ...sops[index], ...patch };
+  syncLedgerSop(sops[index], message);
   if (patch.status === "已发布" || patch.terminal?.includes("已同步") || patch.signStatus === "已签收") {
     window.MES_BUSINESS_FLOW?.applyDispatchAction?.(sops[index].orderId, "generate", { owner: sops[index].owner || "工艺员" });
   }
@@ -449,6 +515,22 @@ function recordLog(sopId, action) {
     { sopId, action, time: new Date().toLocaleString("zh-CN", { hour12: false }) },
     ...logs,
   ].slice(0, 60);
+}
+
+function syncLedgerSop(item, message) {
+  const ledger = window.MES_DISPATCH_LEDGER;
+  if (!ledger) return;
+  const row = ledger.getRows?.().find((entry) => entry.orderId === item.orderId && entry.resources?.station === item.station);
+  if (!row) return;
+  ledger.appendRecord?.(row.dispatchId, message, { owner: item.owner || "工艺员", source: message.includes("模拟") ? "MES SOP 查看接收模拟回执" : "MES SOP 查看" });
+}
+
+function setBlockingReasons(item) {
+  const reasons = [];
+  if (item.status === "已过期") reasons.push(`${item.id} ${item.version} 已过期`);
+  if (item.signStatus !== "已签收" || !item.signoffs.length) reasons.push(`${item.id} ${item.version} 未收到模拟签收回执`);
+  if (item.terminalSync.some((sync) => sync.status !== "ACK")) reasons.push(`${item.id} ${item.version} 终端同步未收到模拟 ACK`);
+  return reasons;
 }
 
 function showToast(message) {
@@ -490,14 +572,20 @@ function bindEvents() {
     }
     targets.forEach((item) => {
       item.signStatus = "已签收";
-      recordLog(item.id, "已批量完成班组签收");
+      item.signoffs = [{ team: item.line === "Line-C" ? "C1 班" : item.line === "Line-B" ? "B1 班" : "A1 班", user: "班组长", source: "模拟工位终端签收回执", signedAt: nowText() }];
+      item.blockingReasons = setBlockingReasons(item);
+      recordLog(item.id, "已批量接收模拟班组签收回执");
     });
     state.activeSopId = targets[0].id;
     saveState();
     renderAll();
     showToast(`已签收 ${targets.length} 份 SOP`);
   });
-  $("#pushTerminalBtn").addEventListener("click", () => updateSop(getActiveSop().id, { terminal: "已同步 4/4" }, "SOP 已推送至工位终端"));
+  $("#pushTerminalBtn").addEventListener("click", () => {
+    const item = getActiveSop();
+    const terminalSync = [{ terminalId: `${item.station}-TERM`, status: "ACK", ackAt: nowText(), retryCount: (item.terminalSync?.[0]?.retryCount || 0) + 1, failureReason: "" }];
+    updateSop(item.id, { terminal: "已同步 4/4", terminalSync, blockingReasons: setBlockingReasons({ ...item, terminalSync }) }, "SOP 已同步终端，并记录模拟终端 ACK");
+  });
   $("#closeDetailBtn").addEventListener("click", () => {
     state.detailOpen = false;
     saveState();
@@ -516,17 +604,39 @@ function bindEvents() {
     renderLogs();
     showToast("SOP 版本校验已完成");
   });
-  $("#signBtn").addEventListener("click", () => updateSop(getActiveSop().id, { signStatus: "已签收" }, "班组已签收 SOP"));
-  $("#releaseBtn").addEventListener("click", () => updateSop(getActiveSop().id, { status: "已发布" }, "SOP 版本已发布"));
+  $("#signBtn").addEventListener("click", () => {
+    const item = getActiveSop();
+    if (!item.terminalSync.some((sync) => sync.status === "ACK")) {
+      showToast("终端未同步 ACK，不能记录模拟签收");
+      return;
+    }
+    const signoffs = [{ team: item.line === "Line-C" ? "C1 班" : item.line === "Line-B" ? "B1 班" : "A1 班", user: "班组长", source: "模拟工位终端签收回执", signedAt: nowText() }];
+    updateSop(item.id, { signStatus: "已签收", signoffs, blockingReasons: setBlockingReasons({ ...item, signStatus: "已签收", signoffs }) }, "已接收模拟签收回执");
+  });
+  $("#releaseBtn").addEventListener("click", () => {
+    const item = getActiveSop();
+    if (!item.approvalNo || !item.effectiveScope?.stations?.length) {
+      showToast("缺少审批单或生效范围，不能发布到执行");
+      return;
+    }
+    updateSop(item.id, { status: "已发布", sourceSystem: "模拟 PLM 来源", blockingReasons: setBlockingReasons({ ...item, status: "已发布" }) }, "SOP 已发布到执行，来源为模拟 PLM 版本");
+  });
   $("#changeBtn").addEventListener("click", () => updateSop(getActiveSop().id, { status: "变更中", signStatus: "待确认" }, "已发起 SOP 变更"));
-  $("#terminalBtn").addEventListener("click", () => updateSop(getActiveSop().id, { terminal: "已同步 4/4" }, "SOP 已同步终端"));
+  $("#terminalBtn").addEventListener("click", () => {
+    const item = getActiveSop();
+    const terminalSync = [{ terminalId: `${item.station}-TERM`, status: "ACK", ackAt: nowText(), retryCount: (item.terminalSync?.[0]?.retryCount || 0) + 1, failureReason: "" }];
+    updateSop(item.id, { terminal: "已同步 4/4", terminalSync, blockingReasons: setBlockingReasons({ ...item, terminalSync }) }, "已同步终端，并记录模拟终端 ACK 回执");
+  });
   $("#printBtn").addEventListener("click", () => {
     recordLog(getActiveSop().id, "已生成工位纸质卡打印记录");
     saveState();
     renderLogs();
     showToast("工位卡打印记录已生成");
   });
-  $("#archiveBtn").addEventListener("click", () => updateSop(getActiveSop().id, { status: "已过期" }, "SOP 已标记过期"));
+  $("#archiveBtn").addEventListener("click", () => {
+    const item = getActiveSop();
+    updateSop(item.id, { status: "已过期", blockingReasons: setBlockingReasons({ ...item, status: "已过期" }) }, "SOP 已标记过期并记录为开工阻断原因");
+  });
   $("#resetSopBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
     sops = structuredClone(initialSops);
@@ -541,6 +651,7 @@ function bindEvents() {
   });
 }
 
+normalizeSops();
 loadState();
 renderFrameMenu();
 $("#sopSearch").value = state.search;

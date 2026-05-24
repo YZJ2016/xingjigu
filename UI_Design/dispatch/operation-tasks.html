@@ -43,7 +43,7 @@
             <h1>工序任务看板</h1>
           </div>
           <div class="topbar-actions">
-            <button id="startReadyBtn" class="primary-action" type="button">批量开工可执行</button>
+            <button id="startReadyBtn" class="primary-action" type="button">批量接收模拟开工回执</button>
             <button id="resetOperationBtn" class="secondary-action" type="button">重置工序演示</button>
             <a class="secondary-link" href="./dispatch-orders.html">派工单</a>
             <a class="secondary-link" href="../index.html">返回首页</a>
@@ -210,10 +210,10 @@
                   <h3>联动动作</h3>
                 </div>
                 <div class="action-grid dispatch-actions">
-                  <button id="startBtn" type="button">扫码开工</button>
-                  <button id="feedBtn" type="button">投料确认</button>
+                  <button id="startBtn" type="button">模拟扫码开工回执</button>
+                  <button id="feedBtn" type="button">模拟 PDA 投料回传</button>
                   <button id="qualityBtn" type="button">质量放行</button>
-                  <button id="reportBtn" type="button">工序报工</button>
+                  <button id="reportBtn" type="button">模拟 HMI 报工回传</button>
                   <button id="blockBtn" class="danger-action" type="button">异常停滞</button>
                   <button id="handoverBtn" type="button">交接下道</button>
                 </div>
@@ -235,6 +235,7 @@
     <script src="../navigation.js"></script>
     <script src="../data/master-data.js"></script>
     <script src="../data/business-flow.js"></script>
+    <script src="../data/dispatch-ledger.js"></script>
     <script src="./operation-tasks.js"></script>
     <script src="./dispatch-maintenance.js"></script>
   </body>

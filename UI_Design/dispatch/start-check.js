@@ -144,6 +144,36 @@ let state = {
 
 const $ = (selector) => document.querySelector(selector);
 
+function nowText() {
+  return new Date().toLocaleString("zh-CN", { hour12: false });
+}
+
+function normalizeGate(gate, fallbackSource) {
+  return {
+    ...gate,
+    source: gate.source || fallbackSource,
+    checkedAt: gate.checkedAt || "2026-06-20 07:58:00",
+  };
+}
+
+function normalizeCheck(item) {
+  const sources = {
+    dispatch: "MES 派工主账本",
+    operator: "模拟工牌/NFC 资质回执",
+    equipment: "模拟 PLC / 设备 HMI 回执",
+    material: "模拟 WMS 齐套回执",
+    sop: "SOP 查看签收结果",
+    quality: "QMS 首件计划",
+    safety: "模拟安灯/点检回执",
+  };
+  const gates = Object.fromEntries(Object.entries(item.gates).map(([key, gate]) => [key, normalizeGate(gate, sources[key] || "MES 后台")]));
+  return { ...item, gates, receipts: item.receipts || [] };
+}
+
+function normalizeChecks() {
+  checks = checks.map(normalizeCheck);
+}
+
 function renderFrameMenu() {
   $("#checkModuleMenu").innerHTML = modules.map((module) => {
     const openClass = module.id === "dispatch" ? " is-open" : "";
@@ -211,6 +241,7 @@ function loadState() {
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  normalizeChecks();
 }
 
 function saveState() {
@@ -358,7 +389,7 @@ function renderDetail() {
     <div class="gate-item ${getGateClass(gate.status)}">
       <span>${gate.label}</span>
       <strong>${gate.desc}</strong>
-      <span>${gate.status}</span>
+      <span>${gate.status} · ${gate.source} · ${gate.checkedAt}</span>
     </div>
   `).join("");
 
@@ -434,6 +465,7 @@ function updateCheck(id, patch, message) {
   const index = checks.findIndex((item) => item.id === id);
   if (index < 0) return;
   checks[index] = { ...checks[index], ...patch };
+  syncLedgerCheck(checks[index], patch, message);
   if (patch.status === "已放行" || patch.status === "可开工") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(checks[index].orderId, "release", { owner: checks[index].owner || "车间主任" });
   if (patch.status === "已拦截") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(checks[index].orderId, "hold", { owner: checks[index].owner || "车间主任", reason: message });
   state.activeCheckId = id;
@@ -446,16 +478,17 @@ function updateCheck(id, patch, message) {
 function updateGate(id, gateKey, patch, message) {
   const item = checks.find((check) => check.id === id);
   if (!item || !item.gates[gateKey]) return;
-  const gates = { ...item.gates, [gateKey]: { ...item.gates[gateKey], ...patch } };
+  const gates = { ...item.gates, [gateKey]: { ...item.gates[gateKey], ...patch, checkedAt: nowText() } };
   updateCheck(id, { gates }, message);
 }
 
-function passAllGates(item, message) {
+function confirmPassedGates(item, message) {
   const gates = Object.fromEntries(Object.entries(item.gates).map(([key, gate]) => [
     key,
-    { ...gate, status: "通过", desc: gate.desc.replace("待", "已").replace("缺", "已补") },
+    gate.status === "通过" ? { ...gate, checkedAt: nowText() } : gate,
   ]));
-  updateCheck(item.id, { gates, status: "可开工", manualBlocked: false }, message);
+  const blocked = Object.values(gates).filter((gate) => gate.status !== "通过");
+  updateCheck(item.id, { gates, status: blocked.length ? "待处理" : "可开工", manualBlocked: false }, blocked.length ? `${message}，仍存在阻断或待确认项：${blocked.map((gate) => gate.label).join("、")}` : message);
 }
 
 function recordLog(checkId, action) {
@@ -463,6 +496,22 @@ function recordLog(checkId, action) {
     { checkId, action, time: new Date().toLocaleString("zh-CN", { hour12: false }) },
     ...logs,
   ].slice(0, 60);
+}
+
+function syncLedgerCheck(item, patch, message) {
+  const ledger = window.MES_DISPATCH_LEDGER;
+  if (!ledger) return;
+  if (patch.status === "已放行") {
+    ledger.updateStatus?.(item.id, "可开工", { owner: item.owner, source: "MES 开工检查", action: message, result: "通过" });
+  } else if (patch.status === "已拦截" || item.manualBlocked) {
+    ledger.updateStatus?.(item.id, "开工拦截", { owner: item.owner, source: "MES 开工检查", action: message, result: "拦截" });
+  } else {
+    ledger.appendRecord?.(item.id, message, { owner: item.owner, source: message.includes("模拟") ? "MES 后台接收模拟回执" : "MES 开工检查" });
+  }
+}
+
+function appendReceipt(item, receipt) {
+  return [...(item.receipts || []), { ...receipt, time: nowText() }].slice(-20);
 }
 
 function showToast(message) {
@@ -505,7 +554,8 @@ function bindEvents() {
     }
     targets.forEach((item) => {
       item.status = "已放行";
-      recordLog(item.id, "已批量开工放行");
+      recordLog(item.id, "已批量开工放行，等待模拟扫码枪开工回执");
+      syncLedgerCheck(item, { status: "已放行" }, "已批量开工放行，等待模拟扫码枪开工回执");
     });
     state.activeCheckId = targets[0].id;
     saveState();
@@ -513,7 +563,7 @@ function bindEvents() {
     showToast(`已放行 ${targets.length} 个开工任务`);
   });
   $("#refreshCheckBtn").addEventListener("click", () => {
-    recordLog(getActiveCheck().id, "已刷新开工检查项");
+    recordLog(getActiveCheck().id, "已刷新开工检查项来源和时间");
     saveState();
     renderLogs();
     showToast("开工检查已刷新");
@@ -531,23 +581,41 @@ function bindEvents() {
     showToast("详情面板已打开");
   });
   $("#recheckBtn").addEventListener("click", () => {
-    recordLog(getActiveCheck().id, "已重新执行开工准入检查");
+    recordLog(getActiveCheck().id, "已重新执行开工准入检查并刷新来源时间");
     saveState();
     renderLogs();
     showToast("准入检查已重新执行");
   });
-  $("#confirmBtn").addEventListener("click", () => passAllGates(getActiveCheck(), "开工检查项已确认通过"));
+  $("#confirmBtn").addEventListener("click", () => confirmPassedGates(getActiveCheck(), "已确认当前通过项"));
   $("#releaseBtn").addEventListener("click", () => {
     const item = getActiveCheck();
     if (Object.values(item.gates).some((gate) => gate.status !== "通过")) {
       showToast("仍有检查项未通过，不能放行");
       return;
     }
-    updateCheck(item.id, { status: "已放行" }, "任务已开工放行");
+    updateCheck(item.id, { status: "已放行" }, "任务已开工放行，等待模拟扫码枪开工回执");
   });
-  $("#materialBtn").addEventListener("click", () => updateGate(getActiveCheck().id, "material", { status: "通过", desc: "物料已补齐或完成拆批放行" }, "物料问题已处理"));
-  $("#qualityBtn").addEventListener("click", () => updateGate(getActiveCheck().id, "quality", { status: "通过", desc: "首件确认计划已完成" }, "首件要求已确认"));
-  $("#equipmentBtn").addEventListener("click", () => updateGate(getActiveCheck().id, "equipment", { status: "通过", desc: "设备已复位，参数重新绑定" }, "设备状态已复位"));
+  $("#materialBtn").addEventListener("click", () => {
+    const item = getActiveCheck();
+    updateGate(item.id, "material", { status: "通过", source: "模拟 WMS 催料回执", desc: "模拟 WMS 回执：物料已补齐或完成拆批放行" }, "已接收模拟 WMS 催料回执");
+    const updated = getActiveCheck();
+    updated.receipts = appendReceipt(updated, { type: "模拟 WMS 催料回执", result: "通过", owner: "物料员" });
+    saveState();
+  });
+  $("#qualityBtn").addEventListener("click", () => {
+    const item = getActiveCheck();
+    updateGate(item.id, "quality", { status: "通过", source: "模拟 QMS 首件回执", desc: "模拟 QMS 回执：首件确认计划已完成" }, "已接收模拟首件回执");
+    const updated = getActiveCheck();
+    updated.receipts = appendReceipt(updated, { type: "模拟首件回执", result: "通过", owner: "质量员" });
+    saveState();
+  });
+  $("#equipmentBtn").addEventListener("click", () => {
+    const item = getActiveCheck();
+    updateGate(item.id, "equipment", { status: "通过", source: "模拟设备复位回执", desc: "模拟设备 HMI 回执：设备已复位，参数重新绑定" }, "已接收模拟设备复位回执");
+    const updated = getActiveCheck();
+    updated.receipts = appendReceipt(updated, { type: "模拟设备复位回执", result: "通过", owner: "设备员" });
+    saveState();
+  });
   $("#blockBtn").addEventListener("click", () => updateCheck(getActiveCheck().id, { status: "已拦截", manualBlocked: true }, "已人工拦截开工"));
   $("#resetCheckBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -563,6 +631,7 @@ function bindEvents() {
   });
 }
 
+normalizeChecks();
 loadState();
 renderFrameMenu();
 $("#checkSearch").value = state.search;

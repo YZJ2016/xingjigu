@@ -47,7 +47,7 @@
             <h1>SOP 查看工作台</h1>
           </div>
           <div class="topbar-actions">
-            <button id="batchSignBtn" class="primary-action" type="button">批量签收已发布</button>
+            <button id="batchSignBtn" class="primary-action" type="button">批量接收模拟签收回执</button>
             <button id="resetSopBtn" class="secondary-action" type="button">重置 SOP 演示</button>
             <a class="secondary-link" href="./task-change.html">任务变更</a>
             <a class="secondary-link" href="./task-release.html">任务下达</a>
@@ -125,7 +125,7 @@
               <div class="section-title">
                 <div>
                   <h3>终端预览</h3>
-                  <p>确认现场终端可见的 SOP 版本、工步提示、参数和签收状态</p>
+                  <p>确认工位终端可见的 SOP 版本、工步提示、参数和模拟签收状态</p>
                 </div>
                 <span id="activeSopText">SOP-ASM-016</span>
               </div>
@@ -148,7 +148,7 @@
                 <h3>SOP 明细</h3>
                 <div class="section-actions">
                   <button id="showDetailBtn" type="button" hidden>显示详情</button>
-                  <button id="pushTerminalBtn" type="button">推送终端</button>
+                  <button id="pushTerminalBtn" type="button">同步终端</button>
                 </div>
               </div>
               <div class="operation-table-wrap">
@@ -214,10 +214,10 @@
                   <h3>联动动作</h3>
                 </div>
                 <div class="action-grid dispatch-actions">
-                  <button id="signBtn" type="button">班组签收</button>
-                  <button id="releaseBtn" type="button">发布版本</button>
+                  <button id="signBtn" type="button">接收模拟签收回执</button>
+                  <button id="releaseBtn" type="button">发布 SOP 到执行</button>
                   <button id="changeBtn" type="button">发起变更</button>
-                  <button id="terminalBtn" type="button">同步终端</button>
+                  <button id="terminalBtn" type="button">接收模拟终端 ACK 回执</button>
                   <button id="printBtn" type="button">打印工位卡</button>
                   <button id="archiveBtn" class="danger-action" type="button">标记过期</button>
                 </div>
@@ -239,6 +239,7 @@
     <script src="../navigation.js"></script>
     <script src="../data/master-data.js"></script>
     <script src="../data/business-flow.js"></script>
+    <script src="../data/dispatch-ledger.js"></script>
     <script src="./sop-view.js"></script>
     <script src="./dispatch-maintenance.js"></script>
   </body>

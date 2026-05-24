@@ -134,7 +134,7 @@
               <div class="section-title">
                 <div>
                   <h3>协同推送</h3>
-                  <p>下达后同步工位终端、班组任务、物料配送和质量检验准备</p>
+                  <p>下达后记录模拟工位终端 ACK、模拟班组接收、物料配送和质量检验准备</p>
                 </div>
                 <span>终端 · 班组 · 物料 · 质量</span>
               </div>
@@ -214,7 +214,7 @@
                 <div class="action-grid dispatch-actions">
                   <button id="checkBtn" type="button">执行校验</button>
                   <button id="releaseBtn" type="button">确认下达</button>
-                  <button id="resendBtn" type="button">重发通知</button>
+                  <button id="resendBtn" type="button">重发通知并记录模拟回执</button>
                   <button id="syncBtn" type="button">同步协同模块</button>
                   <button id="blockBtn" class="danger-action" type="button">标记拦截</button>
                   <button id="withdrawBtn" type="button">撤回下达</button>
@@ -237,6 +237,7 @@
     <script src="../navigation.js"></script>
     <script src="../data/master-data.js"></script>
     <script src="../data/business-flow.js"></script>
+    <script src="../data/dispatch-ledger.js"></script>
     <script src="./task-release.js"></script>
     <script src="./dispatch-maintenance.js"></script>
   </body>

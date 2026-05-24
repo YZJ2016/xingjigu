@@ -135,7 +135,7 @@
               <div class="section-title">
                 <div>
                   <h3>资源状态</h3>
-                  <p>所有资源状态通过后，现场扫码开工才允许建立生产履历</p>
+                  <p>所有资源状态通过后，等待模拟扫码枪开工回执建立生产履历</p>
                 </div>
                 <span>人员 · 设备 · 物料 · 质量</span>
               </div>
@@ -213,11 +213,11 @@
                   <h3>联动动作</h3>
                 </div>
                 <div class="action-grid dispatch-actions">
-                  <button id="confirmBtn" type="button">确认检查</button>
+                  <button id="confirmBtn" type="button">确认已通过项</button>
                   <button id="releaseBtn" type="button">开工放行</button>
-                  <button id="materialBtn" type="button">催料处理</button>
-                  <button id="qualityBtn" type="button">首件确认</button>
-                  <button id="equipmentBtn" type="button">设备复位</button>
+                  <button id="materialBtn" type="button">接收模拟 WMS 催料回执</button>
+                  <button id="qualityBtn" type="button">接收模拟首件回执</button>
+                  <button id="equipmentBtn" type="button">接收模拟设备复位回执</button>
                   <button id="blockBtn" class="danger-action" type="button">拦截开工</button>
                 </div>
               </section>
@@ -238,6 +238,7 @@
     <script src="../navigation.js"></script>
     <script src="../data/master-data.js"></script>
     <script src="../data/business-flow.js"></script>
+    <script src="../data/dispatch-ledger.js"></script>
     <script src="./start-check.js"></script>
     <script src="./dispatch-maintenance.js"></script>
   </body>

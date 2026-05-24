@@ -89,7 +89,10 @@
                   <option value="all">全部状态</option>
                   <option value="待下达">待下达</option>
                   <option value="待接单">待接单</option>
+                  <option value="待开工">待开工</option>
+                  <option value="可开工">可开工</option>
                   <option value="生产中">生产中</option>
+                  <option value="待报工">待报工</option>
                   <option value="异常锁定">异常锁定</option>
                   <option value="已完工">已完工</option>
                 </select>
@@ -142,7 +145,7 @@
                 <h3>派工单明细</h3>
                 <div class="section-actions">
                   <button id="showDetailBtn" type="button" hidden>显示详情</button>
-                  <button id="exportTaskBtn" type="button">生成任务卡</button>
+                  <button id="exportTaskBtn" type="button">生成后台任务卡</button>
                 </div>
               </div>
               <div class="operation-table-wrap">
@@ -209,9 +212,9 @@
                 </div>
                 <div class="action-grid dispatch-actions">
                   <button id="releaseBtn" type="button">下达派工</button>
-                  <button id="acceptBtn" type="button">班组接单</button>
-                  <button id="startBtn" type="button">扫码开工</button>
-                  <button id="completeBtn" type="button">工序完工</button>
+                  <button id="acceptBtn" type="button">接收模拟班组回执</button>
+                  <button id="startBtn" type="button">接收模拟扫码开工回执</button>
+                  <button id="completeBtn" type="button">接收模拟完工回执</button>
                   <button id="blockBtn" class="danger-action" type="button">异常锁定</button>
                   <button id="reassignBtn" type="button">资源重分配</button>
                 </div>
@@ -233,6 +236,7 @@
     <script src="../navigation.js"></script>
     <script src="../data/master-data.js"></script>
     <script src="../data/business-flow.js"></script>
+    <script src="../data/dispatch-ledger.js"></script>
     <script src="./dispatch-orders.js"></script>
     <script src="./dispatch-maintenance.js"></script>
   </body>

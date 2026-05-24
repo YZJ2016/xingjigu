@@ -39,6 +39,37 @@ let state = {
 
 const $ = (selector) => document.querySelector(selector);
 
+function nowText() {
+  return new Date().toLocaleString("zh-CN", { hour12: false });
+}
+
+function defaultApprovals(item) {
+  const base = [
+    { role: "计划主管", user: "李敏", result: item.status === "已生效" || item.status === "已批准" ? "同意" : "待审批", signedAt: item.status === "已生效" || item.status === "已批准" ? "2026-06-20 07:35:00" : "", comment: "确认排程窗口和派工版本" },
+    { role: "质量工程师", user: "孟可", result: item.risk === "高" ? "待会签" : "同意", signedAt: item.risk === "高" ? "" : "2026-06-20 07:36:00", comment: "确认首件、巡检和追溯要求" },
+    { role: "设备员", user: "周强", result: item.risk === "高" ? "待会签" : "不涉及", signedAt: item.risk === "高" ? "" : "2026-06-20 07:36:00", comment: "确认工位、设备和程序绑定" },
+    { role: "物料员", user: "吴倩", result: item.risk === "高" ? "待会签" : "不涉及", signedAt: item.risk === "高" ? "" : "2026-06-20 07:36:00", comment: "确认齐套、拆批和线边转运" },
+  ];
+  return base;
+}
+
+function normalizeChange(item) {
+  return {
+    ...item,
+    approvals: item.approvals || defaultApprovals(item),
+    effectiveScope: item.effectiveScope || {
+      dispatchVersion: item.status === "已生效" ? "V2" : "待生成",
+      stations: [item.after.station],
+      qty: item.after.qty,
+      startCheckRequired: item.risk !== "低",
+    },
+  };
+}
+
+function normalizeChanges() {
+  changes = changes.map(normalizeChange);
+}
+
 function renderFrameMenu() {
   $("#changeModuleMenu").innerHTML = modules.map((module) => {
     const openClass = module.id === "dispatch" ? " is-open" : "";
@@ -106,6 +137,7 @@ function loadState() {
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  normalizeChanges();
 }
 
 function saveState() {
@@ -245,6 +277,9 @@ function renderDetail() {
     ["原因", item.reason],
     ["原窗口", item.before.window],
     ["新窗口", item.after.window],
+    ["生效版本", item.effectiveScope.dispatchVersion],
+    ["生效范围", `${item.effectiveScope.stations.join("、")} / ${item.effectiveScope.qty}`],
+    ["开工复核", item.effectiveScope.startCheckRequired ? "需要" : "不需要"],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
 
   $("#gateList").innerHTML = buildGateItems(item).map((gate) => `
@@ -255,7 +290,13 @@ function renderDetail() {
     </div>
   `).join("");
 
+  const approvalEvidence = item.approvals.map((approval) => [
+    `${approval.role}会签`,
+    `${approval.user} · ${approval.comment}`,
+    `${approval.result}${approval.signedAt ? ` · ${approval.signedAt}` : ""}`,
+  ]);
   $("#syncList").innerHTML = [
+    ...approvalEvidence,
     ["派工同步", item.impacts.dispatch, item.status === "已生效" ? "已同步" : "待同步"],
     ["物料同步", item.impacts.material, item.impacts.material === "不影响" ? "无需同步" : "待同步"],
     ["质量同步", item.impacts.quality, item.status === "已生效" ? "已同步" : "待同步"],
@@ -284,12 +325,31 @@ function renderLogs() {
 }
 
 function buildGateItems(item) {
+  const missingApprovals = getMissingApprovals(item);
   return [
     { label: "影响评估", desc: item.risk === "高" ? "影响交期、质量或设备资源" : "影响范围可控", status: item.status === "待评估" ? "待确认" : "通过" },
-    { label: "资源冲突", desc: `${item.after.team} · ${item.after.station}`, status: item.risk === "高" ? "待确认" : "通过" },
-    { label: "审批要求", desc: item.risk === "高" ? "需计划/质量/车间会签" : "班组长审批即可", status: ["待审批", "已批准", "已生效"].includes(item.status) ? "通过" : "待确认" },
-    { label: "终端同步", desc: "工位任务卡需刷新", status: item.status === "已生效" ? "通过" : "待确认" },
+    { label: "资源冲突", desc: `${item.after.team} · ${item.after.station}`, status: item.risk === "高" && missingApprovals.includes("设备员") ? "待确认" : "通过" },
+    { label: "审批要求", desc: item.risk === "高" ? `需计划/质量/设备/物料会签${missingApprovals.length ? `，缺：${missingApprovals.join("、")}` : ""}` : "班组长审批即可", status: missingApprovals.length ? "待确认" : "通过" },
+    { label: "生效范围", desc: `${item.effectiveScope.dispatchVersion} · ${item.effectiveScope.stations.join("、")} · ${item.effectiveScope.qty}`, status: item.effectiveScope.dispatchVersion === "待生成" ? "待确认" : "通过" },
+    { label: "终端同步", desc: "工位任务卡需刷新，生效后需开工复核", status: item.status === "已生效" ? "通过" : "待确认" },
   ];
+}
+
+function getMissingApprovals(item) {
+  if (item.risk !== "高") return [];
+  const required = ["计划主管", "质量工程师", "设备员", "物料员"];
+  return required.filter((role) => {
+    const approval = item.approvals.find((entry) => entry.role === role);
+    return !approval || approval.result !== "同意";
+  });
+}
+
+function signRequiredApprovals(item) {
+  const required = item.risk === "高" ? ["计划主管", "质量工程师", "设备员", "物料员"] : ["计划主管"];
+  return item.approvals.map((approval) => {
+    if (!required.includes(approval.role)) return approval;
+    return { ...approval, result: "同意", signedAt: nowText(), comment: `${approval.comment}，已形成会签证据` };
+  });
 }
 
 function getGateClass(status) {
@@ -316,6 +376,7 @@ function updateChange(id, patch, message) {
   const index = changes.findIndex((item) => item.id === id);
   if (index < 0) return;
   changes[index] = { ...changes[index], ...patch };
+  syncLedgerChange(changes[index], patch, message);
   if (patch.status === "已生效") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(changes[index].orderId, "release", { owner: changes[index].owner || "车间主任" });
   if (patch.status === "待审批" || patch.status === "待评估") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(changes[index].orderId, "hold", { owner: changes[index].owner || "车间主任", reason: message });
   state.activeChangeId = id;
@@ -330,6 +391,16 @@ function recordLog(changeId, action) {
     { changeId, action, time: new Date().toLocaleString("zh-CN", { hour12: false }) },
     ...logs,
   ].slice(0, 60);
+}
+
+function syncLedgerChange(item, patch, message) {
+  const ledger = window.MES_DISPATCH_LEDGER;
+  if (!ledger) return;
+  if (patch.status === "已生效") {
+    ledger.appendRecord?.(item.dispatchId, message, { owner: item.owner || "计划主管", source: "MES 任务变更审批", result: "已生效" });
+  } else {
+    ledger.appendRecord?.(item.dispatchId, message, { owner: item.owner || "计划主管", source: "MES 任务变更审批" });
+  }
 }
 
 function showToast(message) {
@@ -380,7 +451,7 @@ function bindEvents() {
   });
   $("#changeNoticeBtn").addEventListener("click", () => {
     const item = getActiveChange();
-    recordLog(item.id, "已生成变更通知和影响范围清单");
+    recordLog(item.id, "已生成变更通知、会签证据和生效范围清单");
     saveState();
     renderLogs();
     showToast("变更通知已生成");
@@ -397,10 +468,34 @@ function bindEvents() {
     renderDetailPanelState();
     showToast("详情面板已打开");
   });
-  $("#evaluateBtn").addEventListener("click", () => updateChange(getActiveChange().id, { status: "待审批" }, "变更影响已重新评估"));
-  $("#submitBtn").addEventListener("click", () => updateChange(getActiveChange().id, { status: "待审批" }, "变更已提交审批"));
-  $("#approveBtn").addEventListener("click", () => updateChange(getActiveChange().id, { status: "已批准" }, "变更已批准"));
-  $("#effectiveBtn").addEventListener("click", () => updateChange(getActiveChange().id, { status: "已生效" }, "变更已执行生效"));
+  $("#evaluateBtn").addEventListener("click", () => {
+    const item = getActiveChange();
+    updateChange(item.id, { status: item.risk === "高" ? "待审批" : "待审批", approvals: item.approvals }, "变更影响已重新评估，等待会签审批证据");
+  });
+  $("#submitBtn").addEventListener("click", () => {
+    const item = getActiveChange();
+    updateChange(item.id, { status: "待审批", approvals: signRequiredApprovals(item) }, "变更已提交审批并模拟记录计划/质量/设备/物料会签");
+  });
+  $("#approveBtn").addEventListener("click", () => {
+    const item = getActiveChange();
+    const missing = getMissingApprovals(item);
+    if (missing.length) {
+      showToast(`高风险变更缺少会签：${missing.join("、")}`);
+      recordLog(item.id, `高风险变更批准被拦截，缺少会签：${missing.join("、")}`);
+      saveState();
+      renderLogs();
+      return;
+    }
+    updateChange(item.id, { status: "已批准" }, "变更已校验会签后批准");
+  });
+  $("#effectiveBtn").addEventListener("click", () => {
+    const item = getActiveChange();
+    if (item.status !== "已批准") {
+      showToast("变更未批准，不能执行生效");
+      return;
+    }
+    updateChange(item.id, { status: "已生效", effectiveScope: { ...item.effectiveScope, dispatchVersion: item.effectiveScope.dispatchVersion === "待生成" ? "V2" : item.effectiveScope.dispatchVersion } }, "变更已按生效范围执行生效，开工检查需复核");
+  });
   $("#syncBtn").addEventListener("click", () => {
     const item = getActiveChange();
     updateChange(item.id, { status: item.status === "已批准" ? "已生效" : item.status }, "变更已同步到派工、终端和协同模块");
@@ -421,6 +516,7 @@ function bindEvents() {
   });
 }
 
+normalizeChanges();
 loadState();
 renderFrameMenu();
 $("#changeSearch").value = state.search;

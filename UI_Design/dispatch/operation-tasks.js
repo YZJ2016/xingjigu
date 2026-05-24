@@ -19,10 +19,10 @@ const modules = [
 ];
 
 const initialTasks = [
-  { id: "OP-0010", dispatchId: "D-001", orderId: "MO-202606-0001", product: "智能温控控制器 TCU-100", operation: "SMT 贴片", type: "贴片", seq: 10, line: "Line-A", station: "SMT-WS-01", equipment: "SMT-01", operator: "王海", planQty: 800, inputQty: 800, outputQty: 428, defectQty: 3, takt: "32 秒/片", status: "进行中", material: "PCB、传感器、显示屏已投料", quality: "首件已放行", parameter: "炉温曲线正常", next: "OP-0020", note: "当前节拍稳定，预计 11:58 完成 SMT 批次" },
+  { id: "OP-0010", dispatchId: "D-001", orderId: "MO-202606-0001", product: "智能温控控制器 TCU-100", operation: "SMT 贴片", type: "贴片", seq: 10, line: "Line-A", station: "SMT-WS-01", equipment: "SMT-01", operator: "王海", planQty: 800, inputQty: 800, outputQty: 428, defectQty: 3, scrapQty: 1, actualHours: 3.6, downtime: "0 分钟", takt: "32 秒/片", status: "进行中", material: "PCB、传感器、显示屏已投料", materialWriteoff: "按批次 PCB-0620-A 已核销 428 套", quality: "首件已放行", qualityRecord: "IQC-FAI-001 / IPQC-巡检-02", parameter: "炉温曲线正常", exceptionId: "", traceId: "PH-D-001", next: "OP-0020", note: "当前节拍稳定，预计 11:58 完成 SMT 批次" },
   { id: "OP-0020", dispatchId: "D-002", orderId: "MO-202606-0001", product: "智能温控控制器 TCU-100", operation: "DIP 插件", type: "装配", seq: 20, line: "Line-A", station: "DIP-WS-01", equipment: "DIP-Line-A", operator: "待接单", planQty: 800, inputQty: 0, outputQty: 0, defectQty: 0, takt: "46 秒/台", status: "待开工", material: "等待 SMT 转入", quality: "IPQC 巡检已配置", parameter: "工装已点检", next: "OP-0030", note: "等待上道批次转入后扫码开工" },
   { id: "OP-0030", dispatchId: "D-003", orderId: "MO-202606-0001", product: "智能温控控制器 TCU-100", operation: "程序烧录", type: "测试", seq: 30, line: "Line-A", station: "BURN-WS-01", equipment: "Burn-01", operator: "待分配", planQty: 800, inputQty: 0, outputQty: 0, defectQty: 0, takt: "18 秒/台", status: "待开工", material: "待上道转入", quality: "烧录版本校验", parameter: "固件 TCU-20260620 已锁定", next: "OP-0040", note: "烧录程序版本已审核" },
-  { id: "OP-0040", dispatchId: "D-004", orderId: "MO-202606-0001", product: "智能温控控制器 TCU-100", operation: "整机装配", type: "装配", seq: 40, line: "Line-A", station: "ASM-WS-03", equipment: "Assembly-A", operator: "待分配", planQty: 800, inputQty: 0, outputQty: 0, defectQty: 0, takt: "58 秒/台", status: "异常停滞", material: "外壳上盖缺 120 件", quality: "扭矩抽检已配置", parameter: "电批扭矩待复核", next: "OP-0050", note: "注塑件未到线边，当前不允许开工" },
+  { id: "OP-0040", dispatchId: "D-004", orderId: "MO-202606-0001", product: "智能温控控制器 TCU-100", operation: "整机装配", type: "装配", seq: 40, line: "Line-A", station: "ASM-WS-03", equipment: "Assembly-A", operator: "待分配", planQty: 800, inputQty: 0, outputQty: 0, defectQty: 0, scrapQty: 0, actualHours: 0, downtime: "物料等待 65 分钟", takt: "58 秒/台", status: "异常停滞", material: "外壳上盖缺 120 件", materialWriteoff: "未核销，等待线边库补料", quality: "扭矩抽检已配置", qualityRecord: "Q-GATE-ASM-004 待首件", parameter: "电批扭矩待复核", exceptionId: "EXC-MAT-004", traceId: "", next: "OP-0050", note: "注塑件未到线边，当前不允许开工" },
   { id: "OP-0210", dispatchId: "D-021", orderId: "MO-202606-0002", product: "工业网关 GW-240", operation: "SMT 贴片", type: "贴片", seq: 10, line: "Line-B", station: "SMT-WS-02", equipment: "SMT-02", operator: "李敏", planQty: 600, inputQty: 600, outputQty: 315, defectQty: 2, takt: "35 秒/片", status: "进行中", material: "齐套并已投料", quality: "首件已放行", parameter: "贴片压力正常", next: "OP-0220", note: "客户 B 加急，测试工位已预留" },
   { id: "OP-0310", dispatchId: "D-031", orderId: "MO-202606-0003", product: "边缘采集器 ECU-80", operation: "老化测试", type: "测试", seq: 60, line: "Line-C", station: "AGING-01", equipment: "Aging-Room-1", operator: "周强", planQty: 1200, inputQty: 820, outputQty: 760, defectQty: 5, takt: "8 小时/批", status: "异常停滞", material: "齐套", quality: "老化参数监控", parameter: "老化房容量接近上限", next: "OP-0320", note: "等待设备组释放第二老化架" },
   { id: "OP-0410", dispatchId: "D-041", orderId: "MO-202606-0004", product: "智能传感节点 SEN-20", operation: "FQC 成品检验", type: "检验", seq: 70, line: "Line-A", station: "QC-Final", equipment: "FQC-01", operator: "QC-001", planQty: 2000, inputQty: 1280, outputQty: 0, defectQty: 0, takt: "抽样 50 件/批", status: "待开工", material: "待检批次已到位", quality: "样本数量待确认", parameter: "检验规范 V3.1", next: "入库", note: "质量组确认样本后开检" },
@@ -117,6 +117,26 @@ function saveState() {
 
 function getActiveTask() {
   return tasks.find((item) => item.id === state.activeTaskId) || tasks[0];
+}
+
+function hydrateFromLedger() {
+  const rows = window.MES_DISPATCH_LEDGER?.getRows?.();
+  if (!rows?.length) return;
+  tasks = tasks.map((task) => {
+    const ledger = rows.find((row) => row.dispatchId === task.dispatchId);
+    if (!ledger) return task;
+    return {
+      ...task,
+      inputQty: ledger.execution?.inputQty ?? task.inputQty,
+      outputQty: ledger.execution?.outputQty ?? task.outputQty,
+      defectQty: ledger.execution?.defectQty ?? task.defectQty,
+      operator: ledger.resources?.operator || task.operator,
+      material: ledger.controls?.materialStatus || task.material,
+      qualityRecord: task.qualityRecord || ledger.controls?.inspectionPlan,
+      exceptionId: task.exceptionId || ledger.references?.exceptionIds?.[0] || "",
+      traceId: task.traceId || ledger.references?.traceId || "",
+    };
+  });
 }
 
 function getVisibleTasks() {
@@ -243,6 +263,9 @@ function renderTaskTable() {
 
 function renderDetail() {
   const item = getActiveTask();
+  const actual = getExecutionActual(item);
+  const draft = getReportDraft(item);
+  const closure = getExceptionClosure(item);
   $("#detailStatus").textContent = item.status;
   $("#detailTaskNo").textContent = item.id;
   $("#detailTitle").textContent = `${item.operation} · ${item.product}`;
@@ -256,7 +279,8 @@ function renderDetail() {
     ["计划/出站", `${item.planQty} / ${item.outputQty}`],
     ["节拍", item.takt],
     ["下道", item.next],
-    ["不良", `${item.defectQty} 台`],
+    ["良品/不良/报废", `${actual.goodQty} / ${actual.defectQty} / ${actual.scrapQty}`],
+    ["实际工时/停机", `${actual.actualHours} 小时 / ${actual.downtime}`],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
 
   $("#gateList").innerHTML = buildGateItems(item).map((gate) => `
@@ -269,8 +293,13 @@ function renderDetail() {
 
   $("#processRecordList").innerHTML = [
     ["物料", item.material, getReadyStatus(item.material)],
+    ["用料核销", actual.materialWriteoff, getReadyStatus(actual.materialWriteoff)],
     ["质量", item.quality, getReadyStatus(item.quality)],
+    ["质量记录", actual.qualityRecord, getReadyStatus(actual.qualityRecord)],
     ["参数", item.parameter, getReadyStatus(item.parameter)],
+    ["报工草稿", `${draft.id} · ${draft.status} · 良品 ${draft.goodQty}`, draft.status],
+    ["异常闭环", `${closure.exceptionId} · ${closure.status} · ${closure.owner}`, closure.status],
+    ["生产履历", `${actual.traceId} · 引用 ${item.dispatchId}/${item.id}`, actual.traceId === "待生成" ? "待确认" : "记录中"],
     ["说明", item.note, item.status === "异常停滞" ? "需处理" : "记录中"],
   ].map(([label, value, status]) => `
     <div class="readiness-item ${getGateClass(status)}">
@@ -296,13 +325,63 @@ function renderLogs() {
 }
 
 function buildGateItems(item) {
+  const draft = getReportDraft(item);
   return [
     { label: "任务状态", desc: item.status === "异常停滞" ? "任务被异常锁定" : "状态允许现场操作", status: item.status === "异常停滞" ? "拦截" : "通过" },
     { label: "工位匹配", desc: `${item.operation} 绑定 ${item.station}`, status: "通过" },
     { label: "人员资质", desc: item.operator.includes("待") ? "操作员待确认" : `${item.operator} 资质有效`, status: item.operator.includes("待") ? "待确认" : "通过" },
     { label: "物料/WIP", desc: item.material, status: item.material.includes("缺") || item.material.includes("等待") || item.material.includes("待") ? "待确认" : "通过" },
     { label: "质量门", desc: item.quality, status: item.quality.includes("待") ? "待确认" : "通过" },
+    { label: "异常闭环", desc: getExceptionClosure(item).exceptionId, status: item.status === "异常停滞" ? "拦截" : "通过" },
+    { label: "报工草稿", desc: `${draft.id} · ${draft.status}`, status: draft.status },
   ];
+}
+
+function getExecutionActual(item) {
+  const goodQty = Math.max(0, item.outputQty - item.defectQty - (item.scrapQty || 0));
+  return {
+    goodQty,
+    defectQty: item.defectQty || 0,
+    scrapQty: item.scrapQty || 0,
+    actualHours: item.actualHours || Number((item.outputQty / Math.max(1, item.planQty) * 7.5).toFixed(1)),
+    downtime: item.downtime || (item.status === "异常停滞" ? "等待恢复验证" : "0 分钟"),
+    materialWriteoff: item.materialWriteoff || `按出站 ${item.outputQty} 套生成待核销记录`,
+    qualityRecord: item.qualityRecord || `${item.operation} 过程检验记录待归档`,
+    traceId: item.traceId || `PH-${item.dispatchId}`,
+  };
+}
+
+function getExceptionClosure(item) {
+  if (item.status !== "异常停滞" && !item.exceptionId) {
+    return { exceptionId: "无未闭环异常", status: "记录中", owner: item.operator || "班组长" };
+  }
+  return {
+    exceptionId: item.exceptionId || `EXC-${item.id}`,
+    status: item.status === "异常停滞" ? "需处理" : "记录中",
+    owner: item.operator?.includes("待") ? "车间主任" : item.operator,
+  };
+}
+
+function getReportDraft(item) {
+  const actual = getExecutionActual(item);
+  const blockers = getReportBlockers(item);
+  return {
+    id: item.reportDraftId || `RPT-DRAFT-${item.id}`,
+    goodQty: actual.goodQty,
+    defectQty: actual.defectQty,
+    scrapQty: actual.scrapQty,
+    status: blockers.length ? "待确认" : "通过",
+    blockers,
+  };
+}
+
+function getReportBlockers(item) {
+  const blockers = [];
+  if (item.material.includes("缺") || item.material.includes("等待") || item.material.includes("待")) blockers.push("物料/WIP 未满足报工核销");
+  if (item.quality.includes("待")) blockers.push("质量记录未放行");
+  if (item.status === "异常停滞") blockers.push("异常单未闭环");
+  if (item.outputQty <= 0) blockers.push("无可报工出站数量");
+  return blockers;
 }
 
 function getReadyStatus(value) {
@@ -338,11 +417,46 @@ function updateTask(id, patch, message) {
   if (patch.status === "进行中") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(tasks[index].orderId, "release", { owner: tasks[index].operator || "班组长" });
   if (patch.status === "异常停滞") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(tasks[index].orderId, "hold", { owner: tasks[index].operator || "班组长", reason: message });
   if (patch.material?.includes("投料")) window.MES_BUSINESS_FLOW?.applyMaterialAction?.(tasks[index].orderId, "feedingRelease", { owner: tasks[index].operator || "操作员", status: "投料已确认", label: "工序任务投料确认" });
+  syncLedger(tasks[index], patch, message);
   state.activeTaskId = id;
   recordLog(id, message);
   saveState();
   renderAll();
   showToast(message);
+}
+
+function syncLedger(item, patch, message, options = {}) {
+  const ledger = window.MES_DISPATCH_LEDGER;
+  if (!ledger) return;
+  const source = options.source || "MES 后台静态演示";
+  const statusMap = { "进行中": "生产中", "待报工": "待报工", "异常停滞": "异常锁定", "已完成": "已完工", "待开工": "待开工" };
+  if (patch.status && statusMap[patch.status]) {
+    const result = ledger.updateStatus?.(item.dispatchId, statusMap[patch.status], {
+      action: message,
+      owner: item.operator || "班组长",
+      source,
+      inputQty: item.inputQty,
+      outputQty: item.outputQty,
+      defectQty: item.defectQty,
+      operator: item.operator,
+    });
+    if (result?.ok) return;
+  }
+  ledger.appendRecord?.(item.dispatchId, message, {
+    owner: item.operator || "班组长",
+    source,
+    result: options.result || "记录",
+  });
+}
+
+function generateReportDraft(item) {
+  const draft = getReportDraft(item);
+  const patch = { reportDraftId: draft.id, reportDraftStatus: draft.status };
+  updateTask(item.id, patch, draft.blockers.length
+    ? `报工草稿已生成但被阻断：${draft.blockers.join("、")}`
+    : `报工草稿已生成并通过校验：良品 ${draft.goodQty}，不良 ${draft.defectQty}，报废 ${draft.scrapQty}`,
+  );
+  return draft;
 }
 
 function recordLog(taskId, action) {
@@ -393,7 +507,8 @@ function bindEvents() {
       item.status = "进行中";
       item.operator = item.operator.includes("待") ? "现场操作员" : item.operator;
       item.inputQty = item.inputQty || item.planQty;
-      recordLog(item.id, "批量扫码开工成功");
+      recordLog(item.id, "模拟扫码开工回执通过，批量开工");
+      syncLedger(item, { status: "进行中" }, "模拟扫码开工回执通过，批量开工", { source: "模拟扫码枪" });
     });
     state.activeTaskId = targets[0].id;
     saveState();
@@ -401,11 +516,8 @@ function bindEvents() {
     showToast(`已开工 ${targets.length} 个工序任务`);
   });
   $("#reportReadyBtn").addEventListener("click", () => {
-    const item = getActiveTask();
-    recordLog(item.id, "已生成报工草稿，等待操作员扫码确认");
-    saveState();
-    renderLogs();
-    showToast("报工草稿已生成");
+    const draft = generateReportDraft(getActiveTask());
+    showToast(draft.blockers.length ? "报工草稿存在阻断项" : "报工草稿已通过校验");
   });
   $("#closeDetailBtn").addEventListener("click", () => {
     state.detailOpen = false;
@@ -433,24 +545,39 @@ function bindEvents() {
       showToast(`${blockedGate.label}未通过，不能开工`);
       return;
     }
-    updateTask(item.id, { status: "进行中", operator: item.operator.includes("待") ? "现场操作员" : item.operator, inputQty: item.inputQty || item.planQty }, "扫码开工成功");
+    updateTask(item.id, { status: "进行中", operator: item.operator.includes("待") ? "现场操作员" : item.operator, inputQty: item.inputQty || item.planQty }, "模拟扫码开工回执通过，工位进站已记录");
   });
   $("#feedBtn").addEventListener("click", () => {
     const item = getActiveTask();
-    updateTask(item.id, { material: "物料已扫码确认，批次绑定完成", inputQty: item.inputQty || item.planQty }, "投料确认完成，已建立批次绑定");
+    updateTask(item.id, { material: "模拟 PDA 投料回传：物料批次已绑定", materialWriteoff: `按 ${item.orderId}/${item.id} 生成用料核销草稿`, inputQty: item.inputQty || item.planQty }, "模拟 PDA 投料回传通过，已建立批次绑定");
   });
   $("#qualityBtn").addEventListener("click", () => updateTask(getActiveTask().id, { quality: "质量门已放行" }, "质量门已放行"));
   $("#reportBtn").addEventListener("click", () => {
     const item = getActiveTask();
-    updateTask(item.id, { status: "已完成", outputQty: item.planQty }, "工序报工完成，实绩已记录");
+    const draft = generateReportDraft(item);
+    if (draft.blockers.length) {
+      syncLedger(item, {}, `模拟 HMI 报工回传被阻断：${draft.blockers.join("、")}`, { source: "模拟 HMI", result: "阻断" });
+      showToast("报工被阻断，请先闭环物料/质量/异常");
+      return;
+    }
+    updateTask(item.id, {
+      status: "已完成",
+      outputQty: Math.max(item.outputQty, item.planQty),
+      reportDraftStatus: "通过",
+      traceId: item.traceId || `PH-${item.dispatchId}`,
+    }, "模拟 HMI 报工回传通过，实绩已记录并写入生产履历");
   });
-  $("#blockBtn").addEventListener("click", () => updateTask(getActiveTask().id, { status: "异常停滞" }, "工序任务已异常停滞，等待责任人处理"));
+  $("#blockBtn").addEventListener("click", () => {
+    const item = getActiveTask();
+    updateTask(item.id, { status: "异常停滞", exceptionId: item.exceptionId || `EXC-${item.id}`, downtime: "异常停机待恢复验证" }, "工序任务已异常停滞，异常单已生成并等待责任人处理");
+  });
   $("#handoverBtn").addEventListener("click", () => {
     const item = getActiveTask();
     updateTask(item.id, { status: item.status === "已完成" ? "已完成" : "待报工" }, "已生成下道交接记录");
   });
   $("#resetOperationBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
+    window.MES_DISPATCH_LEDGER?.reset?.();
     tasks = structuredClone(initialTasks);
     logs = [];
     state = { activeTaskId: "OP-0010", search: "", status: "all", line: "all", type: "all", detailOpen: true };
@@ -464,6 +591,7 @@ function bindEvents() {
 }
 
 loadState();
+hydrateFromLedger();
 renderFrameMenu();
 $("#operationSearch").value = state.search;
 $("#statusFilter").value = state.status;

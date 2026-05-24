@@ -41,6 +41,56 @@ let state = {
 
 const $ = (selector) => document.querySelector(selector);
 
+function nowText() {
+  return new Date().toLocaleString("zh-CN", { hour12: false });
+}
+
+function buildMessageId(releaseId, channelKey, retryCount = 0) {
+  return `MSG-${releaseId.replace("REL-", "")}-${channelKey.toUpperCase()}-${String(retryCount).padStart(2, "0")}`;
+}
+
+function normalizeRelease(item) {
+  const baseReceipts = {
+    station: {
+      channel: "模拟工位终端回执",
+      messageId: buildMessageId(item.id, "station"),
+      ackStatus: item.channels.station?.includes("已") ? "ACK" : item.channels.station?.includes("离线") ? "失败" : "待发送",
+      retryCount: 0,
+      failureReason: item.channels.station?.includes("离线") ? "终端离线未 ACK" : "",
+      ackAt: item.channels.station?.includes("已") ? "2026-06-20 08:00:00" : "",
+    },
+    team: {
+      channel: "模拟班组接收回执",
+      messageId: buildMessageId(item.id, "team"),
+      ackStatus: item.channels.team?.includes("已") ? "ACK" : "待发送",
+      retryCount: 0,
+      failureReason: "",
+      ackAt: item.channels.team?.includes("已") ? "2026-06-20 08:00:00" : "",
+    },
+    material: {
+      channel: "模拟物料协同回执",
+      messageId: buildMessageId(item.id, "material"),
+      ackStatus: item.channels.material?.includes("拦截") ? "失败" : item.channels.material?.includes("已") || item.channels.material?.includes("无需") ? "ACK" : "待发送",
+      retryCount: 0,
+      failureReason: item.channels.material?.includes("拦截") ? item.material : "",
+      ackAt: item.channels.material?.includes("已") || item.channels.material?.includes("无需") ? "2026-06-20 08:00:00" : "",
+    },
+    quality: {
+      channel: "模拟质量计划回执",
+      messageId: buildMessageId(item.id, "quality"),
+      ackStatus: item.channels.quality?.includes("待") || item.channels.quality?.includes("未") ? "待发送" : "ACK",
+      retryCount: 0,
+      failureReason: "",
+      ackAt: item.channels.quality?.includes("待") || item.channels.quality?.includes("未") ? "" : "2026-06-20 08:00:00",
+    },
+  };
+  return { ...item, channelReceipts: { ...baseReceipts, ...(item.channelReceipts || {}) } };
+}
+
+function normalizeReleases() {
+  releases = releases.map(normalizeRelease);
+}
+
 function renderFrameMenu() {
   $("#releaseModuleMenu").innerHTML = modules.map((module) => {
     const openClass = module.id === "dispatch" ? " is-open" : "";
@@ -108,6 +158,7 @@ function loadState() {
   } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
+  normalizeReleases();
 }
 
 function saveState() {
@@ -211,17 +262,12 @@ function getFlowIndex(item) {
 
 function renderChannels() {
   const item = getActiveRelease();
-  const channels = [
-    ["工位终端", item.channels.station],
-    ["班组", item.channels.team],
-    ["物料", item.channels.material],
-    ["质量", item.channels.quality],
-  ];
-  $("#channelBoard").innerHTML = channels.map(([label, value]) => `
+  const channels = Object.values(item.channelReceipts);
+  $("#channelBoard").innerHTML = channels.map((receipt) => `
     <article class="channel-card">
-      <span>${label}</span>
-      <strong>${value}</strong>
-      <em>${item.line} · ${item.station}</em>
+      <span>${receipt.channel}</span>
+      <strong>${receipt.messageId} · ${receipt.ackStatus}</strong>
+      <em>重试 ${receipt.retryCount} 次${receipt.failureReason ? ` · ${receipt.failureReason}` : ""}</em>
     </article>
   `).join("");
 }
@@ -268,7 +314,7 @@ function renderDetail() {
     <div class="gate-item ${getGateClass(gate.status)}">
       <span>${gate.label}</span>
       <strong>${gate.desc}</strong>
-      <span>${gate.status}</span>
+      <span>${gate.status} · ${gate.source} · ${gate.checkedAt}</span>
     </div>
   `).join("");
 
@@ -301,12 +347,13 @@ function renderLogs() {
 }
 
 function buildGateItems(item) {
+  const checkedAt = item.lastCheckedAt || "2026-06-20 07:55:00";
   return [
-    { label: "终端在线", desc: `${item.station} 终端 ${item.terminal}`, status: item.terminal === "在线" ? "通过" : "拦截" },
-    { label: "SOP 有效", desc: item.sop, status: item.sop.includes("V") ? "通过" : "待确认" },
-    { label: "物料/WIP", desc: item.material, status: getReadyStatus(item.material) },
-    { label: "质量计划", desc: item.quality, status: item.quality.includes("待确认") ? "待确认" : "通过" },
-    { label: "状态允许", desc: item.status, status: item.status === "下达拦截" ? "拦截" : "通过" },
+    { label: "终端在线", desc: `${item.station} 终端 ${item.terminal}`, status: item.terminal === "在线" ? "通过" : "拦截", source: "模拟工位终端回执", checkedAt },
+    { label: "SOP 有效", desc: item.sop, status: item.sop.includes("V") ? "通过" : "待确认", source: "SOP 查看", checkedAt },
+    { label: "物料/WIP", desc: item.material, status: getReadyStatus(item.material), source: "模拟 WMS 齐套回执", checkedAt },
+    { label: "质量计划", desc: item.quality, status: item.quality.includes("待确认") ? "待确认" : "通过", source: "QMS 首件计划", checkedAt },
+    { label: "状态允许", desc: item.status, status: item.status === "下达拦截" ? "拦截" : "通过", source: "MES 派工状态", checkedAt },
   ];
 }
 
@@ -340,6 +387,7 @@ function updateRelease(id, patch, message) {
   const index = releases.findIndex((item) => item.id === id);
   if (index < 0) return;
   releases[index] = { ...releases[index], ...patch };
+  syncLedgerRelease(releases[index], patch, message);
   if (patch.status === "已下达") {
     window.MES_BUSINESS_FLOW?.applyDispatchAction?.(releases[index].orderId, "release", { owner: releases[index].team || "车间主任" });
   } else if (patch.status === "下达拦截" || patch.status === "已撤回") {
@@ -357,6 +405,23 @@ function recordLog(releaseId, action) {
     { releaseId, action, time: new Date().toLocaleString("zh-CN", { hour12: false }) },
     ...logs,
   ].slice(0, 60);
+}
+
+function syncLedgerRelease(item, patch, message) {
+  const ledger = window.MES_DISPATCH_LEDGER;
+  if (!ledger) return;
+  const statusMap = { "校验通过": "待下达", "已下达": "待接单", "下达拦截": "下达拦截", "已撤回": "已撤回" };
+  const nextStatus = statusMap[patch.status];
+  if (nextStatus) {
+    ledger.updateStatus?.(item.dispatchId, nextStatus, {
+      owner: item.team || "车间主任",
+      source: message.includes("模拟") ? "MES 后台接收模拟回执" : "MES 后台",
+      action: message,
+      result: nextStatus.includes("拦截") ? "拦截" : "通过",
+    });
+  } else {
+    ledger.appendRecord?.(item.dispatchId, message, { owner: item.team || "车间主任", source: "MES 后台" });
+  }
 }
 
 function showToast(message) {
@@ -380,6 +445,22 @@ function releasedChannels(item) {
     material: item.channels.material === "无需配送" ? "无需配送" : "已确认",
     quality: item.channels.quality === "已配置" ? "已配置" : "已触发",
   };
+}
+
+function releasedReceipts(item, isResend = false) {
+  const current = normalizeRelease(item).channelReceipts;
+  return Object.fromEntries(Object.entries(current).map(([key, receipt]) => {
+    const retryCount = isResend ? receipt.retryCount + 1 : receipt.retryCount;
+    const failed = key === "station" && item.terminal !== "在线" || key === "material" && getReadyStatus(item.material) === "拦截";
+    return [key, {
+      ...receipt,
+      messageId: buildMessageId(item.id, key, retryCount),
+      ackStatus: failed ? "失败" : "ACK",
+      retryCount,
+      failureReason: failed ? (key === "station" ? "模拟工位终端离线未 ACK" : item.material) : "",
+      ackAt: failed ? "" : nowText(),
+    }];
+  }));
 }
 
 function bindEvents() {
@@ -412,7 +493,9 @@ function bindEvents() {
     targets.forEach((item) => {
       item.status = "已下达";
       item.channels = releasedChannels(item);
-      recordLog(item.id, "任务已批量下达到终端和协同模块");
+      item.channelReceipts = releasedReceipts(item);
+      recordLog(item.id, "任务已批量下达并接收模拟工位终端 ACK / 模拟班组接收回执");
+      syncLedgerRelease(item, { status: "已下达" }, "任务已批量下达并接收模拟回执");
     });
     state.activeReleaseId = targets[0].id;
     saveState();
@@ -421,7 +504,7 @@ function bindEvents() {
   });
   $("#noticeBtn").addEventListener("click", () => {
     const item = getActiveRelease();
-    recordLog(item.id, "已生成通知记录和推送回执");
+    recordLog(item.id, "已生成通知记录，等待模拟推送回执");
     saveState();
     renderLogs();
     showToast("通知记录已生成");
@@ -441,12 +524,12 @@ function bindEvents() {
   $("#checkReleaseBtn").addEventListener("click", () => {
     const item = getActiveRelease();
     const nextStatus = canRelease(item) ? "校验通过" : "下达拦截";
-    updateRelease(item.id, { status: nextStatus }, "已重新执行下达校验");
+    updateRelease(item.id, { status: nextStatus, lastCheckedAt: nowText() }, "已重新执行下达校验并记录结构化来源");
   });
   $("#checkBtn").addEventListener("click", () => {
     const item = getActiveRelease();
     const nextStatus = canRelease(item) ? "校验通过" : "下达拦截";
-    updateRelease(item.id, { status: nextStatus }, "下达校验已完成");
+    updateRelease(item.id, { status: nextStatus, lastCheckedAt: nowText() }, "下达校验已完成并记录结构化来源");
   });
   $("#releaseBtn").addEventListener("click", () => {
     const item = getActiveRelease();
@@ -454,15 +537,19 @@ function bindEvents() {
       showToast("校验未通过，不能下达");
       return;
     }
-    updateRelease(item.id, { status: "已下达", channels: releasedChannels(item) }, "任务已确认下达");
+    updateRelease(item.id, { status: "已下达", channels: releasedChannels(item), channelReceipts: releasedReceipts(item) }, "任务已确认下达，并记录模拟 ACK 回执");
   });
   $("#resendBtn").addEventListener("click", () => {
     const item = getActiveRelease();
-    updateRelease(item.id, { channels: releasedChannels(item) }, "通知已重发");
+    if (item.status === "已撤回") {
+      showToast("任务已撤回，不能重发模拟回执");
+      return;
+    }
+    updateRelease(item.id, { channels: releasedChannels(item), channelReceipts: releasedReceipts(item, true) }, "通知已重发并接收模拟回执");
   });
   $("#syncBtn").addEventListener("click", () => {
     const item = getActiveRelease();
-    updateRelease(item.id, { channels: { ...item.channels, material: "已确认", quality: "已触发" } }, "协同模块已同步");
+    updateRelease(item.id, { channels: { ...item.channels, material: "已确认", quality: "已触发" }, channelReceipts: releasedReceipts({ ...item, material: "齐套" }, true) }, "协同模块已同步并记录模拟物料/质量回执");
   });
   $("#blockBtn").addEventListener("click", () => updateRelease(getActiveRelease().id, { status: "下达拦截" }, "任务已标记为下达拦截"));
   $("#withdrawBtn").addEventListener("click", () => updateRelease(getActiveRelease().id, { status: "已撤回", channels: { station: "已撤回", team: "已撤回", material: "已撤回", quality: "已撤回" } }, "任务下达已撤回"));
@@ -480,6 +567,7 @@ function bindEvents() {
   });
 }
 
+normalizeReleases();
 loadState();
 renderFrameMenu();
 $("#releaseSearch").value = state.search;

@@ -19,9 +19,9 @@ const modules = [
 ];
 
 const initialTeamTasks = [
-  { id: "TEAM-A1-001", team: "A1 班", line: "Line-A", orderId: "MO-202606-0001", dispatchId: "D-001", operation: "SMT 贴片", station: "SMT-WS-01", leader: "钱佳", members: ["王海", "刘洋", "周敏"], required: 3, assigned: 3, load: 86, status: "执行中", shift: "白班", window: "08:00-12:00", skill: "SMT 贴片资质", risk: "正常", output: "428 / 800", handover: "11:58 移交 DIP", note: "人员齐套，贴片节拍稳定" },
+  { id: "TEAM-A1-001", team: "A1 班", line: "Line-A", orderId: "MO-202606-0001", dispatchId: "D-001", operation: "SMT 贴片", station: "SMT-WS-01", leader: "钱佳", members: ["王海", "刘洋", "周敏"], memberSources: ["白班排班表", "技能矩阵", "白班排班表"], required: 3, assigned: 3, load: 86, status: "执行中", shift: "白班", window: "08:00-12:00", skill: "SMT 贴片资质", risk: "正常", output: "428 / 800", handover: "11:58 移交 DIP", handoverOwner: "钱佳", sla: "12:10 前完成交接", recoveryCheck: "下道 DIP 签收后关闭", note: "人员齐套，贴片节拍稳定" },
   { id: "TEAM-A1-002", team: "A1 班", line: "Line-A", orderId: "MO-202606-0001", dispatchId: "D-002", operation: "DIP 插件", station: "DIP-WS-01", leader: "钱佳", members: ["待分配", "待分配"], required: 2, assigned: 0, load: 42, status: "待接收", shift: "白班", window: "13:00-18:00", skill: "DIP 插件资质", risk: "人员待确认", output: "0 / 800", handover: "等待 SMT 批次", note: "需确认下午班人员和工装" },
-  { id: "TEAM-A1-003", team: "A1 班", line: "Line-A", orderId: "MO-202606-0001", dispatchId: "D-004", operation: "整机装配", station: "ASM-WS-03", leader: "钱佳", members: ["赵杰"], required: 3, assigned: 1, load: 74, status: "人员异常", shift: "白班", window: "13:00-18:00", skill: "装配与扭矩资质", risk: "缺 2 名装配人员", output: "0 / 800", handover: "待物料齐套", note: "外壳上盖缺料且装配人员不足" },
+  { id: "TEAM-A1-003", team: "A1 班", line: "Line-A", orderId: "MO-202606-0001", dispatchId: "D-004", operation: "整机装配", station: "ASM-WS-03", leader: "钱佳", members: ["赵杰"], memberSources: ["白班排班表"], required: 3, assigned: 1, load: 74, status: "人员异常", shift: "白班", window: "13:00-18:00", skill: "装配与扭矩资质", risk: "缺 2 名装配人员", output: "0 / 800", handover: "待物料齐套", handoverOwner: "钱佳", sla: "30 分钟内完成人员恢复", recoveryCheck: "补员工牌/NFC 回执 + 扭矩资质复核", note: "外壳上盖缺料且装配人员不足" },
   { id: "TEAM-B1-001", team: "B1 班", line: "Line-B", orderId: "MO-202606-0002", dispatchId: "D-021", operation: "SMT 贴片", station: "SMT-WS-02", leader: "何伟", members: ["李敏", "陈涛", "许宁"], required: 3, assigned: 3, load: 91, status: "执行中", shift: "白班", window: "08:30-12:30", skill: "SMT 贴片资质", risk: "加急", output: "315 / 600", handover: "12:35 移交测试", note: "客户 B 加急，测试工位已预留" },
   { id: "TEAM-C1-001", team: "C1 班", line: "Line-C", orderId: "MO-202606-0003", dispatchId: "D-031", operation: "老化测试", station: "AGING-01", leader: "罗琴", members: ["周强", "吴平"], required: 2, assigned: 2, load: 96, status: "人员异常", shift: "白班", window: "10:00-18:00", skill: "老化测试资质", risk: "设备容量占满", output: "760 / 1200", handover: "待设备组释放老化架", note: "人员到位但设备容量限制任务推进" },
   { id: "TEAM-A1-004", team: "A1 班", line: "Line-A", orderId: "MO-202606-0004", dispatchId: "D-041", operation: "FQC 成品检验", station: "QC-Final", leader: "钱佳", members: ["QC-001"], required: 1, assigned: 1, load: 58, status: "待接收", shift: "白班", window: "14:00-18:00", skill: "FQC 检验资质", risk: "样本待确认", output: "0 / 2000", handover: "检验后移交包装", note: "等待质量组确认抽样数量" },
@@ -119,6 +119,24 @@ function getActiveTask() {
   return teamTasks.find((item) => item.id === state.activeTaskId) || teamTasks[0];
 }
 
+function hydrateFromLedger() {
+  const rows = window.MES_DISPATCH_LEDGER?.getRows?.();
+  if (!rows?.length) return;
+  teamTasks = teamTasks.map((task) => {
+    const ledger = rows.find((row) => row.dispatchId === task.dispatchId);
+    if (!ledger) return task;
+    return {
+      ...task,
+      line: ledger.resources?.line || task.line,
+      station: ledger.resources?.station || task.station,
+      output: `${ledger.execution?.outputQty ?? task.output.split(" / ")[0]} / ${(ledger.plan?.qty ?? task.output.split(" / ")[1]) || ""}`,
+      handoverOwner: task.handoverOwner || task.leader,
+      sla: task.sla || getDefaultSla(task),
+      recoveryCheck: task.recoveryCheck || getDefaultRecoveryCheck(task),
+    };
+  });
+}
+
 function getVisibleTasks() {
   const keyword = state.search.trim().toLowerCase();
   return teamTasks.filter((item) => {
@@ -203,17 +221,18 @@ function renderTeamLoad() {
 
 function renderMembers() {
   const active = getActiveTask();
+  const assignments = getAssignmentDetails(active);
   $("#activeTeamText").textContent = `${active.team} · ${active.shift}`;
-  $("#memberBoard").innerHTML = active.members.map((member, index) => {
-    const empty = member.includes("待");
+  $("#memberBoard").innerHTML = assignments.map((assignment, index) => {
+    const empty = assignment.name.includes("待");
     return `
       <article class="member-card">
         <div class="member-card__top">
           <span>${index + 1} 号位</span>
-          <span>${empty ? "待定" : "已绑定"}</span>
+          <span>${empty ? "待定" : assignment.source}</span>
         </div>
-        <strong>${member}</strong>
-        <em>${empty ? active.skill : `${active.station} · ${active.skill}`}</em>
+        <strong>${assignment.name}</strong>
+        <em>${empty ? active.skill : `${active.station} · ${assignment.skill} · ${assignment.shift}`}</em>
       </article>
     `;
   }).join("");
@@ -241,6 +260,7 @@ function renderTaskTable() {
 
 function renderDetail() {
   const item = getActiveTask();
+  const closure = getHandoverClosure(item);
   $("#detailStatus").textContent = item.status;
   $("#detailTaskNo").textContent = item.id;
   $("#detailTitle").textContent = `${item.team} · ${item.operation}`;
@@ -255,6 +275,7 @@ function renderDetail() {
     ["负荷", `${item.load}%`],
     ["窗口", item.window],
     ["产出", item.output],
+    ["责任人/SLA", `${closure.owner} / ${closure.sla}`],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
 
   $("#gateList").innerHTML = buildGateItems(item).map((gate) => `
@@ -266,9 +287,11 @@ function renderDetail() {
   `).join("");
 
   $("#assignmentList").innerHTML = [
-    ["人员", item.members.join("、"), item.assigned >= item.required ? "通过" : "待确认"],
-    ["资质", item.skill, item.risk.includes("资质") ? "待确认" : "通过"],
-    ["交接", item.handover, item.status === "待交接" ? "待确认" : "记录中"],
+    ["人员", getAssignmentSummary(item), item.assigned >= item.required ? "通过" : "待确认"],
+    ["资质", `${item.skill} · 来源 ${getAssignmentSources(item)}`, item.risk.includes("资质") ? "待确认" : "通过"],
+    ["交接", `${item.handover} · ${closure.owner}`, item.status === "待交接" ? "待确认" : "记录中"],
+    ["SLA", closure.sla, item.status === "人员异常" ? "需处理" : "记录中"],
+    ["恢复验证", closure.recoveryCheck, item.status === "人员异常" ? "待确认" : "记录中"],
     ["说明", item.note, item.status === "人员异常" ? "需处理" : "记录中"],
   ].map(([label, value, status]) => `
     <div class="readiness-item ${getGateClass(status)}">
@@ -297,10 +320,48 @@ function buildGateItems(item) {
   return [
     { label: "任务状态", desc: item.status === "人员异常" ? "需重新分配人员或资源" : "状态允许班组处理", status: item.status === "人员异常" ? "拦截" : "通过" },
     { label: "人员齐套", desc: `${item.assigned} / ${item.required} 人`, status: item.assigned >= item.required ? "通过" : "待确认" },
-    { label: "资质匹配", desc: item.skill, status: item.risk.includes("资质") ? "待确认" : "通过" },
+    { label: "资质匹配", desc: `${item.skill} · ${getAssignmentSources(item)}`, status: item.risk.includes("资质") ? "待确认" : "通过" },
     { label: "工位可用", desc: `${item.station} · ${item.window}`, status: item.risk.includes("设备") ? "待确认" : "通过" },
     { label: "交接要求", desc: item.handover, status: item.status === "待交接" ? "待确认" : "通过" },
+    { label: "人员异常闭环", desc: getHandoverClosure(item).recoveryCheck, status: item.status === "人员异常" ? "待确认" : "通过" },
   ];
+}
+
+function getAssignmentDetails(item) {
+  return item.members.map((member, index) => ({
+    name: member,
+    source: item.memberSources?.[index] || (member.includes("待") ? "待模拟回执" : "白班排班表"),
+    skill: item.skill,
+    shift: item.shift,
+  }));
+}
+
+function getAssignmentSummary(item) {
+  return getAssignmentDetails(item).map((assignment) => `${assignment.name}(${assignment.source})`).join("、");
+}
+
+function getAssignmentSources(item) {
+  return [...new Set(getAssignmentDetails(item).map((assignment) => assignment.source))].join("、");
+}
+
+function getDefaultSla(item) {
+  if (item.status === "人员异常") return "30 分钟内恢复人员齐套";
+  if (item.status === "待交接") return "15 分钟内完成下道签收";
+  return `${item.window} 内完成任务节点`;
+}
+
+function getDefaultRecoveryCheck(item) {
+  if (item.status === "人员异常") return "班组长复核资质与工位绑定";
+  if (item.status === "待交接") return "下道任务签收 + 数量复核";
+  return "执行中持续记录人员回执";
+}
+
+function getHandoverClosure(item) {
+  return {
+    owner: item.handoverOwner || item.leader,
+    sla: item.sla || getDefaultSla(item),
+    recoveryCheck: item.recoveryCheck || getDefaultRecoveryCheck(item),
+  };
 }
 
 function getGateClass(status) {
@@ -329,11 +390,34 @@ function updateTask(id, patch, message) {
   teamTasks[index] = { ...teamTasks[index], ...patch };
   if (patch.status === "执行中") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(teamTasks[index].orderId, "release", { owner: teamTasks[index].leader || "班组长" });
   if (patch.status === "人员异常") window.MES_BUSINESS_FLOW?.applyDispatchAction?.(teamTasks[index].orderId, "hold", { owner: teamTasks[index].leader || "班组长", reason: message });
+  syncLedger(teamTasks[index], patch, message);
   state.activeTaskId = id;
   recordLog(id, message);
   saveState();
   renderAll();
   showToast(message);
+}
+
+function syncLedger(item, patch, message, options = {}) {
+  const ledger = window.MES_DISPATCH_LEDGER;
+  if (!ledger) return;
+  const statusMap = { "执行中": "生产中", "待交接": "已完工", "人员异常": "异常锁定", "已完成": "已交接", "待接收": "待接单" };
+  const source = options.source || "MES 后台静态演示";
+  if (patch.status && statusMap[patch.status]) {
+    const result = ledger.updateStatus?.(item.dispatchId, statusMap[patch.status], {
+      action: message,
+      owner: item.leader,
+      source,
+      team: item.team,
+      result: options.result || "通过",
+    });
+    if (result?.ok) return;
+  }
+  ledger.appendRecord?.(item.dispatchId, message, {
+    owner: item.leader,
+    source,
+    result: options.result || "记录",
+  });
 }
 
 function recordLog(taskId, action) {
@@ -382,7 +466,8 @@ function bindEvents() {
     }
     targets.forEach((item) => {
       item.status = "执行中";
-      recordLog(item.id, "班组批量接收任务");
+      recordLog(item.id, "班组批量接收任务，人员回执已核对");
+      syncLedger(item, { status: "执行中" }, "班组批量接收任务，人员回执已核对");
     });
     state.activeTaskId = targets[0].id;
     saveState();
@@ -391,7 +476,8 @@ function bindEvents() {
   });
   $("#handoverSheetBtn").addEventListener("click", () => {
     const item = getActiveTask();
-    recordLog(item.id, "已生成班组交接清单");
+    recordLog(item.id, `已生成班组交接清单，责任人 ${getHandoverClosure(item).owner}，SLA ${getHandoverClosure(item).sla}`);
+    syncLedger(item, {}, "已生成班组交接清单，等待模拟工牌/NFC 交接回执");
     saveState();
     renderLogs();
     showToast("交接清单已生成");
@@ -421,22 +507,51 @@ function bindEvents() {
       showToast("人员未齐套，不能接收");
       return;
     }
-    updateTask(item.id, { status: "执行中" }, "班组已接收任务");
+    updateTask(item.id, { status: "执行中" }, "班组已接收任务，人员资质与工位绑定通过");
   });
   $("#assignBtn").addEventListener("click", () => {
     const item = getActiveTask();
-    const members = item.members.map((member, index) => member.includes("待") ? `补员${index + 1}` : member);
-    updateTask(item.id, { members, assigned: item.required, risk: item.risk.includes("人员") ? "正常" : item.risk }, "人员已分配并推送到工位终端");
+    const pool = [
+      { name: "韩磊", source: "模拟工牌回执", skill: "技能矩阵：装配与扭矩资质" },
+      { name: "沈倩", source: "模拟 NFC 回执", skill: "技能矩阵：DIP 插件资质" },
+      { name: "陆晨", source: "模拟班次调拨", skill: "白班支援名单" },
+    ];
+    const memberSources = item.members.map((member, index) => member.includes("待") ? pool[index % pool.length].source : item.memberSources?.[index] || "白班排班表");
+    const members = item.members.map((member, index) => member.includes("待") ? `${pool[index % pool.length].name}(${pool[index % pool.length].skill})` : member);
+    updateTask(item.id, {
+      members,
+      memberSources,
+      assigned: item.required,
+      risk: item.risk.includes("人员") ? "正常" : item.risk,
+      recoveryCheck: "模拟人员回执已复核，资质与班次来源已归档",
+    }, "模拟人员回执通过，人员资质与班次来源已归档");
   });
   $("#startBtn").addEventListener("click", () => updateTask(getActiveTask().id, { status: "执行中" }, "班组任务已开始执行"));
-  $("#handoverBtn").addEventListener("click", () => updateTask(getActiveTask().id, { status: "已完成" }, "班组交接已确认"));
-  $("#peopleRiskBtn").addEventListener("click", () => updateTask(getActiveTask().id, { status: "人员异常", risk: "人员缺勤或资质待确认" }, "已标记人员异常，等待重分配"));
+  $("#handoverBtn").addEventListener("click", () => {
+    const item = getActiveTask();
+    updateTask(item.id, {
+      status: "已完成",
+      handoverOwner: item.leader,
+      sla: "交接回执已在 SLA 内完成",
+      recoveryCheck: "模拟工牌/NFC 交接回执通过，下道签收与数量复核完成",
+    }, "模拟工牌/NFC 交接回执通过，班组交接已闭环");
+  });
+  $("#peopleRiskBtn").addEventListener("click", () => {
+    const item = getActiveTask();
+    updateTask(item.id, {
+      status: "人员异常",
+      risk: "人员缺勤或资质待确认",
+      sla: "30 分钟内恢复人员齐套",
+      recoveryCheck: "需模拟工牌/NFC 回执并复核技能矩阵",
+    }, "已标记人员异常，责任人和恢复验证已记录");
+  });
   $("#rebalanceBtn").addEventListener("click", () => {
     const item = getActiveTask();
-    updateTask(item.id, { load: Math.max(45, item.load - 18), status: item.assigned >= item.required ? "执行中" : "待接收", risk: item.assigned >= item.required ? "正常" : item.risk }, "已完成班组负荷均衡");
+    updateTask(item.id, { load: Math.max(45, item.load - 18), status: item.assigned >= item.required ? "执行中" : "待接收", risk: item.assigned >= item.required ? "正常" : item.risk }, "已完成班组负荷均衡，人员来源保持可追溯");
   });
   $("#resetTeamBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
+    window.MES_DISPATCH_LEDGER?.reset?.();
     teamTasks = structuredClone(initialTeamTasks);
     logs = [];
     state = { activeTaskId: "TEAM-A1-001", search: "", team: "all", status: "all", line: "all", detailOpen: true };
@@ -450,6 +565,7 @@ function bindEvents() {
 }
 
 loadState();
+hydrateFromLedger();
 renderFrameMenu();
 $("#teamSearch").value = state.search;
 $("#teamFilter").value = state.team;
